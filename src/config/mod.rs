@@ -80,6 +80,8 @@ pub struct PipelineConfig {
     pub implement: Option<String>,
     #[serde(default)]
     pub analyze: Option<String>,
+    #[serde(default)]
+    pub review: Option<String>,
 }
 
 impl PipelineConfig {
@@ -93,6 +95,7 @@ impl PipelineConfig {
             "tests" => &self.tests,
             "implement" => &self.implement,
             "analyze" => &self.analyze,
+            "review" => &self.review,
             _ => &None,
         };
         mapped.as_deref().unwrap_or(default_agent).to_string()
@@ -108,6 +111,7 @@ impl PipelineConfig {
             ("tests", &self.tests),
             ("implement", &self.implement),
             ("analyze", &self.analyze),
+            ("review", &self.review),
         ];
         for (phase, agent) in &mappings {
             if let Some(id) = agent

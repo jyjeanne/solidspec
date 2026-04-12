@@ -66,7 +66,7 @@ pub const AGENTS: &[AgentConfig] = &[
         aliases: &[],
         cli_binary: "copilot",
         cli_prompt_flag: "-p",
-        cli_extra_flags: &["--allow-all-tools"],
+        cli_extra_flags: &["--allow-all-tools", "--allow-all-paths"],
     },
     AgentConfig {
         id: "cursor",

@@ -14,6 +14,7 @@ pub const PHASES: &[&str] = &[
     "tests",
     "implement",
     "analyze",
+    "review",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -93,6 +94,7 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
             }
         }
         "analyze" => false, // never skipped
+        "review" => feature_dir.join("review-report.md").exists(),
         _ => false,
     }
 }
@@ -200,9 +202,9 @@ mod tests {
     #[test]
     fn filter_all_phases() {
         let phases = filter_phases(None, None).unwrap();
-        assert_eq!(phases.len(), 7);
+        assert_eq!(phases.len(), 8);
         assert_eq!(phases[0], "specify");
-        assert_eq!(phases[6], "analyze");
+        assert_eq!(phases[7], "review");
     }
 
     #[test]

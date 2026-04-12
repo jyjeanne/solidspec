@@ -43,6 +43,31 @@ pub fn adjust_script_paths(content: &str) -> String {
     content.replace("../../scripts/", ".rustyspec/scripts/")
 }
 
+/// Render a Copilot `.agent.md` file with proper VS Code custom agent frontmatter.
+/// Includes `tools:` aliases and `argument-hint` for agent picker UX.
+pub fn render_copilot_agent(description: &str, body: &str) -> String {
+    format!(
+        "---\n\
+         description: \"{description}\"\n\
+         tools: [read, edit, search, execute]\n\
+         argument-hint: \"Feature ID (e.g. 001-feature-name)\"\n\
+         ---\n\n\
+         {body}\n"
+    )
+}
+
+/// Render a Copilot `.prompt.md` file with `agent: \"agent\"` mode and tools.
+pub fn render_copilot_prompt(description: &str, body: &str) -> String {
+    format!(
+        "---\n\
+         description: \"{description}\"\n\
+         agent: \"agent\"\n\
+         tools: [read, edit, search, execute]\n\
+         ---\n\n\
+         {body}\n"
+    )
+}
+
 /// Render a Vibe skill SKILL.md with the required frontmatter fields.
 pub fn render_vibe_skill(cmd_name: &str, description: &str, body: &str) -> String {
     let name = standard_command_name(cmd_name);

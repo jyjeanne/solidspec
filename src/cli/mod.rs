@@ -12,6 +12,7 @@ pub mod preset;
 pub mod specify;
 pub mod tasks;
 pub mod tests_cmd;
+pub mod review;
 pub mod upgrade;
 pub mod ux;
 
@@ -51,6 +52,10 @@ pub enum Commands {
         /// Skip confirmation prompts
         #[arg(long)]
         force: bool,
+
+        /// Target AI agent (e.g., copilot, claude, cursor). Auto-detected if omitted.
+        #[arg(long)]
+        agent: Option<String>,
     },
 
     /// Create a new feature specification
@@ -108,6 +113,12 @@ pub enum Commands {
 
     /// Validate cross-artifact consistency (read-only)
     Analyze {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+    },
+
+    /// Review spec quality with preflight heuristics
+    Review {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
@@ -198,7 +209,8 @@ pub fn run(cli: Cli) -> Result<()> {
             here,
             no_git,
             force,
-        } => init::run(name, here, no_git, force),
+            agent,
+        } => init::run(name, here, no_git, force, agent),
         Commands::Specify { feature_name } => specify::run(&feature_name),
         Commands::Clarify { feature_id } => clarify::run(feature_id.as_deref()),
         Commands::Plan { feature_id } => plan::run(feature_id.as_deref()),
@@ -216,6 +228,7 @@ pub fn run(cli: Cli) -> Result<()> {
             dry_run,
         ),
         Commands::Analyze { feature_id } => analyze::run(feature_id.as_deref()),
+        Commands::Review { feature_id } => review::run(feature_id.as_deref()),
         Commands::Checklist { feature_id, append } => checklist::run(feature_id.as_deref(), append),
         Commands::Pipeline {
             feature_id,

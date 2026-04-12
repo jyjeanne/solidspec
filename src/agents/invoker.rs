@@ -4,6 +4,7 @@ use std::process::Command;
 use anyhow::{Context, Result};
 
 use super::config::{AgentConfig, find_agent};
+use super::registry::find_binary;
 
 /// Build the prompt for a pipeline phase, with detailed per-phase instructions.
 pub fn build_phase_prompt(
@@ -101,6 +102,18 @@ pub fn build_phase_prompt(
                  5. Suggest improvements if any artifacts are incomplete"
             )
         }
+        "review" => {
+            format!(
+                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                 Feature: {specs_path}\n\n\
+                 Perform a comprehensive spec quality review:\n\
+                 1. Check for placeholder text and incomplete sections\n\
+                 2. Validate requirement quality and testability\n\
+                 3. Check cross-artifact consistency (spec → plan → tasks)\n\
+                 4. Assess security, performance, and maintainability concerns\n\
+                 5. Write findings to {specs_path}/review-report.md"
+            )
+        }
         _ => {
             format!(
                 "Read the project context from .rustyspec/AGENT.md, then execute the '{phase}' workflow for feature {specs_path}."
@@ -147,19 +160,22 @@ pub fn invoke_agent(
         };
     }
 
-    // Check if CLI binary is available
-    if which::which(agent.cli_binary).is_err() {
-        return InvokeResult::NotAvailable {
-            reason: format!(
-                "'{}' CLI not found in PATH. Install {} or use handoff mode.",
-                agent.cli_binary, agent.name
-            ),
-        };
-    }
+    // Check if CLI binary is available (checks PATH and common npm/nvm locations)
+    let binary_path = match find_binary(agent.cli_binary) {
+        Some(p) => p,
+        None => {
+            return InvokeResult::NotAvailable {
+                reason: format!(
+                    "'{}' CLI not found. Install {} or add it to PATH.",
+                    agent.cli_binary, agent.name
+                ),
+            };
+        }
+    };
 
     let prompt = build_phase_prompt(phase, feature_dir_name, description);
 
-    match run_agent_cli(agent, &prompt, project_root) {
+    match run_agent_cli(agent, &binary_path, &prompt, project_root) {
         Ok(output) => InvokeResult::Success { output },
         Err(e) => InvokeResult::Failed {
             error: format!("{e}"),
@@ -168,8 +184,8 @@ pub fn invoke_agent(
 }
 
 /// Execute the agent CLI process with the given prompt.
-fn run_agent_cli(agent: &AgentConfig, prompt: &str, working_dir: &Path) -> Result<String> {
-    let mut cmd = Command::new(agent.cli_binary);
+fn run_agent_cli(agent: &AgentConfig, binary_path: &Path, prompt: &str, working_dir: &Path) -> Result<String> {
+    let mut cmd = Command::new(binary_path);
     cmd.current_dir(working_dir);
 
     // Special handling for agents with non-standard invocation
@@ -228,7 +244,7 @@ fn run_agent_cli(agent: &AgentConfig, prompt: &str, working_dir: &Path) -> Resul
 /// Check if an agent supports CLI invocation.
 pub fn supports_cli(agent_id: &str) -> bool {
     find_agent(agent_id)
-        .map(|a| !a.cli_binary.is_empty() && which::which(a.cli_binary).is_ok())
+        .map(|a| !a.cli_binary.is_empty() && find_binary(a.cli_binary).is_some())
         .unwrap_or(false)
 }
 

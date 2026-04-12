@@ -11,6 +11,12 @@
 # Claude Code local settings
 .claude/
 
+# Generated artifacts from running rustyspec on itself
+.rustyspec/
+.vibe/
+rustyspec.toml
+specs/
+
 # OS
 .DS_Store
 Thumbs.db

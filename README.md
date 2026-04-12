@@ -25,7 +25,7 @@ You describe a feature to your AI coding agent. It generates code. But the code 
 
 **RustySpec fixes this** by inserting a structured specification layer between your idea and the code. Every feature gets a spec, a plan, and a task list &mdash; all versioned in your repo, all driving the AI's implementation.
 
-## The 6-Step Workflow
+## The 8-Step Workflow
 
 ```
                     You describe a feature
@@ -40,7 +40,8 @@ You describe a feature to your AI coding agent. It generates code. But the code 
   |   4. rustyspec tasks     -->  tasks.md (phased, parallel) |
   |   5. rustyspec tests     -->  test scaffolds (per story)  |
   |   6. rustyspec implement -->  AI builds from tasks        |
-  |   7. rustyspec analyze   -->  consistency report           |
+  |   7. rustyspec analyze   -->  consistency report          |
+  |   8. rustyspec review    -->  quality review report       |
   |                                                           |
   |   Or run all at once: rustyspec pipeline --new "feature"  |
   |                                                          |
@@ -56,23 +57,76 @@ Every artifact references the one before it. Requirements trace to plan sections
 
 ## Install
 
+### Build from source
+
 ```bash
 git clone https://github.com/jyjeanne/rustyspec.git
 cd rustyspec
 cargo build --release
 ```
 
-Add to your PATH:
+The compiled binary is placed at `target/release/rustyspec` (Linux/macOS) or `target\release\rustyspec.exe` (Windows).
+
+---
+
+### Add to PATH — Linux / macOS
+
+**Option A — copy to a system directory (recommended)**
 
 ```bash
-# Linux / macOS
-export PATH="$PATH:$(pwd)/target/release"
+sudo cp target/release/rustyspec /usr/local/bin/rustyspec
+```
 
-# Windows (PowerShell)
+**Option B — add the build output directory to your shell profile**
+
+```bash
+# Bash (~/.bashrc or ~/.bash_profile)
+echo 'export PATH="$PATH:$HOME/rustyspec/target/release"' >> ~/.bashrc
+source ~/.bashrc
+
+# Zsh (~/.zshrc)
+echo 'export PATH="$PATH:$HOME/rustyspec/target/release"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Replace `$HOME/rustyspec` with the actual path where you cloned the repository.
+
+---
+
+### Add to PATH — Windows
+
+**Option A — copy to a permanent directory, then add it to the system PATH (recommended)**
+
+```powershell
+# 1. Create a directory for CLI tools (skip if it already exists)
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin"
+
+# 2. Copy the binary
+Copy-Item .\target\release\rustyspec.exe "$env:USERPROFILE\bin\rustyspec.exe"
+
+# 3. Add the directory to the permanent user PATH (takes effect in new shells)
+[Environment]::SetEnvironmentVariable(
+    "PATH",
+    "$env:PATH;$env:USERPROFILE\bin",
+    [EnvironmentVariableTarget]::User
+)
+```
+
+**Option B — add the build output directory to PATH for the current session only**
+
+```powershell
 $env:PATH += ";$(Get-Location)\target\release"
 ```
 
-Verify:
+To make Option B permanent, add it to your PowerShell profile (`$PROFILE`):
+
+```powershell
+Add-Content $PROFILE "`n`$env:PATH += `";C:\path\to\rustyspec\target\release`""
+```
+
+---
+
+**Verify the installation:**
 
 ```bash
 rustyspec --version
@@ -99,7 +153,7 @@ RustySpec creates:
 - `.rustyspec/` &mdash; constitution, templates, config
 - `specs/` &mdash; where feature artifacts live
 - `rustyspec.toml` &mdash; project configuration
-- `.claude/commands/rustyspec-*.md` &mdash; 8 slash commands for your agent
+- `.claude/commands/rustyspec-*.md` &mdash; 9 slash commands for your agent
 
 ### 2. Describe your feature
 
@@ -158,7 +212,7 @@ Use the slash command in your AI agent:
 
 ## Using with Claude Code
 
-Claude Code gets 8 slash commands automatically registered in `.claude/commands/`.
+Claude Code gets 9 slash commands automatically registered in `.claude/commands/`.
 
 ### Setup
 
@@ -186,6 +240,7 @@ Registered commands for 1 agent(s): claude
 | `/rustyspec-implement` | Execute tasks from the breakdown |
 | `/rustyspec-tests` | Generate and enhance test scaffolds |
 | `/rustyspec-analyze` | Validate cross-artifact consistency |
+| `/rustyspec-review` | Review spec quality with preflight heuristics |
 | `/rustyspec-checklist` | Generate quality validation checklist |
 
 ### Step-by-step with Claude Code
@@ -234,7 +289,7 @@ Claude checks that all requirements trace to plan sections, all plan sections tr
 
 ## Using with Mistral Vibe
 
-Mistral Vibe gets 8 skills registered as directories in `.vibe/skills/`. Each skill has a `SKILL.md` with the `user-invocable: true` frontmatter so it appears in Vibe's slash command list.
+Mistral Vibe gets 9 skills registered as directories in `.vibe/skills/`. Each skill has a `SKILL.md` with the `user-invocable: true` frontmatter so it appears in Vibe's slash command list.
 
 ### Setup
 
@@ -258,6 +313,7 @@ Skills are created at:
   rustyspec-implement/SKILL.md
   rustyspec-tests/SKILL.md
   rustyspec-analyze/SKILL.md
+  rustyspec-review/SKILL.md
   rustyspec-checklist/SKILL.md
 ```
 
@@ -560,6 +616,7 @@ tasks = "claude"         # Claude for task breakdown
 tests = "claude"         # Claude for test generation
 implement = "vibe"       # Mistral Vibe for code
 analyze = "claude"       # Claude for cross-checking
+review = "claude"        # Claude for quality review
 ```
 
 ```bash
@@ -578,7 +635,7 @@ rustyspec pipeline --new "Feature name" --no-agent
 
 ### How it works
 
-The pipeline runs 7 phases in order: **specify → clarify → plan → tasks → tests → implement → analyze**.
+The pipeline runs 8 phases in order: **specify → clarify → plan → tasks → tests → implement → analyze → review**.
 
 For each Auto phase (specify, clarify, plan, tasks, tests, analyze):
 1. RustySpec generates the template scaffold (spec.md, plan.md, etc.)
@@ -730,6 +787,7 @@ rustyspec preset add ./my-team-preset --priority 5
 | `rustyspec implement [id]` | Execute tasks with hook support and `--pass` for iterations |
 | `rustyspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
 | `rustyspec analyze [id]` | Validate consistency (read-only) with severity levels |
+| `rustyspec review [id]` | Review spec quality with preflight heuristics and dimension scoring |
 | `rustyspec checklist [id]` | Generate/append quality checklists (`--append`) |
 | `rustyspec pipeline [id]` | Run multi-agent SDD pipeline (`--new`, `--from`, `--to`, `--auto`, `--no-agent`) |
 | `rustyspec preset <cmd>` | Manage presets (`add`, `remove`, `list`, `search`, `info`) |
@@ -799,7 +857,7 @@ auto_commit = true
 ## Development
 
 ```bash
-# Run all 266 tests
+# Run all 278 tests
 cargo test
 
 # Build release binary

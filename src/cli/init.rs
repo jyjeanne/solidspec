@@ -9,7 +9,7 @@ use crate::core::git;
 use crate::extensions;
 use crate::templates;
 
-pub fn run(name: Option<String>, here: bool, no_git: bool, _force: bool) -> Result<()> {
+pub fn run(name: Option<String>, here: bool, no_git: bool, _force: bool, agent: Option<String>) -> Result<()> {
     let project_dir = resolve_project_dir(name.as_deref(), here)?;
     let project_name = project_dir
         .file_name()
@@ -42,7 +42,7 @@ pub fn run(name: Option<String>, here: bool, no_git: bool, _force: bool) -> Resu
     generate_agent_file(&project_dir, &project_name)?;
 
     // Detect and register AI agent commands
-    let registered = registry::register_all(&project_dir, None)?;
+    let registered = registry::register_all(&project_dir, agent.as_deref())?;
     if registered.is_empty() {
         println!("  No AI agent directories detected (create .claude/, .cursor/, etc. to enable)");
     } else {

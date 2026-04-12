@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -26,6 +26,7 @@ const COMMANDS: &[(&str, &str)] = &[
     ("implement", "Execute tasks from the task breakdown"),
     ("tests", "Generate test scaffolds from acceptance scenarios"),
     ("analyze", "Validate cross-artifact consistency"),
+    ("review", "Review spec quality with preflight heuristics"),
     ("checklist", "Generate a quality validation checklist"),
 ];
 
@@ -36,10 +37,10 @@ pub fn detect_agents(project_root: &Path) -> Vec<DetectedAgent> {
         .map(|agent| {
             let agent_path = project_root.join(agent.command_dir);
             let dir_exists = agent_path.exists();
-            let cli_available = if agent.requires_cli {
-                check_cli_available(agent.id)
+            let cli_available = if !agent.cli_binary.is_empty() {
+                find_binary(agent.cli_binary).is_some()
             } else {
-                true // IDE agents don't need CLI
+                false
             };
             DetectedAgent {
                 config: agent,
@@ -158,6 +159,19 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
                      4. Report any gaps or inconsistencies"
                 )
             }
+            "review" => {
+                format!(
+                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                     Feature ID: {arg}\n\
+                     Find the matching directory under specs/.\n\n\
+                     Perform a comprehensive spec quality review:\n\
+                     1. Check for placeholder text and incomplete sections\n\
+                     2. Validate requirement quality and testability\n\
+                     3. Check cross-artifact consistency (spec → plan → tasks)\n\
+                     4. Assess security, performance, and maintainability concerns\n\
+                     5. Write findings to {arg}/review-report.md"
+                )
+            }
             _ => {
                 format!(
                     "Read the project context from .rustyspec/AGENT.md, then execute the '{}' workflow for the feature specified by {arg}.",
@@ -167,6 +181,30 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
         };
 
         let body = formats::translate_placeholder(&body, agent.arg_placeholder);
+
+        // Copilot: .agent.md and .prompt.md use different frontmatter formats
+        if agent.id == "copilot" {
+            let agent_content = formats::adjust_script_paths(
+                &formats::render_copilot_agent(description, &body),
+            );
+            let prompt_content = formats::adjust_script_paths(
+                &formats::render_copilot_prompt(description, &body),
+            );
+            let agents_dir = project_root
+                .join(agent.command_dir)
+                .join(agent.commands_subdir);
+            let file_name = format!("rustyspec-{cmd_name}{}", agent.extension);
+            std::fs::write(agents_dir.join(&file_name), &agent_content)?;
+
+            let prompts_dir = project_root.join(".github/prompts");
+            std::fs::create_dir_all(&prompts_dir)?;
+            std::fs::write(
+                prompts_dir.join(format!("rustyspec-{cmd_name}.prompt.md")),
+                &prompt_content,
+            )?;
+            continue;
+        }
+
         let content = if agent.id == "vibe" {
             let rendered = formats::render_vibe_skill(cmd_name, description, &body);
             formats::adjust_script_paths(&rendered)
@@ -204,16 +242,6 @@ fn write_command_file(
         let skill_dir = cmd_dir.join(&skill_name);
         std::fs::create_dir_all(&skill_dir)?;
         std::fs::write(skill_dir.join("SKILL.md"), content)?;
-    } else if agent.id == "copilot" {
-        // Copilot: .agent.md + companion .prompt.md
-        let file_name = format!("rustyspec-{cmd_name}{}", agent.extension);
-        std::fs::write(cmd_dir.join(&file_name), content)?;
-
-        // Companion .prompt.md in .github/prompts/
-        let prompts_dir = project_root.join(".github/prompts");
-        std::fs::create_dir_all(&prompts_dir)?;
-        let prompt_name = format!("rustyspec-{cmd_name}.prompt.md");
-        std::fs::write(prompts_dir.join(&prompt_name), content)?;
     } else {
         // Standard: flat file with hyphen-separator
         let file_name = format!(
@@ -299,10 +327,10 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
         register_commands(project_root, agent)?;
         registered.push(agent.id.to_string());
     } else {
-        // Auto-detect and register for all present agents
+        // Auto-detect: register for agents whose dir exists OR whose CLI is available
         let detected = detect_agents(project_root);
         for det in &detected {
-            if det.dir_exists {
+            if det.dir_exists || det.cli_available {
                 register_commands(project_root, det.config)?;
                 registered.push(det.config.id.to_string());
             }
@@ -313,13 +341,51 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
 }
 
 fn check_cli_available(agent_id: &str) -> bool {
-    let exe_name = match agent_id {
-        "kiro-cli" => "kiro",
-        "qodercli" => "qodercli",
-        _ => agent_id,
-    };
+    let agent = find_agent(agent_id);
+    match agent {
+        Some(a) if !a.cli_binary.is_empty() => find_binary(a.cli_binary).is_some(),
+        _ => {
+            let exe_name = match agent_id {
+                "kiro-cli" => "kiro",
+                "qodercli" => "qodercli",
+                _ => agent_id,
+            };
+            which::which(exe_name).is_ok()
+        }
+    }
+}
 
-    which::which(exe_name).is_ok()
+/// Resolve a CLI binary by name, checking PATH first then common npm/nvm install locations.
+pub fn find_binary(name: &str) -> Option<PathBuf> {
+    // 1. Standard PATH lookup
+    if let Ok(p) = which::which(name) {
+        return Some(p);
+    }
+
+    // 2. nvm-managed Node.js installations (~/.nvm/versions/node/*/bin/<name>)
+    if let Ok(home) = std::env::var("HOME") {
+        let nvm_root = PathBuf::from(&home).join(".nvm/versions/node");
+        if let Ok(entries) = std::fs::read_dir(&nvm_root) {
+            let mut versions: Vec<_> = entries.flatten().collect();
+            versions.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+            for entry in versions {
+                let bin = entry.path().join("bin").join(name);
+                if bin.exists() {
+                    return Some(bin);
+                }
+            }
+        }
+
+        // 3. npm global bin directories
+        for npm_dir in &[".npm-global/bin", ".local/share/npm/bin"] {
+            let bin = PathBuf::from(&home).join(npm_dir).join(name);
+            if bin.exists() {
+                return Some(bin);
+            }
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]

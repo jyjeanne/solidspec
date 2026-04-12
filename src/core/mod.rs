@@ -7,5 +7,6 @@ pub mod pipeline;
 pub mod spec_parser;
 pub mod task_generator;
 pub mod test_generator;
+pub mod review;
 pub mod token;
 pub mod vscode;

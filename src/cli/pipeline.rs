@@ -368,6 +368,10 @@ fn execute_phase(
             crate::cli::analyze::run(Some(feature_dir_name))?;
             Ok("analysis complete".into())
         }
+        "review" => {
+            crate::cli::review::run(Some(feature_dir_name))?;
+            Ok("review complete".into())
+        }
         _ => anyhow::bail!("Unknown phase: {phase}"),
     }
 }
@@ -433,6 +437,8 @@ fn skip_reason(phase: &str, _feature_dir: &std::path::Path) -> String {
         "tasks" => "tasks.md already exists".into(),
         "tests" => "tests/ directory exists".into(),
         "implement" => "all tasks completed".into(),
+        "analyze" => "never skipped".into(),
+        "review" => "review-report.md already exists".into(),
         _ => "condition met".into(),
     }
 }
