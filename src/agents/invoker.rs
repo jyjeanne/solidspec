@@ -184,7 +184,12 @@ pub fn invoke_agent(
 }
 
 /// Execute the agent CLI process with the given prompt.
-fn run_agent_cli(agent: &AgentConfig, binary_path: &Path, prompt: &str, working_dir: &Path) -> Result<String> {
+fn run_agent_cli(
+    agent: &AgentConfig,
+    binary_path: &Path,
+    prompt: &str,
+    working_dir: &Path,
+) -> Result<String> {
     let mut cmd = Command::new(binary_path);
     cmd.current_dir(working_dir);
 

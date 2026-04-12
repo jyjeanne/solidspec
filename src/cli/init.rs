@@ -9,7 +9,13 @@ use crate::core::git;
 use crate::extensions;
 use crate::templates;
 
-pub fn run(name: Option<String>, here: bool, no_git: bool, _force: bool, agent: Option<String>) -> Result<()> {
+pub fn run(
+    name: Option<String>,
+    here: bool,
+    no_git: bool,
+    _force: bool,
+    agent: Option<String>,
+) -> Result<()> {
     let project_dir = resolve_project_dir(name.as_deref(), here)?;
     let project_name = project_dir
         .file_name()

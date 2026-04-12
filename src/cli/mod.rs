@@ -9,10 +9,10 @@ pub mod init;
 pub mod pipeline;
 pub mod plan;
 pub mod preset;
+pub mod review;
 pub mod specify;
 pub mod tasks;
 pub mod tests_cmd;
-pub mod review;
 pub mod upgrade;
 pub mod ux;
 

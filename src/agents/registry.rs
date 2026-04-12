@@ -184,12 +184,10 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
 
         // Copilot: .agent.md and .prompt.md use different frontmatter formats
         if agent.id == "copilot" {
-            let agent_content = formats::adjust_script_paths(
-                &formats::render_copilot_agent(description, &body),
-            );
-            let prompt_content = formats::adjust_script_paths(
-                &formats::render_copilot_prompt(description, &body),
-            );
+            let agent_content =
+                formats::adjust_script_paths(&formats::render_copilot_agent(description, &body));
+            let prompt_content =
+                formats::adjust_script_paths(&formats::render_copilot_prompt(description, &body));
             let agents_dir = project_root
                 .join(agent.command_dir)
                 .join(agent.commands_subdir);
@@ -367,7 +365,7 @@ pub fn find_binary(name: &str) -> Option<PathBuf> {
         let nvm_root = PathBuf::from(&home).join(".nvm/versions/node");
         if let Ok(entries) = std::fs::read_dir(&nvm_root) {
             let mut versions: Vec<_> = entries.flatten().collect();
-            versions.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
+            versions.sort_by_key(|b| std::cmp::Reverse(b.file_name()));
             for entry in versions {
                 let bin = entry.path().join("bin").join(name);
                 if bin.exists() {

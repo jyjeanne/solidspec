@@ -35,10 +35,7 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
         .count();
 
     if report.findings.is_empty() {
-        println!(
-            "All clear — overall score: {:.0}%",
-            report.overall_score
-        );
+        println!("All clear — overall score: {:.0}%", report.overall_score);
     } else {
         println!(
             "Found {} issues ({} critical, {} high) — score: {:.0}%",

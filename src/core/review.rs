@@ -173,7 +173,11 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
     } else {
         let total: f64 = dimension_scores.iter().map(|d| d.score).sum();
         let max: f64 = dimension_scores.iter().map(|d| d.max_score).sum();
-        if max > 0.0 { total / max * 100.0 } else { 100.0 }
+        if max > 0.0 {
+            total / max * 100.0
+        } else {
+            100.0
+        }
     };
 
     Ok(ReviewReport {
@@ -194,7 +198,10 @@ fn check_placeholders(content: &str, file_name: &str) -> Vec<ReviewFinding> {
         (r"(?i)\[To be filled[^\]]*\]", "'To be filled' placeholder"),
         (r"(?i)\[PLACEHOLDER[^\]]*\]", "PLACEHOLDER marker"),
         (r"(?i)\[Brief Title\]", "'Brief Title' placeholder"),
-        (r"(?i)\[NEEDS CLARIFICATION[^\]]*\]", "Unresolved clarification"),
+        (
+            r"(?i)\[NEEDS CLARIFICATION[^\]]*\]",
+            "Unresolved clarification",
+        ),
         (r"(?i)\[Insert [^\]]+\]", "'Insert ...' placeholder"),
     ];
 
@@ -209,7 +216,9 @@ fn check_placeholders(content: &str, file_name: &str) -> Vec<ReviewFinding> {
                     Severity::Medium
                 },
                 message: format!("{label} found in {file_name}: \"{}\"", mat.as_str()),
-                remediation: format!("Replace the placeholder in {file_name} with concrete content."),
+                remediation: format!(
+                    "Replace the placeholder in {file_name} with concrete content."
+                ),
                 location: Some(file_name.to_string()),
             });
         }
@@ -257,13 +266,22 @@ fn check_section_completeness(content: &str) -> Vec<ReviewFinding> {
 fn check_ambiguous_language(content: &str) -> Vec<ReviewFinding> {
     let mut findings = Vec::new();
     let weak_terms = [
-        ("should", "Use 'MUST' or 'SHALL' for requirements, 'should' is non-binding"),
+        (
+            "should",
+            "Use 'MUST' or 'SHALL' for requirements, 'should' is non-binding",
+        ),
         ("might", "Replace 'might' with a definite statement"),
         ("possibly", "Replace 'possibly' with a concrete decision"),
-        ("approximately", "Replace 'approximately' with a measurable threshold"),
+        (
+            "approximately",
+            "Replace 'approximately' with a measurable threshold",
+        ),
         ("etc.", "Replace 'etc.' with an explicit list"),
         ("and/or", "Choose 'and' or 'or' — 'and/or' is ambiguous"),
-        ("as needed", "Define explicit conditions instead of 'as needed'"),
+        (
+            "as needed",
+            "Define explicit conditions instead of 'as needed'",
+        ),
         ("if applicable", "Specify when it applies or remove"),
     ];
 
@@ -282,16 +300,16 @@ fn check_ambiguous_language(content: &str) -> Vec<ReviewFinding> {
         for (term, advice) in &weak_terms {
             // Use word-boundary matching to avoid false positives (e.g. "shoulders" for "should")
             let pattern = format!(r"(?i)\b{}\b", regex::escape(term));
-            if let Ok(re) = Regex::new(&pattern) {
-                if re.is_match(&lower_line) {
-                    findings.push(ReviewFinding {
-                        dimension: Dimension::Clarity,
-                        severity: Severity::Low,
-                        message: format!("Ambiguous term '{term}' in requirement context"),
-                        remediation: advice.to_string(),
-                        location: Some("spec.md".into()),
-                    });
-                }
+            if let Ok(re) = Regex::new(&pattern)
+                && re.is_match(&lower_line)
+            {
+                findings.push(ReviewFinding {
+                    dimension: Dimension::Clarity,
+                    severity: Severity::Low,
+                    message: format!("Ambiguous term '{term}' in requirement context"),
+                    remediation: advice.to_string(),
+                    location: Some("spec.md".into()),
+                });
             }
         }
     }
@@ -334,7 +352,10 @@ fn check_requirement_quality(spec: &spec_parser::ParsedSpec) -> Vec<ReviewFindin
                 dimension: Dimension::Testability,
                 severity: Severity::Medium,
                 message: format!("{}: lacks action verb (MUST/SHALL/CAN)", req.id),
-                remediation: format!("Rewrite {} with a clear action verb: 'System MUST...'", req.id),
+                remediation: format!(
+                    "Rewrite {} with a clear action verb: 'System MUST...'",
+                    req.id
+                ),
                 location: Some("spec.md".into()),
             });
         }
@@ -352,7 +373,8 @@ fn check_scenario_coverage(spec: &spec_parser::ParsedSpec) -> Vec<ReviewFinding>
             dimension: Dimension::Completeness,
             severity: Severity::High,
             message: "No user stories found in spec.md".into(),
-            remediation: "Add user stories with ### User Story N - Title (Priority: P1) format.".into(),
+            remediation: "Add user stories with ### User Story N - Title (Priority: P1) format."
+                .into(),
             location: Some("spec.md".into()),
         });
         return findings;
@@ -450,10 +472,7 @@ fn check_task_story_links(
 }
 
 /// Check that tests directory covers acceptance scenarios.
-fn check_test_coverage(
-    spec: &spec_parser::ParsedSpec,
-    tests_dir: &Path,
-) -> Vec<ReviewFinding> {
+fn check_test_coverage(spec: &spec_parser::ParsedSpec, tests_dir: &Path) -> Vec<ReviewFinding> {
     let mut findings = Vec::new();
 
     if !tests_dir.exists() {
@@ -538,8 +557,11 @@ fn check_security_hints(plan_content: &str, spec_content: &str) -> Vec<ReviewFin
             findings.push(ReviewFinding {
                 dimension: Dimension::Security,
                 severity: Severity::Medium,
-                message: "Spec references auth/user features but plan lacks a security section".into(),
-                remediation: "Add a security section to plan.md covering authentication and authorization.".into(),
+                message: "Spec references auth/user features but plan lacks a security section"
+                    .into(),
+                remediation:
+                    "Add a security section to plan.md covering authentication and authorization."
+                        .into(),
                 location: Some("plan.md".into()),
             });
         }
@@ -761,7 +783,11 @@ Session managed via tokens.
     fn placeholder_detection() {
         let findings = check_placeholders("[TODO: fill this in] and [TBD]", "spec.md");
         assert_eq!(findings.len(), 2);
-        assert!(findings.iter().all(|f| f.dimension == Dimension::Completeness));
+        assert!(
+            findings
+                .iter()
+                .all(|f| f.dimension == Dimension::Completeness)
+        );
     }
 
     #[test]
@@ -892,7 +918,10 @@ Session managed via tokens.
             },
         ];
         let scores = score_dimensions(&findings);
-        let completeness = scores.iter().find(|s| s.dimension == Dimension::Completeness).unwrap();
+        let completeness = scores
+            .iter()
+            .find(|s| s.dimension == Dimension::Completeness)
+            .unwrap();
         assert_eq!(completeness.score, 0.0); // 10 - 5 - 5 = 0 (clamped)
     }
 }
