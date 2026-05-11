@@ -2,7 +2,7 @@
 use std::path::PathBuf;
 
 #[derive(Debug, thiserror::Error)]
-pub enum RustySpecError {
+pub enum SolidSpecError {
     #[error("Config error at {path}: {message}\n  Fix: {fix}")]
     Config {
         path: PathBuf,
@@ -47,23 +47,23 @@ mod tests {
 
     #[test]
     fn config_error_displays_path_and_fix() {
-        let err = RustySpecError::Config {
-            path: PathBuf::from("/project/rustyspec.toml"),
+        let err = SolidSpecError::Config {
+            path: PathBuf::from("/project/solidspec.toml"),
             message: "missing field 'name'".into(),
-            fix: "Add [project] name = \"my_project\" to rustyspec.toml".into(),
+            fix: "Add [project] name = \"my_project\" to solidspec.toml".into(),
         };
         let msg = err.to_string();
-        assert!(msg.contains("/project/rustyspec.toml"));
+        assert!(msg.contains("/project/solidspec.toml"));
         assert!(msg.contains("missing field 'name'"));
         assert!(msg.contains("Fix:"));
     }
 
     #[test]
     fn spec_error_displays_feature_id() {
-        let err = RustySpecError::Spec {
+        let err = SolidSpecError::Spec {
             feature_id: "003".into(),
             message: "spec.md not found".into(),
-            fix: "Run 'rustyspec specify' first".into(),
+            fix: "Run 'solidspec specify' first".into(),
         };
         let msg = err.to_string();
         assert!(msg.contains("003"));
@@ -72,36 +72,36 @@ mod tests {
 
     #[test]
     fn all_error_variants_produce_nonempty_messages() {
-        let errors: Vec<RustySpecError> = vec![
-            RustySpecError::Config {
+        let errors: Vec<SolidSpecError> = vec![
+            SolidSpecError::Config {
                 path: PathBuf::from("x"),
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Spec {
+            SolidSpecError::Spec {
                 feature_id: "1".into(),
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Template {
+            SolidSpecError::Template {
                 template: "t".into(),
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Git {
+            SolidSpecError::Git {
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Feature {
+            SolidSpecError::Feature {
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Init {
+            SolidSpecError::Init {
                 path: PathBuf::from("x"),
                 message: "m".into(),
                 fix: "f".into(),
             },
-            RustySpecError::Validation {
+            SolidSpecError::Validation {
                 message: "m".into(),
             },
         ];

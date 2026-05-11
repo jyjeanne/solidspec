@@ -1,10 +1,27 @@
 #![allow(dead_code)]
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Result;
 use regex::Regex;
 
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
+
+static USER_STORY_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"###\s+User Story \d+\s*-\s*(.+?)\s*\(Priority:\s*(P\d+)\)")
+        .expect("invalid user story regex")
+});
+static SCENARIO_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*\*Given\*\*\s+(.+)").expect("invalid scenario regex"));
+static REQUIREMENT_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\*\*(FR-\d{3})\*\*:\s*(.+)").expect("invalid requirement regex")
+});
+static CLARIFICATION_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\[NEEDS CLARIFICATION[:\s]*([^\]]*)\]").expect("invalid clarification regex")
+});
+static ENTITY_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\*\*\[([^\]]+)\]\*\*:\s*(.*)").expect("invalid entity regex")
+});
 
 /// Parsed representation of a spec.md file.
 #[derive(Debug, Clone)]
@@ -36,10 +53,10 @@ pub struct ClarificationMarker {
 }
 
 pub fn parse_spec(path: &Path) -> Result<ParsedSpec> {
-    let content = std::fs::read_to_string(path).map_err(|e| RustySpecError::Spec {
+    let content = std::fs::read_to_string(path).map_err(|e| SolidSpecError::Spec {
         feature_id: path.display().to_string(),
         message: format!("Cannot read spec: {e}"),
-        fix: "Ensure spec.md exists. Run 'rustyspec specify' first.".into(),
+        fix: "Ensure spec.md exists. Run 'solidspec specify' first.".into(),
     })?;
 
     parse_spec_content(&content)
@@ -61,12 +78,9 @@ pub fn parse_spec_content(content: &str) -> Result<ParsedSpec> {
 }
 
 fn extract_user_stories(content: &str) -> Vec<UserStory> {
-    let re = Regex::new(r"###\s+User Story \d+\s*-\s*(.+?)\s*\(Priority:\s*(P\d+)\)").unwrap();
-    let scenario_re = Regex::new(r"\*\*Given\*\*\s+(.+)").unwrap();
-
     let mut stories = Vec::new();
 
-    for caps in re.captures_iter(content) {
+    for caps in USER_STORY_RE.captures_iter(content) {
         let title = caps[1].trim().to_string();
         let priority = caps[2].to_string();
 
@@ -77,7 +91,7 @@ fn extract_user_stories(content: &str) -> Vec<UserStory> {
         let end = rest.find("\n### ").unwrap_or(rest.len());
         let section = &rest[..end];
 
-        let scenarios: Vec<String> = scenario_re
+        let scenarios: Vec<String> = SCENARIO_RE
             .captures_iter(section)
             .map(|c| c[1].trim().to_string())
             .collect();
@@ -93,9 +107,8 @@ fn extract_user_stories(content: &str) -> Vec<UserStory> {
 }
 
 fn extract_requirements(content: &str) -> Vec<Requirement> {
-    let re = Regex::new(r"\*\*(FR-\d{3})\*\*:\s*(.+)").unwrap();
-
-    re.captures_iter(content)
+    REQUIREMENT_RE
+        .captures_iter(content)
         .map(|caps| Requirement {
             id: caps[1].to_string(),
             text: caps[2].trim().to_string(),
@@ -104,13 +117,11 @@ fn extract_requirements(content: &str) -> Vec<Requirement> {
 }
 
 fn extract_clarification_markers(content: &str) -> Vec<ClarificationMarker> {
-    let re = Regex::new(r"\[NEEDS CLARIFICATION[:\s]*([^\]]*)\]").unwrap();
-
     content
         .lines()
         .enumerate()
         .flat_map(|(line_num, line)| {
-            re.captures_iter(line).map(move |caps| ClarificationMarker {
+            CLARIFICATION_RE.captures_iter(line).map(move |caps| ClarificationMarker {
                 text: caps
                     .get(1)
                     .map(|m| m.as_str().trim().to_string())
@@ -130,15 +141,14 @@ fn extract_entities(content: &str) -> Vec<String> {
 
 /// Extract entities with their descriptions from the Key Entities section.
 pub fn extract_entities_with_descriptions(content: &str) -> Vec<(String, String)> {
-    let re = Regex::new(r"\*\*\[([^\]]+)\]\*\*:\s*(.*)").unwrap();
-
     let section_start = content.find("### Key Entities");
     if let Some(start) = section_start {
         let rest = &content[start..];
         let end = rest[1..].find("\n## ").map(|i| i + 1).unwrap_or(rest.len());
         let section = &rest[..end];
 
-        re.captures_iter(section)
+        ENTITY_RE
+            .captures_iter(section)
             .map(|caps| (caps[1].to_string(), caps[2].trim().to_string()))
             .collect()
     } else {

@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::core::errors::RustySpecError;
+use crate::core::errors::SolidSpecError;
 
-/// Root configuration from `rustyspec.toml`
+/// Root configuration from `solidspec.toml`
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RootConfig {
     pub project: ProjectConfig,
@@ -17,6 +17,8 @@ pub struct RootConfig {
     pub templates: TemplatesConfig,
     #[serde(default)]
     pub pipeline: PipelineConfig,
+    #[serde(default)]
+    pub context: ContextConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -61,6 +63,78 @@ impl Default for GitConfig {
 pub struct TemplatesConfig {
     #[serde(default = "default_override_dir")]
     pub override_dir: String,
+}
+
+/// Project context injected into every agent prompt.
+/// Provides tech stack, conventions, and per-phase rules.
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct ContextConfig {
+    /// Project overview — tech stack, conventions, architecture notes
+    #[serde(default)]
+    pub description: String,
+    /// Per-phase rules (spec, plan, tasks, implement, tests, analyze, review)
+    #[serde(default)]
+    pub rules: ContextRules,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct ContextRules {
+    #[serde(default)]
+    pub spec: String,
+    #[serde(default)]
+    pub clarify: String,
+    #[serde(default)]
+    pub plan: String,
+    #[serde(default)]
+    pub tasks: String,
+    #[serde(default)]
+    pub implement: String,
+    #[serde(default)]
+    pub tests: String,
+    #[serde(default)]
+    pub analyze: String,
+    #[serde(default)]
+    pub review: String,
+}
+
+#[allow(dead_code)]
+impl ContextConfig {
+    /// Format context as a prompt section.
+    #[allow(dead_code)]
+    pub fn as_prompt_section(&self) -> String {
+        if self.description.is_empty() {
+            return String::new();
+        }
+        format!("## Project Context\n\n{}\n", self.description)
+    }
+
+    /// Get per-phase rules for a given phase name.
+    pub fn rules_for_phase(&self, phase: &str) -> &str {
+        match phase {
+            "specify" => &self.rules.spec,
+            "clarify" => &self.rules.clarify,
+            "plan" => &self.rules.plan,
+            "tasks" => &self.rules.tasks,
+            "implement" => &self.rules.implement,
+            "tests" => &self.rules.tests,
+            "analyze" => &self.rules.analyze,
+            "review" => &self.rules.review,
+            _ => "",
+        }
+    }
+
+    /// Format the full context + rules for a phase, for prompt injection.
+    pub fn as_phase_prompt(&self, phase: &str) -> String {
+        let mut out = self.as_prompt_section();
+        let rules = self.rules_for_phase(phase);
+        if !rules.is_empty() {
+            if !out.is_empty() {
+                out.push('\n');
+            }
+            out.push_str(&format!("## Phase-Specific Rules ({phase})\n\n{rules}\n"));
+        }
+        out
+    }
 }
 
 /// Pipeline configuration: maps SDD phases to agent IDs.
@@ -139,7 +213,7 @@ fn default_true() -> bool {
     true
 }
 fn default_override_dir() -> String {
-    ".rustyspec/templates/overrides".into()
+    ".solidspec/templates/overrides".into()
 }
 
 impl RootConfig {
@@ -153,21 +227,22 @@ impl RootConfig {
             git: GitConfig::default(),
             templates: TemplatesConfig::default(),
             pipeline: PipelineConfig::default(),
+            context: ContextConfig::default(),
         }
     }
 
     pub fn load(path: &Path) -> Result<Self> {
-        let content = std::fs::read_to_string(path).map_err(|e| RustySpecError::Config {
+        let content = std::fs::read_to_string(path).map_err(|e| SolidSpecError::Config {
             path: path.to_path_buf(),
             message: format!("Cannot read file: {e}"),
-            fix: "Ensure rustyspec.toml exists. Run 'rustyspec init' to create it.".into(),
+            fix: "Ensure solidspec.toml exists. Run 'solidspec init' to create it.".into(),
         })?;
 
         toml::from_str(&content)
-            .map_err(|e| RustySpecError::Config {
+            .map_err(|e| SolidSpecError::Config {
                 path: path.to_path_buf(),
                 message: format!("Invalid TOML: {e}"),
-                fix: "Check rustyspec.toml syntax. See docs for format.".into(),
+                fix: "Check solidspec.toml syntax. See docs for format.".into(),
             })
             .map_err(Into::into)
     }
@@ -183,7 +258,7 @@ impl RootConfig {
     }
 }
 
-/// Project-internal config from `.rustyspec/config.toml`
+/// Project-internal config from `.solidspec/config.toml`
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ProjectInternalConfig {
     #[serde(default)]
@@ -210,7 +285,7 @@ impl ProjectInternalConfig {
     }
 }
 
-/// Init options persisted to `.rustyspec/init-options.json`
+/// Init options persisted to `.solidspec/init-options.json`
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct InitOptions {
     pub ai_assistant: String,
@@ -230,11 +305,11 @@ impl InitOptions {
     }
 }
 
-/// Find the project root by looking for `rustyspec.toml` or `.rustyspec/`
+/// Find the project root by looking for `solidspec.toml` or `.solidspec/`
 pub fn find_project_root(start: &Path) -> Option<PathBuf> {
     let mut current = start.to_path_buf();
     loop {
-        if current.join("rustyspec.toml").exists() || current.join(".rustyspec").exists() {
+        if current.join("solidspec.toml").exists() || current.join(".solidspec").exists() {
             return Some(current);
         }
         if !current.pop() {
@@ -270,7 +345,7 @@ mod tests {
     #[test]
     fn load_valid_config() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("rustyspec.toml");
+        let path = dir.path().join("solidspec.toml");
         let content = r#"
 [project]
 name = "hello"
@@ -285,21 +360,21 @@ version = "1.0.0"
     #[test]
     fn load_malformed_toml_returns_error() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("rustyspec.toml");
+        let path = dir.path().join("solidspec.toml");
         std::fs::write(&path, "not valid toml {{{}").unwrap();
         assert!(RootConfig::load(&path).is_err());
     }
 
     #[test]
     fn load_missing_file_returns_error() {
-        let path = Path::new("/nonexistent/rustyspec.toml");
+        let path = Path::new("/nonexistent/solidspec.toml");
         assert!(RootConfig::load(path).is_err());
     }
 
     #[test]
     fn save_and_reload() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("rustyspec.toml");
+        let path = dir.path().join("solidspec.toml");
         let cfg = RootConfig::new("roundtrip");
         cfg.save(&path).unwrap();
         let loaded = RootConfig::load(&path).unwrap();
@@ -309,7 +384,7 @@ version = "1.0.0"
     #[test]
     fn defaults_when_optional_fields_missing() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("rustyspec.toml");
+        let path = dir.path().join("solidspec.toml");
         std::fs::write(&path, "[project]\nname = \"minimal\"\n").unwrap();
         let cfg = RootConfig::load(&path).unwrap();
         assert_eq!(cfg.ai.default_agent, "claude");
@@ -317,9 +392,9 @@ version = "1.0.0"
     }
 
     #[test]
-    fn find_project_root_finds_rustyspec_toml() {
+    fn find_project_root_finds_solidspec_toml() {
         let dir = TempDir::new().unwrap();
-        std::fs::write(dir.path().join("rustyspec.toml"), "").unwrap();
+        std::fs::write(dir.path().join("solidspec.toml"), "").unwrap();
         let sub = dir.path().join("specs/001");
         std::fs::create_dir_all(&sub).unwrap();
         assert_eq!(find_project_root(&sub).unwrap(), dir.path());
@@ -327,6 +402,6 @@ version = "1.0.0"
 
     #[test]
     fn find_project_root_returns_none_at_root() {
-        assert!(find_project_root(Path::new("/tmp/nonexistent-rustyspec-test")).is_none());
+        assert!(find_project_root(Path::new("/tmp/nonexistent-solidspec-test")).is_none());
     }
 }

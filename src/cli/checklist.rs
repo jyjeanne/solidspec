@@ -1,7 +1,11 @@
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use anyhow::{Context, Result};
 use regex::Regex;
+
+static CHK_ID_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"CHK(\d{3})").expect("invalid checklist id regex"));
 
 use crate::config;
 use crate::core::feature;
@@ -12,7 +16,7 @@ use crate::templates::resolver;
 pub fn run(feature_id: Option<&str>, append: bool) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
     let feature_dir_name = feature::resolve_feature(feature_id, &project_root)?;
     let feature_dir = project_root.join("specs").join(&feature_dir_name);
@@ -40,15 +44,15 @@ pub fn run(feature_id: Option<&str>, append: bool) -> Result<()> {
         // Create mode
         println!("Generating checklist: {feature_dir_name}");
 
-        let root_config = config::RootConfig::load(&project_root.join("rustyspec.toml"))?;
+        let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))?;
         let vars = HashMap::from([
             ("feature_name".to_string(), feature_dir_name.clone()),
-            ("branch_name".to_string(), feature_dir_name.clone()),
+            ("branch_name".to_string(), feature_dir_name),
             (
                 "date".to_string(),
                 chrono::Local::now().format("%Y-%m-%d").to_string(),
             ),
-            ("project_name".to_string(), root_config.project.name.clone()),
+            ("project_name".to_string(), root_config.project.name),
         ]);
 
         let preset_priorities =
@@ -71,9 +75,8 @@ pub fn run(feature_id: Option<&str>, append: bool) -> Result<()> {
 }
 
 fn find_last_chk_id(content: &str) -> u32 {
-    let re = Regex::new(r"CHK(\d{3})").unwrap();
     let mut max_id: u32 = 0;
-    for caps in re.captures_iter(content) {
+    for caps in CHK_ID_RE.captures_iter(content) {
         if let Ok(num) = caps[1].parse::<u32>() {
             max_id = max_id.max(num);
         }

@@ -39,7 +39,7 @@ pub enum PresetCommands {
 pub fn run(cmd: PresetCommands) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root =
-        config::find_project_root(&cwd).context("Not inside a RustySpec project.")?;
+        config::find_project_root(&cwd).context("Not inside a SolidSpec project.")?;
 
     match cmd {
         PresetCommands::Add { path, priority } => {

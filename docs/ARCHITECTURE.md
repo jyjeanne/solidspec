@@ -1,8 +1,8 @@
-# RustySpec Architecture
+# SolidSpec Architecture
 
 ## Overview
 
-RustySpec is a Rust CLI built with a layered architecture that separates concerns into distinct module trees. The CLI layer handles user interaction, the core layer contains domain logic, and specialized modules handle agent integration, templates, presets, and extensions.
+SolidSpec is a Rust CLI built with a layered architecture that separates concerns into distinct module trees. The CLI layer handles user interaction, the core layer contains domain logic, and specialized modules handle agent integration, templates, presets, and extensions.
 
 ```
                         ┌──────────────┐
@@ -52,7 +52,10 @@ Thin handlers for each CLI subcommand. Each file maps to one command. No busines
 | `tests_cmd.rs` | `tests` | Generate test scaffolds from acceptance scenarios |
 | `analyze.rs` | `analyze` | Run consistency analysis, print report |
 | `checklist.rs` | `checklist` | Generate/append quality checklists |
+| `review.rs` | `review` | Preflight spec quality review with dimension scoring |
 | `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (7 phases) with agent CLI invocation |
+| `change.rs` | `change` | Change-based workflow: propose, list, archive (delta specs) |
+| `status.rs` | `status` | DAG-based artifact completion status (schema-driven) |
 | `check.rs` | `check` | Verify prerequisites |
 | `preset.rs` | `preset` | Preset CRUD subcommands |
 | `extension.rs` | `extension` | Extension CRUD subcommands |
@@ -67,6 +70,11 @@ Pure business logic with no CLI dependency. Can be used as a library.
 | File | Responsibility |
 |------|---------------|
 | `spec_parser.rs` | Parse `spec.md` into `ParsedSpec` (stories, requirements, markers, entities) |
+| `artifact_graph.rs` | DAG engine: artifact nodes, Kahn's algorithm topological sort, completion detection, state computation |
+| `schema.rs` | Workflow schema loading (YAML), 3-level resolution (project-local → built-in → default), 3 built-in schemas |
+| `review.rs` | Preflight spec quality review, dimension scoring, placeholder detection |
+| `review.rs` | Preflight spec quality review, dimension scoring, placeholder detection |
+| `change.rs` | Change-based workflow: delta spec parser (ADDED/MODIFIED/REMOVED), archive merge engine, change metadata |
 | `constitution.rs` | Load constitution, parse gates, check plan compliance |
 | `task_generator.rs` | Generate `TaskList` from spec + plan, organize by phases |
 | `test_generator.rs` | Extract Given/When/Then scenarios, detect framework, generate test scaffolds |
@@ -74,7 +82,7 @@ Pure business logic with no CLI dependency. Can be used as a library.
 | `analyzer.rs` | Cross-artifact consistency validation, severity heuristic |
 | `feature.rs` | Feature numbering, branch name generation, 4-level resolution |
 | `git.rs` | Git operations: init, branch creation, current branch detection |
-| `errors.rs` | Typed error enum `RustySpecError` with what/where/fix |
+| `errors.rs` | Typed error enum `SolidSpecError` with what/where/fix |
 | `token.rs` | GitHub token resolution (CLI flag > env vars) |
 | `vscode.rs` | Deep-merge `.vscode/settings.json` |
 
@@ -88,12 +96,15 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 | `registry.rs` | Detection, registration, unregistration of commands (phase-specific prompts) |
 | `registrar.rs` | Re-exports from registry |
 | `formats.rs` | Markdown/TOML/Vibe-skill rendering, placeholder translation, path adjustment |
-| `invoker.rs` | Non-interactive CLI invocation of AI agents, phase-specific prompt generation |
+| `invoker.rs` | Non-interactive CLI invocation of AI agents, phase-specific prompt generation with 300s timeout |
+| `personas.rs` | 8 role-based agent personas (Spec Writer, Architect, Implementer, Code Reviewer, etc.) with verification checklists |
+| `guardrails.rs` | Anti-rationalization table + mandatory compliance checklist injected into every prompt |
 
 **Agent-specific handling** (in `registry.rs`):
 - **Copilot**: `.agent.md` + companion `.prompt.md`
-- **Kimi**: Directory-based skills with dot-separator (`.kimi/skills/rustyspec.specify/SKILL.md`)
-- **Vibe**: Directory-based skills with hyphen-separator (`.vibe/skills/rustyspec-specify/SKILL.md`), `user-invocable: true` frontmatter
+- **Kimi**: Directory-based skills with dot-separator (`.kimi/skills/solidspec.specify/SKILL.md`)
+- **Vibe**: Directory-based skills with hyphen-separator (`.vibe/skills/solidspec-specify/SKILL.md`), `user-invocable: true` frontmatter
+- **OpenCode**: Directory-based skills with hyphen-separator (`.opencode/skills/solidspec-specify/SKILL.md`), `name:` + `description:` YAML frontmatter
 - **Gemini/Tabnine**: TOML format with `{{args}}`
 
 **CLI invocation** (in `invoker.rs`):
@@ -111,9 +122,9 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 
 **Resolution hierarchy:**
 ```
-1. .rustyspec/templates/overrides/    (project tweaks)
-2. .rustyspec/presets/<id>/templates/ (sorted by priority)
-3. .rustyspec/extensions/<id>/templates/
+1. .solidspec/templates/overrides/    (project tweaks)
+2. .solidspec/presets/<id>/templates/ (sorted by priority)
+3. .solidspec/extensions/<id>/templates/
 4. Embedded in binary (include_str!)
 ```
 
@@ -138,7 +149,7 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 
 | File | Responsibility |
 |------|---------------|
-| `mod.rs` | `RootConfig` (rustyspec.toml), `PipelineConfig` (per-phase agent mapping), `ProjectInternalConfig`, `InitOptions`, project root finder |
+| `mod.rs` | `RootConfig` (solidspec.toml), `PipelineConfig` (per-phase agent mapping), `ProjectInternalConfig`, `InitOptions`, project root finder |
 
 ## Data Flow
 
@@ -188,7 +199,7 @@ Command needs template
 resolve_feature(explicit_id, project_root)
         │
         ├── Level 1: explicit argument ──found──> return
-        ├── Level 2: RUSTYSPEC_FEATURE env ──found──> return
+        ├── Level 2: SOLIDSPEC_FEATURE env ──found──> return
         ├── Level 3: git branch (if \d{3}-.*) ──found──> return
         └── Level 4: latest specs/ directory ──found──> return
 ```
@@ -216,7 +227,7 @@ fire_hooks(trigger, project_root, registry)
 ### Pipeline Execution Flow
 
 ```
-rustyspec pipeline [--new "desc"] [--from X] [--to Y] [--auto] [--no-agent]
+solidspec pipeline [--new "desc"] [--from X] [--to Y] [--auto] [--no-agent]
         │
         ▼
 ┌─ Resolve feature ──────────────────────────────┐
@@ -288,7 +299,7 @@ Pipeline Auto phase (specify, plan, tasks, tests, analyze)
 ### Spec-to-Test Generation Flow
 
 ```
-rustyspec tests [feature-id] [--framework X] [--output-dir Y]
+solidspec tests [feature-id] [--framework X] [--output-dir Y]
         │
         ▼
 ┌─ test_generator::extract_scenarios(spec_text) ─┐
@@ -310,6 +321,62 @@ rustyspec tests [feature-id] [--framework X] [--output-dir Y]
 └──────────────────────────────────────────────────┘
 ```
 
+### Change-Based Workflow (Delta Specs)
+
+```
+solidspec change propose "Add social login"
+        │
+        ▼
+┌─ create_change(feature_dir, title) ─────────────────┐
+│  1. Generate slug from title (lowercase-hyphens)     │
+│  2. Create specs/<id>/changes/<slug>/ directory      │
+│  3. Write proposal.md (Why/What/Impact/Non-Goals)    │
+│  4. Write delta-spec.md (ADDED/MODIFIED/REMOVED)     │
+│  5. Write .change.yaml (metadata: status, created_at)│
+└──────────────────────┬──────────────────────────────┘
+                       │
+        User edits proposal + delta-spec
+                       │
+                       ▼
+┌─ archive_change(feature_dir, slug) ──────────────────┐
+│  1. Parse delta-spec.md → DeltaSpec                   │
+│  2. Read main spec.md                                 │
+│  3. merge_deltas(): remove → modify → append          │
+│  4. Write merged spec.md                              │
+│  5. Move change to changes/archive/<slug>/            │
+│  6. Update metadata → status: archived                │
+└───────────────────────────────────────────────────────┘
+```
+
+### DAG Status Flow
+
+```
+solidspec status [feature-id] [--schema X]
+        │
+        ▼
+┌─ schema::load_graph(name, root) ──────────────────┐
+│  1. Check .solidspec/workflows/<name>/schema.yaml  │
+│  2. Fall back to built-in schema                   │
+│  3. Fall back to default (spec-driven)             │
+└────────────────────┬───────────────────────────────┘
+                     │
+                     ▼
+┌─ graph.detect_completion(feature_dir) ────────────┐
+│  Scan filesystem for generated artifacts           │
+│  spec.md → spec done, plan.md → plan done, etc.   │
+└────────────────────┬───────────────────────────────┘
+                     │
+                     ▼
+┌─ graph.compute_states(completed) ─────────────────┐
+│  For each artifact:                                │
+│    Done  — file exists                             │
+│    Ready — all deps done, file missing             │
+│    Blocked — waiting on deps                       │
+└────────────────────┬───────────────────────────────┘
+                     │
+                     ▼
+          Print status table (topological order)
+
 ## Key Design Decisions
 
 ### 1. Data-driven agent config
@@ -318,7 +385,7 @@ All 20 agents are defined in a single `AGENTS` const array. Adding a new agent r
 
 ### 2. Template auto-escaping disabled
 
-Tera's HTML auto-escaping is explicitly turned off (`tera.autoescape_on(vec![])`) because RustySpec generates Markdown, not HTML. Without this, `&` becomes `&amp;` in all generated artifacts.
+Tera's HTML auto-escaping is explicitly turned off (`tera.autoescape_on(vec![])`) because SolidSpec generates Markdown, not HTML. Without this, `&` becomes `&amp;` in all generated artifacts.
 
 ### 3. Constitution gate stripping
 
@@ -350,25 +417,49 @@ Each pipeline phase has a detailed, unique prompt (in `invoker.rs`) telling the 
 
 ### 10. Graceful CLI fallback
 
-Agent CLI invocation returns a three-variant enum (`Success`/`NotAvailable`/`Failed`). When an agent's CLI is not installed or fails, the pipeline falls back to handoff mode (shows the manual `/rustyspec-*` command to run). This means the pipeline never crashes due to a missing agent — it degrades gracefully.
+Agent CLI invocation returns a three-variant enum (`Success`/`NotAvailable`/`Failed`). When an agent's CLI is not installed or fails, the pipeline falls back to handoff mode (shows the manual `/solidspec-*` command to run). This means the pipeline never crashes due to a missing agent — it degrades gracefully.
 
 ### 11. Vibe directory-based skills
 
-Mistral Vibe uses a skills system with directory-based discovery (`.vibe/skills/<name>/SKILL.md`), unlike most agents that use flat command files. The `SKILL.md` requires `user-invocable: true` and `allowed-tools:` in YAML frontmatter. RustySpec generates these with the correct format so skills appear in Vibe's slash command list.
+Mistral Vibe uses a skills system with directory-based discovery (`.vibe/skills/<name>/SKILL.md`), unlike most agents that use flat command files. The `SKILL.md` requires `user-invocable: true` and `allowed-tools:` in YAML frontmatter. SolidSpec generates these with the correct format so skills appear in Vibe's slash command list.
+
+### 12. Prompt layering (personas + guardrails + context)
+
+Every agent prompt is assembled in 4 layers: (1) Project context from `solidspec.toml` [context], (2) Role-based persona with output format + mission checklist, (3) Phase-specific instructions, (4) Anti-rationalization table + mandatory compliance checklist. This ensures agents get consistent guardrails regardless of which phase they're executing.
+
+### 13. Agent subprocess timeout
+
+Agent CLI invocation uses a `try_wait()` polling loop with a 300-second default timeout. If the agent process doesn't complete within the deadline, it's killed and the pipeline falls back to handoff mode. This prevents hung agent processes from blocking the entire pipeline indefinitely.
+
+### 14. Delta spec brownfield workflow
+
+Instead of creating a new feature from scratch for every change, SolidSpec supports lightweight change folders with delta specs (ADDED/MODIFIED/REMOVED requirements). The `archive` command merges deltas into the main spec and moves the change to `archive/`. This enables spec-driven development for existing (brownfield) systems.
+
+### 15. DAG-based artifact status
+
+The `solidspec status` command uses Kahn's algorithm topological sort to compute which artifacts are ready to create. It detects completion via filesystem scanning (glob-based) and shows a table of Blocked/Ready/Done states. Users can work on any ready artifact in any order — dependencies are enablers, not gates.
+
+### 16. OpenCode skill system support
+
+SolidSpec generates directory-based skills for OpenCode (`.opencode/skills/solidspec-specify/SKILL.md`) with the required `name:` + `description:` YAML frontmatter per OpenCode's skill discovery protocol. Skills are auto-discovered via the `skill` tool.
+
+### 17. Schema-driven workflows
+
+Workflows are defined in YAML schema files rather than hardcoded in Rust. Three built-in schemas (spec-driven, minimal, security-first) are shipped with the binary. Users can create project-local overrides in `.solidspec/workflows/<name>/schema.yaml`. Resolution follows a 3-level cascade (project-local → built-in → default).
 
 ## File Counts
 
 | Category | Files | Tests |
 |----------|-------|-------|
-| CLI commands | 17 | 19 |
-| Core domain | 12 | 103 |
-| Agents | 6 | 47 |
+| CLI commands | 19 | 19 |
+| Core domain | 16 | 130 |
+| Agents | 8 | 58 |
 | Templates | 2 | 22 |
 | Presets | 4 | 28 |
 | Extensions | 5 | 40 |
 | Config | 1 | 9 |
 | main.rs | 1 | — |
-| **Total** | **48** | **268** |
+| **Total** | **56** | **306** |
 
 ## Dependencies
 

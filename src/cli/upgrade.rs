@@ -7,17 +7,17 @@ use crate::templates;
 pub fn run(force: bool) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
-    println!("Upgrading RustySpec project...");
+    println!("Upgrading SolidSpec project...");
 
     if !force {
         println!("  This will refresh templates and scripts. overrides/ and specs/ are preserved.");
         println!("  Use --force to skip this message.");
     }
 
-    // Refresh templates (overwrite .rustyspec/templates/ but NOT overrides/)
-    let templates_dir = project_root.join(".rustyspec/templates");
+    // Refresh templates (overwrite .solidspec/templates/ but NOT overrides/)
+    let templates_dir = project_root.join(".solidspec/templates");
     std::fs::create_dir_all(&templates_dir)?;
     let mut refreshed = 0;
     for (name, content) in templates::embedded::all() {
@@ -29,15 +29,15 @@ pub fn run(force: bool) -> Result<()> {
     println!("  Refreshed {refreshed} templates");
 
     // Refresh scripts (always overwrite)
-    templates::copy_embedded_scripts(&project_root.join(".rustyspec"))?;
+    templates::copy_embedded_scripts(&project_root.join(".solidspec"))?;
     println!("  Refreshed shell scripts (bash + powershell)");
 
     // Preserve constitution (never overwrite)
-    let constitution_path = project_root.join(".rustyspec/constitution.md");
+    let constitution_path = project_root.join(".solidspec/constitution.md");
     if constitution_path.exists() {
         println!("  Constitution preserved (not modified)");
     } else {
-        println!("  Warning: constitution.md missing (run 'rustyspec init' to recreate)");
+        println!("  Warning: constitution.md missing (run 'solidspec init' to recreate)");
     }
 
     // Preserve specs/ (never touch)
@@ -51,7 +51,7 @@ pub fn run(force: bool) -> Result<()> {
     }
 
     // Preserve overrides/
-    let overrides_dir = project_root.join(".rustyspec/templates/overrides");
+    let overrides_dir = project_root.join(".solidspec/templates/overrides");
     if overrides_dir.exists() {
         let count = std::fs::read_dir(&overrides_dir)?
             .filter_map(|e| e.ok())
@@ -77,25 +77,25 @@ mod tests {
     use tempfile::TempDir;
 
     fn setup_project(dir: &std::path::Path) {
-        std::fs::create_dir_all(dir.join(".rustyspec/templates/overrides")).unwrap();
-        std::fs::create_dir_all(dir.join(".rustyspec/presets")).unwrap();
-        std::fs::create_dir_all(dir.join(".rustyspec/extensions")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/templates/overrides")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/presets")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/extensions")).unwrap();
         std::fs::create_dir_all(dir.join("specs/001-feature")).unwrap();
-        std::fs::write(dir.join("rustyspec.toml"), "[project]\nname = \"test\"\n").unwrap();
+        std::fs::write(dir.join("solidspec.toml"), "[project]\nname = \"test\"\n").unwrap();
         std::fs::write(
-            dir.join(".rustyspec/constitution.md"),
+            dir.join(".solidspec/constitution.md"),
             "CUSTOM CONSTITUTION",
         )
         .unwrap();
 
         // Write templates with old content
         for (name, _) in templates::embedded::all() {
-            std::fs::write(dir.join(".rustyspec/templates").join(name), "OLD CONTENT").unwrap();
+            std::fs::write(dir.join(".solidspec/templates").join(name), "OLD CONTENT").unwrap();
         }
 
         // Write a custom override
         std::fs::write(
-            dir.join(".rustyspec/templates/overrides/spec-template.md"),
+            dir.join(".solidspec/templates/overrides/spec-template.md"),
             "MY OVERRIDE",
         )
         .unwrap();
@@ -122,7 +122,7 @@ mod tests {
 
         // Constitution should not be touched
         let constitution =
-            std::fs::read_to_string(dir.path().join(".rustyspec/constitution.md")).unwrap();
+            std::fs::read_to_string(dir.path().join(".solidspec/constitution.md")).unwrap();
         assert_eq!(constitution, "CUSTOM CONSTITUTION");
     }
 
@@ -133,7 +133,7 @@ mod tests {
 
         let override_content = std::fs::read_to_string(
             dir.path()
-                .join(".rustyspec/templates/overrides/spec-template.md"),
+                .join(".solidspec/templates/overrides/spec-template.md"),
         )
         .unwrap();
         assert_eq!(override_content, "MY OVERRIDE");

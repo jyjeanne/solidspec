@@ -2,7 +2,7 @@
 
 **Feature ID:** 003
 **Feature Name:** Multi-Agent Pipeline
-**Project Name:** RustySpec
+**Project Name:** SolidSpec
 **Version:** v0.3.0
 **Status:** Draft
 **Author:** jjeanne
@@ -12,7 +12,7 @@
 
 ## 1. Overview
 
-`rustyspec pipeline <feature-id>` runs the full SDD workflow (specify → clarify → plan → tasks → tests → implement → analyze) with a **different AI agent per phase**. The pipeline configuration lives in `rustyspec.toml` and maps each phase to an agent ID.
+`solidspec pipeline <feature-id>` runs the full SDD workflow (specify → clarify → plan → tasks → tests → implement → analyze) with a **different AI agent per phase**. The pipeline configuration lives in `solidspec.toml` and maps each phase to an agent ID.
 
 This is the **first multi-agent SDD tool** — no other product orchestrates multiple AI coding agents in a structured, phased development pipeline.
 
@@ -41,9 +41,9 @@ As a developer, I want to assign different AI agents to different SDD phases so 
 
 **Acceptance Scenarios:**
 
-1. **Given** `rustyspec.toml` has a `[pipeline]` section mapping phases to agents, **When** running `rustyspec pipeline 001`, **Then** each phase uses the configured agent
-2. **Given** no `[pipeline]` section exists, **When** running `rustyspec pipeline 001`, **Then** all phases use the default agent from `[ai].default_agent`
-3. **Given** a pipeline maps a phase to an unknown agent ID, **When** running `rustyspec pipeline 001`, **Then** an error lists available agents
+1. **Given** `solidspec.toml` has a `[pipeline]` section mapping phases to agents, **When** running `solidspec pipeline 001`, **Then** each phase uses the configured agent
+2. **Given** no `[pipeline]` section exists, **When** running `solidspec pipeline 001`, **Then** all phases use the default agent from `[ai].default_agent`
+3. **Given** a pipeline maps a phase to an unknown agent ID, **When** running `solidspec pipeline 001`, **Then** an error lists available agents
 
 ### User Story 2 — Run full pipeline end-to-end (Priority: P1)
 
@@ -51,8 +51,8 @@ As a developer, I want to run the entire SDD pipeline with one command so I don'
 
 **Acceptance Scenarios:**
 
-1. **Given** a feature description, **When** running `rustyspec pipeline --new "TODO app with CRUD"`, **Then** the pipeline runs specify → clarify → plan → tasks → tests → implement → analyze in sequence
-2. **Given** an existing feature 001 with spec.md already created, **When** running `rustyspec pipeline 001`, **Then** the pipeline skips specify, starts from clarify, and continues to analyze
+1. **Given** a feature description, **When** running `solidspec pipeline --new "TODO app with CRUD"`, **Then** the pipeline runs specify → clarify → plan → tasks → tests → implement → analyze in sequence
+2. **Given** an existing feature 001 with spec.md already created, **When** running `solidspec pipeline 001`, **Then** the pipeline skips specify, starts from clarify, and continues to analyze
 3. **Given** a pipeline step fails (e.g., plan fails because spec has unresolved markers), **When** the failure occurs, **Then** the pipeline stops, reports which step failed and why, and suggests the next action
 
 ### User Story 3 — Preview pipeline without executing (Priority: P2)
@@ -61,7 +61,7 @@ As a developer, I want to preview the pipeline before running it so I can verify
 
 **Acceptance Scenarios:**
 
-1. **Given** a pipeline config, **When** running `rustyspec pipeline 001 --dry-run`, **Then** the output shows each phase, the assigned agent, and whether the phase would be skipped (artifact already exists)
+1. **Given** a pipeline config, **When** running `solidspec pipeline 001 --dry-run`, **Then** the output shows each phase, the assigned agent, and whether the phase would be skipped (artifact already exists)
 2. **Given** a `--dry-run`, **When** displayed, **Then** no files are created or modified
 
 ### User Story 4 — Run partial pipeline (Priority: P2)
@@ -70,8 +70,8 @@ As a developer, I want to run only specific phases so I can re-run a single step
 
 **Acceptance Scenarios:**
 
-1. **Given** `--from plan` flag, **When** running `rustyspec pipeline 001 --from plan`, **Then** the pipeline starts from the plan phase and continues to the end
-2. **Given** `--to tasks` flag, **When** running `rustyspec pipeline 001 --to tasks`, **Then** the pipeline runs from the beginning up to and including tasks, then stops
+1. **Given** `--from plan` flag, **When** running `solidspec pipeline 001 --from plan`, **Then** the pipeline starts from the plan phase and continues to the end
+2. **Given** `--to tasks` flag, **When** running `solidspec pipeline 001 --to tasks`, **Then** the pipeline runs from the beginning up to and including tasks, then stops
 3. **Given** both `--from plan --to tasks`, **When** running, **Then** only plan and tasks phases run
 
 ### User Story 5 — Pipeline execution log (Priority: P3)
@@ -89,7 +89,7 @@ As a developer, I want a log of which agent handled which phase so I can track a
 
 ### Functional Requirements
 
-- **FR-001**: System MUST read pipeline configuration from `[pipeline]` section in `rustyspec.toml`
+- **FR-001**: System MUST read pipeline configuration from `[pipeline]` section in `solidspec.toml`
 - **FR-002**: System MUST support mapping any of these phases to an agent: `specify`, `clarify`, `plan`, `tasks`, `tests`, `implement`, `analyze`
 - **FR-003**: System MUST fall back to `[ai].default_agent` for phases not explicitly mapped
 - **FR-004**: System MUST validate all mapped agent IDs exist in the agent config table
@@ -104,7 +104,7 @@ As a developer, I want a log of which agent handled which phase so I can track a
 
 ### Key Entities
 
-- **[PipelineConfig]**: Mapping of phase name → agent ID, read from `rustyspec.toml`
+- **[PipelineConfig]**: Mapping of phase name → agent ID, read from `solidspec.toml`
 - **[PipelinePhase]**: A single step in the pipeline with: name, agent, status (pending/running/done/failed/skipped), output artifact path
 - **[PipelineRun]**: A complete pipeline execution with ordered phases, feature ID, start/end timestamps, overall status
 
@@ -112,7 +112,7 @@ As a developer, I want a log of which agent handled which phase so I can track a
 
 ## 5. Configuration
 
-### `rustyspec.toml` pipeline section
+### `solidspec.toml` pipeline section
 
 ```toml
 [project]
@@ -140,7 +140,7 @@ analyze = "vibe"          # Mistral Vibe for cross-checking
 
 ## 6. CLI Command
 
-### `rustyspec pipeline [feature-id]`
+### `solidspec pipeline [feature-id]`
 
 The `feature-id` is optional — if omitted, auto-detected from git branch or latest spec (same as other commands). Mutually exclusive with `--new`.
 
@@ -160,25 +160,25 @@ The `feature-id` is optional — if omitted, auto-detected from git branch or la
 
 ```bash
 # Full pipeline on new feature
-rustyspec pipeline --new "User authentication with OAuth"
+solidspec pipeline --new "User authentication with OAuth"
 
 # Full pipeline on existing feature
-rustyspec pipeline 001
+solidspec pipeline 001
 
 # Partial: only plan and tasks
-rustyspec pipeline 001 --from plan --to tasks
+solidspec pipeline 001 --from plan --to tasks
 
 # Preview
-rustyspec pipeline 001 --dry-run
+solidspec pipeline 001 --dry-run
 
 # Single phase only
-rustyspec pipeline 001 --only plan
+solidspec pipeline 001 --only plan
 
 # Re-run everything from scratch
-rustyspec pipeline 001 --force
+solidspec pipeline 001 --force
 
 # Unattended (skip handoff confirmation)
-rustyspec pipeline --new "auth system" --auto
+solidspec pipeline --new "auth system" --auto
 ```
 
 **Output:**
@@ -197,7 +197,7 @@ Pipeline: 001-user-auth
   Phase 5/7: tests (claude)
     ✓ 4 test files — 8 scenarios (0.5s)
   Phase 6/7: implement (codex) [HANDOFF]
-    → Open codex and run: /rustyspec-implement
+    → Open codex and run: /solidspec-implement
     ⏳ Waiting for confirmation... (press Enter when done, or Ctrl+C to abort)
     ✓ User confirmed implementation complete
   Phase 7/7: analyze (vibe)
@@ -211,17 +211,17 @@ Log: specs/001-user-auth/pipeline-log.md
 
 ## 7. Phase Definitions
 
-Each phase maps to an existing RustySpec command:
+Each phase maps to an existing SolidSpec command:
 
 | Phase | Command | Type | Primary output | Skip condition |
 |-------|---------|------|----------------|----------------|
-| `specify` | `rustyspec specify` | Auto | `spec.md` + `checklists/requirements.md` | spec.md exists (unless `--force`); only runs with `--new` |
-| `clarify` | `rustyspec clarify` | Auto | `clarifications.md` | No `[NEEDS CLARIFICATION]` markers in spec |
-| `plan` | `rustyspec plan` | Auto | `plan.md` + research + data-model + contracts | plan.md exists (unless `--force`) |
-| `tasks` | `rustyspec tasks` | Auto | `tasks.md` | tasks.md exists (unless `--force`) |
-| `tests` | `rustyspec tests` | Auto | `tests/` directory | tests/ dir exists with files (unless `--force`) |
-| `implement` | `rustyspec implement` | Handoff | source code files | Zero pending tasks in tasks.md (all `- [x]`) |
-| `analyze` | `rustyspec analyze` | Auto | analysis report | Never skipped — always runs |
+| `specify` | `solidspec specify` | Auto | `spec.md` + `checklists/requirements.md` | spec.md exists (unless `--force`); only runs with `--new` |
+| `clarify` | `solidspec clarify` | Auto | `clarifications.md` | No `[NEEDS CLARIFICATION]` markers in spec |
+| `plan` | `solidspec plan` | Auto | `plan.md` + research + data-model + contracts | plan.md exists (unless `--force`) |
+| `tasks` | `solidspec tasks` | Auto | `tasks.md` | tasks.md exists (unless `--force`) |
+| `tests` | `solidspec tests` | Auto | `tests/` directory | tests/ dir exists with files (unless `--force`) |
+| `implement` | `solidspec implement` | Handoff | source code files | Zero pending tasks in tasks.md (all `- [x]`) |
+| `analyze` | `solidspec analyze` | Auto | analysis report | Never skipped — always runs |
 
 **Notes:**
 - `specify` also generates the mandatory quality checklist (`checklists/requirements.md`) as part of its execution
@@ -234,11 +234,11 @@ Each phase maps to an existing RustySpec command:
 
 The pipeline has two types of phases:
 
-### Automated phases (RustySpec generates artifacts directly)
+### Automated phases (SolidSpec generates artifacts directly)
 
-These phases run without any AI agent — RustySpec produces the artifacts itself:
+These phases run without any AI agent — SolidSpec produces the artifacts itself:
 
-| Phase | What RustySpec does | AI agent needed? |
+| Phase | What SolidSpec does | AI agent needed? |
 |-------|--------------------|-----------------|
 | `specify` | Generates spec.md from template + checklist | No |
 | `clarify` | Generates clarification questions | No |
@@ -251,12 +251,12 @@ These phases run without any AI agent — RustySpec produces the artifacts itsel
 
 These phases pause the pipeline and tell the user what to do:
 
-| Phase | What RustySpec does | What the user does |
+| Phase | What SolidSpec does | What the user does |
 |-------|--------------------|--------------------|
-| `implement` | Prints pending tasks and target agent | Opens the configured agent and runs `/rustyspec-implement` |
+| `implement` | Prints pending tasks and target agent | Opens the configured agent and runs `/solidspec-implement` |
 
 When the pipeline reaches a handoff phase:
-1. It prints `→ Handoff to <agent>: run /rustyspec-implement in your <agent> session`
+1. It prints `→ Handoff to <agent>: run /solidspec-implement in your <agent> session`
 2. The pipeline pauses and waits for user confirmation (or `--auto` to skip confirmation)
 3. After the user confirms completion, the pipeline continues to the next phase
 
@@ -268,7 +268,7 @@ The agent configured per phase determines:
 
 ### Context sharing
 
-All agents share context through the `specs/<feature>/` artifact directory. Each phase reads from and writes to this directory. The `.rustyspec/AGENT.md` file provides project-wide context to every agent.
+All agents share context through the `specs/<feature>/` artifact directory. Each phase reads from and writes to this directory. The `.solidspec/AGENT.md` file provides project-wide context to every agent.
 
 ### Future: Direct agent spawning (v0.4.0)
 
@@ -292,7 +292,7 @@ For CLI-based agents (Claude Code, Gemini CLI), a future version could spawn the
 | plan | claude | done | 2.1s | plan.md, research.md, data-model.md |
 | tasks | claude | done | 0.8s | tasks.md (17 tasks) |
 | tests | claude | done | 0.5s | 4 test files |
-| implement | codex | handoff | user-confirmed | user ran /rustyspec-implement in codex |
+| implement | codex | handoff | user-confirmed | user ran /solidspec-implement in codex |
 | analyze | vibe | done | 0.5s | 100% traceability |
 
 **Total:** 5.1s (automated) | **Agents:** claude, codex, vibe | **Status:** complete
@@ -383,9 +383,9 @@ For CLI-based agents (Claude Code, Gemini CLI), a future version could spawn the
 
 Feature is complete when:
 
-- `rustyspec pipeline --new "description"` runs the full 7-phase pipeline
-- `rustyspec pipeline 001` resumes from where artifacts left off
-- `[pipeline]` config in `rustyspec.toml` correctly maps phases to agents
+- `solidspec pipeline --new "description"` runs the full 7-phase pipeline
+- `solidspec pipeline 001` resumes from where artifacts left off
+- `[pipeline]` config in `solidspec.toml` correctly maps phases to agents
 - Unmapped phases fall back to `[ai].default_agent`
 - `--from`, `--to`, `--force`, `--dry-run` flags work correctly
 - `pipeline-log.md` is generated with timestamps, agents, and status

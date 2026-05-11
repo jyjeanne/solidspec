@@ -1,0 +1,30 @@
+# Schema: minimal
+# Lightweight workflow — just the essentials.
+name: minimal
+version: "1.0"
+description: "Minimal SDD workflow: spec → plan → tasks → implement"
+
+artifacts:
+  - id: spec
+    generates: ["spec.md"]
+    requires: []
+    instruction: "Create a feature specification with user stories, functional requirements, and acceptance criteria."
+    template: "spec-template.md"
+
+  - id: plan
+    generates: ["plan.md"]
+    requires: ["spec"]
+    instruction: "Create an architecture plan with decisions and project structure."
+    template: "plan-template.md"
+
+  - id: tasks
+    generates: ["tasks.md"]
+    requires: ["spec", "plan"]
+    instruction: "Generate a phased task breakdown from the plan."
+    template: "tasks-template.md"
+
+  - id: implement
+    generates: ["tasks.md"]
+    requires: ["tasks"]
+    instruction: "Execute each task, checking off completed work."
+    template: null

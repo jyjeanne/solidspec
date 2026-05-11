@@ -1,6 +1,6 @@
 # Killer Feature Ideas
 
-Features that would differentiate RustySpec from Spec Kit and other SDD tools.
+Features that would differentiate SolidSpec from Spec Kit and other SDD tools.
 
 ---
 
@@ -23,7 +23,7 @@ Ranked by **what users care about most**:
 | **6** | **Spec Drift Detection** | Long-term maintenance value. Detects when code diverges from spec over time. Most useful for projects with ongoing development. |
 | **7** | **AI-Powered Spec Review** | Nice to have. LLM reviews specs for quality. Requires API integration and prompt engineering — high effort for incremental value. |
 
-**Recommended starting point:** Spec-to-Test Generation — it's the feature that would make someone choose RustySpec over Spec Kit in 30 seconds.
+**Recommended starting point:** Spec-to-Test Generation — it's the feature that would make someone choose SolidSpec over Spec Kit in 30 seconds.
 
 ---
 
@@ -51,8 +51,8 @@ Ordered from easiest to hardest.
 Import requirements from GitHub Issues or Jira tickets and generate a pre-filled spec.md.
 
 ```bash
-rustyspec import --github 42
-rustyspec import --jira PROJ-123
+solidspec import --github 42
+solidspec import --jira PROJ-123
 ```
 
 **What it does:**
@@ -81,7 +81,7 @@ Markers: 1 [NEEDS CLARIFICATION] (priority not specified)
 Automatically generate runnable test scaffolds from Given/When/Then acceptance scenarios in spec.md.
 
 ```bash
-rustyspec tests 001
+solidspec tests 001
 ```
 
 **What it does:**
@@ -126,7 +126,7 @@ describe("US1: Add a new task", () => {
 
 Orchestrate different AI agents for different SDD phases in a single workflow.
 
-**Configuration in `rustyspec.toml`:**
+**Configuration in `solidspec.toml`:**
 ```toml
 [pipeline]
 specify = "claude"       # Claude writes specs (strong at structured text)
@@ -137,11 +137,11 @@ analyze = "gemini"       # Gemini for cross-checking (different perspective)
 ```
 
 ```bash
-rustyspec pipeline 001    # Runs full workflow, switching agents per phase
+solidspec pipeline 001    # Runs full workflow, switching agents per phase
 ```
 
 **What it does:**
-- Reads pipeline config from `rustyspec.toml`
+- Reads pipeline config from `solidspec.toml`
 - Executes each phase with the configured agent
 - Passes output from one phase as input to the next
 - Logs which agent handled which phase
@@ -160,7 +160,7 @@ rustyspec pipeline 001    # Runs full workflow, switching agents per phase
 Terminal UI for guided spec creation with real-time quality validation.
 
 ```bash
-rustyspec specify --interactive
+solidspec specify --interactive
 ```
 
 **What it does:**
@@ -181,7 +181,7 @@ rustyspec specify --interactive
 
 **TUI layout:**
 ```
-┌─ RustySpec — New Feature Specification ──────────────────┐
+┌─ SolidSpec — New Feature Specification ──────────────────┐
 │                                                          │
 │  Feature: TODO list with CRUD operations                 │
 │                                                          │
@@ -211,7 +211,7 @@ rustyspec specify --interactive
 Scan actual source code to build a requirement-to-code traceability map.
 
 ```bash
-rustyspec trace 001
+solidspec trace 001
 ```
 
 **Output:**
@@ -257,7 +257,7 @@ Traceability Matrix: 001-todo-list-crud
 Detect when implementation has diverged from the specification.
 
 ```bash
-rustyspec drift 001
+solidspec drift 001
 ```
 
 **Output:**
@@ -308,7 +308,7 @@ Drift Analysis: 001-todo-list-crud
 Use an LLM to review and improve specifications before implementation.
 
 ```bash
-rustyspec review 001 --ai claude
+solidspec review 001 --ai claude
 ```
 
 **What it does:**

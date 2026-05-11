@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::core::git;
 
 pub fn run() -> Result<()> {
-    println!("RustySpec System Check");
+    println!("SolidSpec System Check");
     println!("======================\n");
 
     // Check Git
@@ -15,27 +15,27 @@ pub fn run() -> Result<()> {
     }
 
     // Check project structure
-    let rustyspec_dir = cwd.join(".rustyspec");
-    if rustyspec_dir.exists() {
-        println!("  [OK] .rustyspec/ directory found");
+    let solidspec_dir = cwd.join(".solidspec");
+    if solidspec_dir.exists() {
+        println!("  [OK] .solidspec/ directory found");
 
-        let constitution = rustyspec_dir.join("constitution.md");
+        let constitution = solidspec_dir.join("constitution.md");
         if constitution.exists() {
             println!("  [OK] Constitution file present");
         } else {
             println!("  [!!] Constitution file missing");
         }
     } else {
-        println!("  [--] Not a RustySpec project (no .rustyspec/ directory)");
+        println!("  [--] Not a SolidSpec project (no .solidspec/ directory)");
     }
 
-    let config_path = cwd.join("rustyspec.toml");
+    let config_path = cwd.join("solidspec.toml");
     if config_path.exists() {
-        println!("  [OK] rustyspec.toml found");
+        println!("  [OK] solidspec.toml found");
     } else {
-        println!("  [--] rustyspec.toml not found");
+        println!("  [--] solidspec.toml not found");
     }
 
-    println!("\nRustySpec v{}", env!("CARGO_PKG_VERSION"));
+    println!("\nSolidSpec v{}", env!("CARGO_PKG_VERSION"));
     Ok(())
 }

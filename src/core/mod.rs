@@ -1,10 +1,13 @@
 pub mod analyzer;
+pub mod artifact_graph;
+pub mod change;
 pub mod constitution;
 pub mod errors;
 pub mod feature;
 pub mod git;
 pub mod pipeline;
 pub mod review;
+pub mod schema;
 pub mod spec_parser;
 pub mod task_generator;
 pub mod test_generator;

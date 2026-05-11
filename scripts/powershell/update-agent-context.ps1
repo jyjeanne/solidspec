@@ -1,21 +1,21 @@
-# Regenerate .rustyspec/AGENT.md from constitution and current specs
+# Regenerate .solidspec/AGENT.md from constitution and current specs
 . "$PSScriptRoot\common.ps1"
 
 $root = Get-RepoRoot
-$agentFile = Join-Path $root ".rustyspec\AGENT.md"
-$constitution = Join-Path $root ".rustyspec\constitution.md"
+$agentFile = Join-Path $root ".solidspec\AGENT.md"
+$constitution = Join-Path $root ".solidspec\constitution.md"
 $date = Get-Date -Format "yyyy-MM-dd"
 
 # Read project name
 $projectName = "unknown"
-$tomlPath = Join-Path $root "rustyspec.toml"
+$tomlPath = Join-Path $root "solidspec.toml"
 if (Test-Path $tomlPath) {
     $match = Select-String -Path $tomlPath -Pattern 'name\s*=\s*"([^"]+)"' | Select-Object -First 1
     if ($match) { $projectName = $match.Matches.Groups[1].Value }
 }
 
 $content = @"
-# RustySpec Agent Context
+# SolidSpec Agent Context
 
 **Project**: $projectName
 **Updated**: $date
@@ -57,13 +57,13 @@ $content += @"
 
 ## Available Commands
 
-- ``/rustyspec-specify`` — Create feature specification
-- ``/rustyspec-clarify`` — Resolve spec ambiguities
-- ``/rustyspec-plan`` — Generate architecture plan
-- ``/rustyspec-tasks`` — Generate task breakdown
-- ``/rustyspec-implement`` — Execute tasks
-- ``/rustyspec-analyze`` — Validate consistency
-- ``/rustyspec-checklist`` — Quality validation
+- ``/solidspec-specify`` — Create feature specification
+- ``/solidspec-clarify`` — Resolve spec ambiguities
+- ``/solidspec-plan`` — Generate architecture plan
+- ``/solidspec-tasks`` — Generate task breakdown
+- ``/solidspec-implement`` — Execute tasks
+- ``/solidspec-analyze`` — Validate consistency
+- ``/solidspec-checklist`` — Quality validation
 "@
 
 Set-Content $agentFile $content

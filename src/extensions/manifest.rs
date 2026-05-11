@@ -1,6 +1,13 @@
+use std::sync::LazyLock;
+
 use anyhow::{Result, bail};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+
+static EXT_ID_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(ID_PATTERN).expect("invalid extension id regex"));
+static EXT_CMD_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(CMD_PATTERN).expect("invalid extension cmd regex"));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtensionManifest {
@@ -30,7 +37,7 @@ pub struct ExtensionInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ExtensionRequires {
     #[serde(default)]
-    pub rustyspec_version: String,
+    pub solidspec_version: String,
     #[serde(default)]
     pub tools: Vec<ToolRequirement>,
     #[serde(default)]
@@ -95,7 +102,7 @@ const VALID_HOOKS: &[&str] = &[
     "after_implement",
 ];
 const ID_PATTERN: &str = r"^[a-z0-9-]+$";
-const CMD_PATTERN: &str = r"^rustyspec\.[a-z0-9-]+\.[a-z0-9-]+$";
+const CMD_PATTERN: &str = r"^solidspec\.[a-z0-9-]+\.[a-z0-9-]+$";
 
 impl ExtensionManifest {
     pub fn load(path: &std::path::Path) -> Result<Self> {
@@ -117,8 +124,7 @@ impl ExtensionManifest {
             );
         }
 
-        let id_re = Regex::new(ID_PATTERN).unwrap();
-        if !id_re.is_match(&self.extension.id) {
+        if !EXT_ID_RE.is_match(&self.extension.id) {
             bail!(
                 "Invalid extension ID '{}'. Must match {ID_PATTERN}.",
                 self.extension.id
@@ -143,11 +149,10 @@ impl ExtensionManifest {
             bail!("Extension must provide at least one command.");
         }
 
-        let cmd_re = Regex::new(CMD_PATTERN).unwrap();
         for cmd in &self.provides.commands {
-            if !cmd_re.is_match(&cmd.name) {
+            if !EXT_CMD_RE.is_match(&cmd.name) {
                 bail!(
-                    "Invalid command name '{}'. Must match {CMD_PATTERN} (e.g., rustyspec.my-ext.validate).",
+                    "Invalid command name '{}'. Must match {CMD_PATTERN} (e.g., solidspec.my-ext.validate).",
                     cmd.name
                 );
             }
@@ -177,12 +182,12 @@ impl ExtensionManifest {
             }
         }
 
-        if !self.requires.rustyspec_version.is_empty()
-            && semver::VersionReq::parse(&self.requires.rustyspec_version).is_err()
+        if !self.requires.solidspec_version.is_empty()
+            && semver::VersionReq::parse(&self.requires.solidspec_version).is_err()
         {
             bail!(
                 "Invalid version specifier '{}'.",
-                self.requires.rustyspec_version
+                self.requires.solidspec_version
             );
         }
 
@@ -202,15 +207,15 @@ extension:
   version: "1.0.0"
   description: "Test extension"
 requires:
-  rustyspec_version: ">=0.1.0"
+  solidspec_version: ">=0.1.0"
 provides:
   commands:
-    - name: rustyspec.my-ext.validate
+    - name: solidspec.my-ext.validate
       file: commands/validate.md
       description: "Validate something"
 hooks:
   after_tasks:
-    command: rustyspec.my-ext.validate
+    command: solidspec.my-ext.validate
     optional: true
 "#;
 
@@ -238,10 +243,10 @@ extension:
   name: X
   version: "1.0.0"
 requires:
-  rustyspec_version: "bad"
+  solidspec_version: "bad"
 provides:
   commands:
-    - name: rustyspec.x.y
+    - name: solidspec.x.y
       file: x.md
 "#;
         assert!(ExtensionManifest::parse(yaml).is_err());
@@ -257,11 +262,11 @@ extension:
   version: "1.0.0"
 provides:
   commands:
-    - name: rustyspec.x.y
+    - name: solidspec.x.y
       file: x.md
 hooks:
   invalid_hook:
-    command: rustyspec.x.y
+    command: solidspec.x.y
 "#;
         let err = ExtensionManifest::parse(yaml).unwrap_err().to_string();
         assert!(err.contains("Invalid hook trigger"));
@@ -284,11 +289,11 @@ extension:
   version: "1.0.0"
 provides:
   commands:
-    - name: rustyspec.x.y
+    - name: solidspec.x.y
       file: x.md
 hooks:
   {hook}:
-    command: rustyspec.x.y
+    command: solidspec.x.y
 "#
             );
             assert!(
@@ -300,7 +305,7 @@ hooks:
 
     #[test]
     fn invalid_extension_id_errors() {
-        let yaml = "schema_version: '1.0'\nextension:\n  id: MyExt\n  name: X\n  version: '1.0.0'\nprovides:\n  commands:\n    - name: rustyspec.x.y\n      file: x.md\n";
+        let yaml = "schema_version: '1.0'\nextension:\n  id: MyExt\n  name: X\n  version: '1.0.0'\nprovides:\n  commands:\n    - name: solidspec.x.y\n      file: x.md\n";
         let err = ExtensionManifest::parse(yaml).unwrap_err().to_string();
         assert!(err.contains("Invalid extension ID"));
     }
@@ -316,7 +321,7 @@ hooks:
     fn description_over_200_chars_errors() {
         let long = "x".repeat(201);
         let yaml = format!(
-            "schema_version: '1.0'\nextension:\n  id: x\n  name: X\n  version: '1.0.0'\n  description: '{long}'\nprovides:\n  commands:\n    - name: rustyspec.x.y\n      file: x.md\n"
+            "schema_version: '1.0'\nextension:\n  id: x\n  name: X\n  version: '1.0.0'\n  description: '{long}'\nprovides:\n  commands:\n    - name: solidspec.x.y\n      file: x.md\n"
         );
         assert!(ExtensionManifest::parse(&yaml).is_err());
     }
@@ -338,11 +343,11 @@ extension:
   version: "1.0.0"
 provides:
   commands:
-    - name: rustyspec.x.real
+    - name: solidspec.x.real
       file: commands/real.md
 hooks:
   after_tasks:
-    command: rustyspec.x.nonexistent
+    command: solidspec.x.nonexistent
 "#;
         let err = ExtensionManifest::parse(yaml).unwrap_err().to_string();
         assert!(
@@ -361,11 +366,11 @@ extension:
   version: "1.0.0"
 provides:
   commands:
-    - name: rustyspec.x.validate
+    - name: solidspec.x.validate
       file: commands/validate.md
 hooks:
   after_tasks:
-    command: rustyspec.x.validate
+    command: solidspec.x.validate
 "#;
         assert!(ExtensionManifest::parse(yaml).is_ok());
     }

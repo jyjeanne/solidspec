@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 /// 2. presets/<id>/templates/ — sorted by priority (lower number = higher precedence)
 /// 3. extensions/<id>/templates/ — extension-provided
 /// 4. Embedded defaults (returned as None path — caller uses include_str!)
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResolvedTemplate {
     pub path: Option<PathBuf>,
     pub source: TemplateSource,
@@ -19,6 +19,36 @@ pub enum TemplateSource {
     EmbeddedDefault,
 }
 
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+thread_local! {
+    static RESOLVE_CACHE: RefCell<HashMap<(String, String), ResolvedTemplate>> =
+        RefCell::new(HashMap::new());
+}
+
+/// Resolve a template name with caching — avoids redundant filesystem traversal
+/// when the same template is requested multiple times in a process lifetime.
+pub fn resolve_cached(
+    template_name: &str,
+    project_root: &Path,
+    preset_priorities: &[(String, u32)],
+) -> ResolvedTemplate {
+    let cache_key = (
+        template_name.to_string(),
+        project_root.to_string_lossy().to_string(),
+    );
+    RESOLVE_CACHE.with(|cache| {
+        if let Some(cached) = cache.borrow().get(&cache_key) {
+            log::debug!("Template cache hit: {template_name}");
+            return cached.clone();
+        }
+        let result = resolve(template_name, project_root, preset_priorities);
+        cache.borrow_mut().insert(cache_key, result.clone());
+        result
+    })
+}
+
 /// Resolve a template name through the 4-layer hierarchy.
 /// Returns the path to the winning template file, or None for embedded default.
 pub fn resolve(
@@ -26,10 +56,10 @@ pub fn resolve(
     project_root: &Path,
     preset_priorities: &[(String, u32)], // (preset_id, priority) sorted by priority
 ) -> ResolvedTemplate {
-    let rustyspec_dir = project_root.join(".rustyspec");
+    let solidspec_dir = project_root.join(".solidspec");
 
     // Layer 1: overrides/
-    let override_path = rustyspec_dir
+    let override_path = solidspec_dir
         .join("templates/overrides")
         .join(template_name);
     if override_path.exists() {
@@ -41,7 +71,7 @@ pub fn resolve(
 
     // Layer 2: presets (sorted by priority — lower number = higher precedence)
     for (preset_id, _priority) in preset_priorities {
-        let preset_path = rustyspec_dir
+        let preset_path = solidspec_dir
             .join("presets")
             .join(preset_id)
             .join("templates")
@@ -55,7 +85,7 @@ pub fn resolve(
     }
 
     // Layer 3: extensions
-    let extensions_dir = rustyspec_dir.join("extensions");
+    let extensions_dir = solidspec_dir.join("extensions");
     if extensions_dir.exists()
         && let Ok(entries) = std::fs::read_dir(&extensions_dir)
     {
@@ -83,13 +113,13 @@ pub fn resolve(
     }
 }
 
-/// Load the resolved template content as a string.
+/// Load the resolved template content as a string (uses cache).
 pub fn load_template(
     template_name: &str,
     project_root: &Path,
     preset_priorities: &[(String, u32)],
 ) -> std::io::Result<(String, TemplateSource)> {
-    let resolved = resolve(template_name, project_root, preset_priorities);
+    let resolved = resolve_cached(template_name, project_root, preset_priorities);
 
     match resolved.path {
         Some(path) => {
@@ -123,9 +153,9 @@ mod tests {
     use tempfile::TempDir;
 
     fn setup_project(dir: &Path) {
-        std::fs::create_dir_all(dir.join(".rustyspec/templates/overrides")).unwrap();
-        std::fs::create_dir_all(dir.join(".rustyspec/presets")).unwrap();
-        std::fs::create_dir_all(dir.join(".rustyspec/extensions")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/templates/overrides")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/presets")).unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/extensions")).unwrap();
     }
 
     #[test]
@@ -134,7 +164,7 @@ mod tests {
         setup_project(dir.path());
         std::fs::write(
             dir.path()
-                .join(".rustyspec/templates/overrides/spec-template.md"),
+                .join(".solidspec/templates/overrides/spec-template.md"),
             "OVERRIDE CONTENT",
         )
         .unwrap();
@@ -148,7 +178,7 @@ mod tests {
     fn preset_wins_when_no_override() {
         let dir = TempDir::new().unwrap();
         setup_project(dir.path());
-        let preset_dir = dir.path().join(".rustyspec/presets/my-preset/templates");
+        let preset_dir = dir.path().join(".solidspec/presets/my-preset/templates");
         std::fs::create_dir_all(&preset_dir).unwrap();
         std::fs::write(preset_dir.join("spec-template.md"), "PRESET CONTENT").unwrap();
 
@@ -161,7 +191,7 @@ mod tests {
     fn extension_wins_when_no_override_or_preset() {
         let dir = TempDir::new().unwrap();
         setup_project(dir.path());
-        let ext_dir = dir.path().join(".rustyspec/extensions/my-ext/templates");
+        let ext_dir = dir.path().join(".solidspec/extensions/my-ext/templates");
         std::fs::create_dir_all(&ext_dir).unwrap();
         std::fs::write(ext_dir.join("spec-template.md"), "EXT CONTENT").unwrap();
 
@@ -187,11 +217,11 @@ mod tests {
         // Both override and preset exist
         std::fs::write(
             dir.path()
-                .join(".rustyspec/templates/overrides/spec-template.md"),
+                .join(".solidspec/templates/overrides/spec-template.md"),
             "OVERRIDE",
         )
         .unwrap();
-        let preset_dir = dir.path().join(".rustyspec/presets/my-preset/templates");
+        let preset_dir = dir.path().join(".solidspec/presets/my-preset/templates");
         std::fs::create_dir_all(&preset_dir).unwrap();
         std::fs::write(preset_dir.join("spec-template.md"), "PRESET").unwrap();
 
@@ -209,7 +239,7 @@ mod tests {
         for (id, _) in &[("high-priority", 1), ("low-priority", 10)] {
             let preset_dir = dir
                 .path()
-                .join(format!(".rustyspec/presets/{id}/templates"));
+                .join(format!(".solidspec/presets/{id}/templates"));
             std::fs::create_dir_all(&preset_dir).unwrap();
             std::fs::write(
                 preset_dir.join("spec-template.md"),
@@ -237,7 +267,7 @@ mod tests {
         // Empty file — still takes precedence (exists = wins)
         std::fs::write(
             dir.path()
-                .join(".rustyspec/templates/overrides/spec-template.md"),
+                .join(".solidspec/templates/overrides/spec-template.md"),
             "",
         )
         .unwrap();
@@ -252,7 +282,7 @@ mod tests {
         setup_project(dir.path());
         std::fs::write(
             dir.path()
-                .join(".rustyspec/templates/overrides/spec-template.md"),
+                .join(".solidspec/templates/overrides/spec-template.md"),
             "CUSTOM SPEC",
         )
         .unwrap();

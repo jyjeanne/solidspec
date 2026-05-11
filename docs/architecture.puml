@@ -1,4 +1,4 @@
-@startuml RustySpec Architecture
+@startuml SolidSpec Architecture
 
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
@@ -7,7 +7,7 @@ skinparam shadowing false
 skinparam defaultFontName "Segoe UI"
 skinparam classFontSize 11
 
-title RustySpec — Class Diagram
+title SolidSpec — Class Diagram
 
 ' ============================================================
 ' CLI Layer
@@ -29,9 +29,11 @@ package "cli" <<Rectangle>> #E3F2FD {
         Checklist
         Preset
         Extension
+        Change
         Upgrade
         Completions
         Check
+        Status
     }
 
     class StepTracker {
@@ -176,7 +178,7 @@ package "core" <<Rectangle>> #E8F5E9 {
         Low
     }
 
-    enum RustySpecError {
+    enum SolidSpecError {
         Config
         Spec
         Template
@@ -184,6 +186,53 @@ package "core" <<Rectangle>> #E8F5E9 {
         Feature
         Init
         Validation
+    }
+
+    class "artifact_graph" as ArtifactGraphMod <<module>> {
+        +new(nodes): Result
+        +topological_order(): Result
+        +compute_states(completed): HashMap
+        +detect_completion(dir): HashSet
+    }
+
+    enum ArtifactState {
+        Blocked
+        Ready
+        Done
+    }
+
+    class "schema" as SchemaMod <<module>> {
+        +resolve_schema(name, root): Result
+        +load_graph(name, root): Result
+        +list_available_schemas(root): Vec
+    }
+
+    enum SchemaSource {
+        ProjectLocal
+        Builtin
+        Default
+    }
+
+    class WorkflowSchema {
+        +name: String
+        +version: String
+        +description: String
+        +artifacts: Vec
+        +parse(yaml): Result
+        +into_graph(): Result
+    }
+
+    class DeltaSpec {
+        +added: Vec<DeltaRequirement>
+        +modified: Vec<DeltaModification>
+        +removed: Vec<String>
+    }
+
+    class "change" as ChangeMod <<module>> {
+        +parse_delta_spec(content): DeltaSpec
+        +merge_deltas(main, delta): Result
+        +create_change(dir, title): Result
+        +archive_change(dir, slug): Result
     }
 
     ParsedSpec *-- UserStory
@@ -194,6 +243,10 @@ package "core" <<Rectangle>> #E8F5E9 {
     Phase *-- Task
     AnalysisReport *-- Finding
     Finding --> Severity
+    ArtifactGraphMod --> ArtifactState
+    WorkflowSchema --> ArtifactGraphMod : into_graph()
+    SchemaMod --> SchemaSource
+    SchemaMod --> WorkflowSchema
 }
 
 ' ============================================================
@@ -239,10 +292,42 @@ package "agents" <<Rectangle>> #F3E5F5 {
         +standard_command_name(cmd): String
     }
 
+    class "invoker" as AgentInvoker <<module>> {
+        +build_phase_prompt(phase, dir, desc, ctx): String
+        +invoke_agent(agent, phase, dir, root, desc, ctx): InvokeResult
+    }
+
+    class "guardrails" as Guardrails <<module>> {
+        +ANTI_RATIONALIZATION: &str
+        +COMPLIANCE_CHECKLIST: &str
+        +compliance_footer(): String
+    }
+
+    class "personas" as Personas <<module>> {
+        +persona_for_phase(phase): &Persona
+        +persona_prompt(phase): String
+    }
+
     AgentConfig --> AgentFormat
     DetectedAgent --> AgentConfig
     AgentRegistry --> AgentConfig
     AgentRegistry --> AgentFormats
+
+    class "invoker" as AgentInvoker <<module>> {
+        +build_phase_prompt(phase, dir, desc, ctx): String
+        +invoke_agent(agent, phase, dir, root, desc, ctx): InvokeResult
+    }
+
+    class "guardrails" as Guardrails <<module>> {
+        +ANTI_RATIONALIZATION: &str
+        +COMPLIANCE_CHECKLIST: &str
+        +compliance_footer(): String
+    }
+
+    class "personas" as Personas <<module>> {
+        +persona_for_phase(phase): &Persona
+        +persona_prompt(phase): String
+    }
 }
 
 ' ============================================================
@@ -396,5 +481,14 @@ Commands ..> HookExecutor : fires
 
 TemplateResolver ..> PresetRegistry : reads priorities
 TemplateResolver ..> ExtensionRegistry : scans dirs
+
+Commands ..> SchemaMod : loads workflow
+Commands ..> ArtifactGraphMod : queries status
+Commands ..> ChangeMod : manages changes
+Commands ..> Guardrails : injects
+Commands ..> Personas : injects
+AgentInvoker ..> Guardrails : appends
+AgentInvoker ..> Personas : prepends
+AgentRegistry ..> Guardrails : appends
 
 @enduml

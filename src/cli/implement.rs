@@ -10,7 +10,7 @@ use crate::extensions;
 pub fn run(feature_id: Option<&str>, pass: Option<u32>) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
     let feature_dir_name = feature::resolve_feature(feature_id, &project_root)?;
     let feature_dir = project_root.join("specs").join(&feature_dir_name);
@@ -21,7 +21,7 @@ pub fn run(feature_id: Option<&str>, pass: Option<u32>) -> Result<()> {
     let tasks_path = feature_dir.join("tasks.md");
     if !tasks_path.exists() {
         anyhow::bail!(
-            "tasks.md not found. Run 'rustyspec tasks {}' first.",
+            "tasks.md not found. Run 'solidspec tasks {}' first.",
             feature_dir_name
         );
     }

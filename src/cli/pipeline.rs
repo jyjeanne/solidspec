@@ -26,9 +26,9 @@ pub fn run(
 
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
-    let root_config = config::RootConfig::load(&project_root.join("rustyspec.toml"))?;
+    let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))?;
     let default_agent = &root_config.ai.default_agent;
 
     // Validate pipeline config agent IDs
@@ -208,7 +208,7 @@ pub fn run(
                 println!("    ✗ FAILED: {e}");
                 results.push(pipeline::PhaseResult {
                     name: phase.to_string(),
-                    agent: agent.clone(),
+                    agent,
                     status: pipeline::PhaseStatus::Failed,
                     duration_ms: elapsed_ms,
                     output: format!("error: {e}"),
@@ -351,7 +351,7 @@ fn execute_phase(
         "implement" => {
             // Implement is always a handoff — AI agent does the actual coding
             println!(
-                "    → Open {} and run: /rustyspec-implement {feature_dir_name}",
+                "    → Open {} and run: /solidspec-implement {feature_dir_name}",
                 agent
             );
             if auto {
@@ -387,7 +387,7 @@ fn invoke_or_handoff(
 ) -> Result<()> {
     println!("    → Invoking {} for '{}'...", agent_id, phase);
 
-    match invoker::invoke_agent(agent_id, phase, feature_dir_name, project_root, description) {
+    match invoker::invoke_agent(agent_id, phase, feature_dir_name, project_root, description, None) {
         InvokeResult::Success { output } => {
             let preview = output.lines().take(3).collect::<Vec<_>>().join(" ");
             let preview = if preview.len() > 100 {
@@ -402,7 +402,7 @@ fn invoke_or_handoff(
         }
         InvokeResult::NotAvailable { reason } => {
             println!("    ⚠ {reason}");
-            println!("    → Run manually: /rustyspec-{phase} {feature_dir_name}");
+            println!("    → Run manually: /solidspec-{phase} {feature_dir_name}");
             if !auto {
                 print!("    ⏳ Press Enter when done (or Ctrl+C to abort)... ");
                 std::io::stdout().flush()?;
@@ -415,7 +415,7 @@ fn invoke_or_handoff(
         }
         InvokeResult::Failed { error } => {
             println!("    ⚠ Agent failed: {error}");
-            println!("    → Run manually: /rustyspec-{phase} {feature_dir_name}");
+            println!("    → Run manually: /solidspec-{phase} {feature_dir_name}");
             if !auto {
                 print!("    ⏳ Press Enter to continue or Ctrl+C to abort... ");
                 std::io::stdout().flush()?;

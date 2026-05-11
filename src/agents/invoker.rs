@@ -1,24 +1,47 @@
 use std::path::Path;
 use std::process::Command;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 
+const AGENT_TIMEOUT_SECS: u64 = 300;
+const AGENT_POLL_INTERVAL_MS: u64 = 100;
+
 use super::config::{AgentConfig, find_agent};
+use super::guardrails;
+use super::personas;
 use super::registry::find_binary;
 
-/// Build the prompt for a pipeline phase, with detailed per-phase instructions.
+/// Build the prompt for a pipeline phase, with persona context, phase-specific
+/// instructions, and compliance guardrails.
 pub fn build_phase_prompt(
     phase: &str,
     feature_dir_name: &str,
     description: Option<&str>,
+    project_context: Option<&str>,
 ) -> String {
     let specs_path = format!("specs/{feature_dir_name}");
 
-    match phase {
+    let mut prompt = String::new();
+
+    // Layer 1: Project context (if configured)
+    if let Some(ctx) = project_context
+        && !ctx.is_empty()
+    {
+        prompt.push_str(&format!("## Project Context\n\n{ctx}\n\n"));
+    }
+
+    // Layer 2: Persona — role, output format, mission checklist
+    prompt.push_str(&personas::persona_prompt(phase));
+    prompt.push_str("\n\n---\n\n");
+
+    // Layer 3: Phase-specific instructions (existing content)
+    let phase_body = match phase {
         "specify" => {
             let desc = description.unwrap_or(feature_dir_name);
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {desc}\n\
                  Feature directory: {specs_path}\n\n\
                  Fill in {specs_path}/spec.md with real content based on the feature description above.\n\n\
@@ -35,7 +58,7 @@ pub fn build_phase_prompt(
         }
         "clarify" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\n\
                  Read {specs_path}/spec.md and find all [NEEDS CLARIFICATION] markers.\n\
                  For each marker:\n\
@@ -48,7 +71,7 @@ pub fn build_phase_prompt(
         }
         "plan" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\
                  Read {specs_path}/spec.md for requirements.\n\n\
                  Fill in the planning documents with real content:\n\
@@ -64,7 +87,7 @@ pub fn build_phase_prompt(
         }
         "tasks" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\
                  Read {specs_path}/spec.md and {specs_path}/plan.md.\n\n\
                  Fill in {specs_path}/tasks.md with concrete tasks:\n\
@@ -79,7 +102,7 @@ pub fn build_phase_prompt(
         }
         "tests" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\
                  Read {specs_path}/spec.md for acceptance scenarios.\n\n\
                  Review and enhance test scaffolds in {specs_path}/tests/:\n\
@@ -92,7 +115,7 @@ pub fn build_phase_prompt(
         }
         "analyze" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\n\
                  Validate cross-artifact consistency:\n\
                  1. Check that plan.md addresses all requirements from spec.md\n\
@@ -104,7 +127,7 @@ pub fn build_phase_prompt(
         }
         "review" => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md.\n\n\
+                "Read the project context from .solidspec/AGENT.md.\n\n\
                  Feature: {specs_path}\n\n\
                  Perform a comprehensive spec quality review:\n\
                  1. Check for placeholder text and incomplete sections\n\
@@ -116,10 +139,18 @@ pub fn build_phase_prompt(
         }
         _ => {
             format!(
-                "Read the project context from .rustyspec/AGENT.md, then execute the '{phase}' workflow for feature {specs_path}."
+                "Read the project context from .solidspec/AGENT.md, then execute the '{phase}' workflow for feature {specs_path}."
             )
         }
-    }
+    };
+
+    prompt.push_str(&phase_body);
+
+    // Layer 4: Anti-rationalization guardrails + compliance checklist
+    prompt.push('\n');
+    prompt.push_str(&guardrails::compliance_footer());
+
+    prompt
 }
 
 /// Result of an agent CLI invocation.
@@ -143,6 +174,7 @@ pub fn invoke_agent(
     feature_dir_name: &str,
     project_root: &Path,
     description: Option<&str>,
+    project_context: Option<&str>,
 ) -> InvokeResult {
     let agent = match find_agent(agent_id) {
         Some(a) => a,
@@ -173,7 +205,7 @@ pub fn invoke_agent(
         }
     };
 
-    let prompt = build_phase_prompt(phase, feature_dir_name, description);
+    let prompt = build_phase_prompt(phase, feature_dir_name, description, project_context);
 
     match run_agent_cli(agent, &binary_path, &prompt, project_root) {
         Ok(output) => InvokeResult::Success { output },
@@ -222,27 +254,35 @@ fn run_agent_cli(
     );
     log::debug!("Prompt length: {} chars", prompt.len());
 
-    let output = cmd
-        .output()
-        .with_context(|| format!("Failed to execute '{}' CLI", agent.cli_binary))?;
+    let mut child = cmd
+        .spawn()
+        .with_context(|| format!("Failed to spawn '{}' CLI", agent.cli_binary))?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let poll = Duration::from_millis(AGENT_POLL_INTERVAL_MS);
+    let deadline = Instant::now() + Duration::from_secs(AGENT_TIMEOUT_SECS);
 
-    if output.status.success() {
-        log::info!("{} CLI completed successfully", agent.name);
-        if !stderr.is_empty() {
-            log::debug!("stderr: {}", &stderr[..stderr.len().min(500)]);
+    let exit_status = loop {
+        match child.try_wait()? {
+            Some(status) => break status,
+            None if Instant::now() >= deadline => {
+                child.kill()?;
+                child.wait()?;
+                anyhow::bail!(
+                    "{} CLI timed out after {} seconds",
+                    agent.name,
+                    AGENT_TIMEOUT_SECS
+                );
+            }
+            None => thread::sleep(poll),
         }
-        Ok(stdout)
+    };
+
+    if exit_status.success() {
+        log::info!("{} CLI completed successfully", agent.name);
+        Ok(String::new())
     } else {
-        let code = output.status.code().unwrap_or(-1);
-        anyhow::bail!(
-            "{} CLI exited with code {}: {}",
-            agent.name,
-            code,
-            if stderr.is_empty() { &stdout } else { &stderr }
-        )
+        let code = exit_status.code().unwrap_or(-1);
+        anyhow::bail!("{} CLI exited with code {code}", agent.name)
     }
 }
 
@@ -259,7 +299,7 @@ mod tests {
 
     #[test]
     fn build_specify_prompt_includes_feature() {
-        let prompt = build_phase_prompt("specify", "001-auth", Some("User authentication"));
+        let prompt = build_phase_prompt("specify", "001-auth", Some("User authentication"), None);
         assert!(prompt.contains("User authentication"));
         assert!(prompt.contains("specs/001-auth/spec.md"));
         assert!(prompt.contains("Given/When/Then"));
@@ -267,7 +307,7 @@ mod tests {
 
     #[test]
     fn build_plan_prompt_includes_all_docs() {
-        let prompt = build_phase_prompt("plan", "001-auth", None);
+        let prompt = build_phase_prompt("plan", "001-auth", None, None);
         assert!(prompt.contains("plan.md"));
         assert!(prompt.contains("research.md"));
         assert!(prompt.contains("data-model.md"));
@@ -277,7 +317,7 @@ mod tests {
 
     #[test]
     fn build_tasks_prompt_mentions_phases() {
-        let prompt = build_phase_prompt("tasks", "001-auth", None);
+        let prompt = build_phase_prompt("tasks", "001-auth", None, None);
         assert!(prompt.contains("Setup"));
         assert!(prompt.contains("Foundational"));
         assert!(prompt.contains("[US1]"));
@@ -285,39 +325,39 @@ mod tests {
 
     #[test]
     fn build_clarify_prompt_mentions_markers() {
-        let prompt = build_phase_prompt("clarify", "001-auth", None);
+        let prompt = build_phase_prompt("clarify", "001-auth", None, None);
         assert!(prompt.contains("[NEEDS CLARIFICATION]"));
     }
 
     #[test]
     fn build_tests_prompt_mentions_scaffolds() {
-        let prompt = build_phase_prompt("tests", "001-auth", None);
+        let prompt = build_phase_prompt("tests", "001-auth", None, None);
         assert!(prompt.contains("test scaffolds"));
         assert!(prompt.contains("tests/"));
     }
 
     #[test]
     fn build_analyze_prompt_mentions_consistency() {
-        let prompt = build_phase_prompt("analyze", "001-auth", None);
+        let prompt = build_phase_prompt("analyze", "001-auth", None, None);
         assert!(prompt.contains("consistency"));
     }
 
     #[test]
     fn build_unknown_phase_returns_generic() {
-        let prompt = build_phase_prompt("unknown-phase", "001-auth", None);
+        let prompt = build_phase_prompt("unknown-phase", "001-auth", None, None);
         assert!(prompt.contains("unknown-phase"));
     }
 
     #[test]
     fn invoke_unknown_agent_returns_not_available() {
-        let result = invoke_agent("nonexistent", "specify", "001", Path::new("."), None);
+        let result = invoke_agent("nonexistent", "specify", "001", Path::new("."), None, None);
         matches!(result, InvokeResult::NotAvailable { .. });
     }
 
     #[test]
     fn invoke_no_cli_agent_returns_not_available() {
         // windsurf has empty cli_binary
-        let result = invoke_agent("windsurf", "specify", "001", Path::new("."), None);
+        let result = invoke_agent("windsurf", "specify", "001", Path::new("."), None, None);
         matches!(result, InvokeResult::NotAvailable { .. });
     }
 
@@ -331,5 +371,57 @@ mod tests {
     #[test]
     fn supports_cli_false_for_unknown() {
         assert!(!supports_cli("nonexistent-agent"));
+    }
+
+    #[test]
+    fn prompts_include_persona_role_section() {
+        for phase in &["specify", "plan", "implement", "review"] {
+            let prompt = build_phase_prompt(phase, "001-test", None, None);
+            assert!(
+                prompt.contains("## Role:"),
+                "{phase} prompt missing persona role section"
+            );
+            assert!(
+                prompt.contains("## Expected Output"),
+                "{phase} prompt missing expected output section"
+            );
+            assert!(
+                prompt.contains("## Mission Checklist"),
+                "{phase} prompt missing mission checklist"
+            );
+        }
+    }
+
+    #[test]
+    fn prompts_include_compliance_guardrails() {
+        for phase in &["specify", "plan", "analyze"] {
+            let prompt = build_phase_prompt(phase, "001-test", None, None);
+            assert!(
+                prompt.contains("Before You Skip Any Step"),
+                "{phase} prompt missing anti-rationalization section"
+            );
+            assert!(
+                prompt.contains("Mandatory Verification Checklist"),
+                "{phase} prompt missing compliance checklist"
+            );
+        }
+    }
+
+    #[test]
+    fn project_context_injected_when_provided() {
+        let prompt = build_phase_prompt(
+            "specify",
+            "001-test",
+            None,
+            Some("Rust + TypeScript monorepo"),
+        );
+        assert!(prompt.contains("## Project Context"));
+        assert!(prompt.contains("Rust + TypeScript monorepo"));
+    }
+
+    #[test]
+    fn empty_project_context_is_skipped() {
+        let prompt = build_phase_prompt("specify", "001-test", None, Some(""));
+        assert!(!prompt.contains("## Project Context"));
     }
 }

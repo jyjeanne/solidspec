@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# RustySpec prerequisites check
+# SolidSpec prerequisites check
 source "$(dirname "$0")/common.sh"
 
-echo "RustySpec Prerequisites Check"
+echo "SolidSpec Prerequisites Check"
 echo "=============================="
 
 errors=0
@@ -20,21 +20,21 @@ root="$(get_repo_root 2>/dev/null || true)"
 if [ -n "$root" ]; then
     echo "[OK] Project root: $root"
 
-    if [ -f "$root/.rustyspec/constitution.md" ]; then
+    if [ -f "$root/.solidspec/constitution.md" ]; then
         echo "[OK] Constitution file present"
     else
         echo "[!!] Constitution file missing"
         errors=$((errors + 1))
     fi
 
-    if [ -f "$root/rustyspec.toml" ]; then
-        echo "[OK] rustyspec.toml found"
+    if [ -f "$root/solidspec.toml" ]; then
+        echo "[OK] solidspec.toml found"
     else
-        echo "[!!] rustyspec.toml missing"
+        echo "[!!] solidspec.toml missing"
         errors=$((errors + 1))
     fi
 else
-    echo "[!!] Not inside a RustySpec project"
+    echo "[!!] Not inside a SolidSpec project"
     errors=$((errors + 1))
 fi
 

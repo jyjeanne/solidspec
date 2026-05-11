@@ -1,8 +1,8 @@
-# RustySpec Project Guidelines
+# SolidSpec Project Guidelines
 
 ## What This Project Is
 
-RustySpec is a Rust CLI tool (`rustyspec`) implementing Specification-Driven Development (SDD) — it transforms feature descriptions into structured specs, plans, tasks, and test scaffolds, then orchestrates AI agents to implement them.
+SolidSpec is a Rust CLI tool (`solidspec`) implementing Specification-Driven Development (SDD) — it transforms feature descriptions into structured specs, plans, tasks, and test scaffolds, then orchestrates AI agents to implement them.
 
 See [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for full system architecture and data flows.
 
@@ -38,7 +38,7 @@ Each `src/cli/` file maps 1-to-1 to a subcommand. Never add business logic there
 
 ## Key Conventions
 
-**Errors:** Use `RustySpecError` (`src/core/errors.rs`) with `thiserror`. Every error variant must include a `fix` field with a human-actionable suggestion. Use `anyhow::Result` in fallible functions.
+**Errors:** Use `SolidSpecError` (`src/core/errors.rs`) with `thiserror`. Every error variant must include a `fix` field with a human-actionable suggestion. Use `anyhow::Result` in fallible functions.
 
 **CLI parsing:** Clap derive macros (`#[derive(Parser)]`). Global `--debug` flag lives on the root `Cli` struct.
 
@@ -46,16 +46,16 @@ Each `src/cli/` file maps 1-to-1 to a subcommand. Never add business logic there
 
 **Embedded templates:** Use `include_str!()` to embed templates from `templates/` into the binary. Template resolution priority:
 ```
-1. .rustyspec/templates/overrides/     ← project-level tweaks (highest)
-2. .rustyspec/presets/<id>/templates/
-3. .rustyspec/extensions/<id>/templates/
+1. .solidspec/templates/overrides/     ← project-level tweaks (highest)
+2. .solidspec/presets/<id>/templates/
+3. .solidspec/extensions/<id>/templates/
 4. Binary-embedded defaults            ← fallback
 ```
 
 **Runtime config locations:**
-- `rustyspec.toml` — project config (root)
-- `.rustyspec/` — constitution, templates, extensions, presets, internal state
-- `.rustyspec/project-config.json` — `ProjectInternalConfig` (internal state, not user-facing)
+- `solidspec.toml` — project config (root)
+- `.solidspec/` — constitution, templates, extensions, presets, internal state
+- `.solidspec/project-config.json` — `ProjectInternalConfig` (internal state, not user-facing)
 
 **Feature resolution** cascades: explicit CLI arg → env var → current git branch → latest `specs/` directory.
 
@@ -69,7 +69,7 @@ Each `src/cli/` file maps 1-to-1 to a subcommand. Never add business logic there
 
 Don't duplicate — link:
 - Architecture details → [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
-- SDD methodology → [docs/rusty-specification.md](../docs/rusty-specification.md)
+- SDD methodology → [docs/solid-specification.md](../docs/solid-specification.md)
 - Pipeline orchestration → [docs/multi-agent-pipeline.md](../docs/multi-agent-pipeline.md)
 - Test scaffold generation → [docs/spec-to-test-generation.md](../docs/spec-to-test-generation.md)
 - Feature backlog → [docs/KILLER_FEATURE_IDEAS.md](../docs/KILLER_FEATURE_IDEAS.md)

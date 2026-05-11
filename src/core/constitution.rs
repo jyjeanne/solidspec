@@ -3,7 +3,7 @@ use std::path::Path;
 
 use anyhow::Result;
 
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
 
 #[derive(Debug, Clone)]
 pub struct Constitution {
@@ -26,11 +26,11 @@ pub struct GateResult {
 }
 
 pub fn load_constitution(path: &Path) -> Result<Constitution> {
-    let content = std::fs::read_to_string(path).map_err(|_| RustySpecError::Config {
+    let content = std::fs::read_to_string(path).map_err(|_| SolidSpecError::Config {
         path: path.to_path_buf(),
         message: "Constitution file not found".into(),
         fix: format!(
-            "Ensure {} exists. Run 'rustyspec init' to create it.",
+            "Ensure {} exists. Run 'solidspec init' to create it.",
             path.display()
         ),
     })?;

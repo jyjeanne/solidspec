@@ -40,7 +40,7 @@ pub fn render_command(format: AgentFormat, description: &str, body: &str) -> Str
 
 /// Adjust script paths from relative template paths to installed paths.
 pub fn adjust_script_paths(content: &str) -> String {
-    content.replace("../../scripts/", ".rustyspec/scripts/")
+    content.replace("../../scripts/", ".solidspec/scripts/")
 }
 
 /// Render a Copilot `.agent.md` file with proper VS Code custom agent frontmatter.
@@ -88,14 +88,27 @@ pub fn render_vibe_skill(cmd_name: &str, description: &str, body: &str) -> Strin
     )
 }
 
-/// Generate a Kimi dot-separator command name (rustyspec.specify).
-pub fn kimi_command_name(cmd: &str) -> String {
-    format!("rustyspec.{cmd}")
+/// Render an OpenCode skill SKILL.md with name + description frontmatter.
+/// Format per https://opencode.ai/docs/skills/
+pub fn render_opencode_skill(cmd_name: &str, description: &str, body: &str) -> String {
+    let name = standard_command_name(cmd_name);
+    format!(
+        "---\n\
+         name: {name}\n\
+         description: {description}\n\
+         ---\n\n\
+         {body}\n"
+    )
 }
 
-/// Generate a standard hyphen-separator command name (rustyspec-specify).
+/// Generate a Kimi dot-separator command name (solidspec.specify).
+pub fn kimi_command_name(cmd: &str) -> String {
+    format!("solidspec.{cmd}")
+}
+
+/// Generate a standard hyphen-separator command name (solidspec-specify).
 pub fn standard_command_name(cmd: &str) -> String {
-    format!("rustyspec-{cmd}")
+    format!("solidspec-{cmd}")
 }
 
 #[cfg(test)]
@@ -147,14 +160,14 @@ mod tests {
         let input =
             "scripts:\n  sh: ../../scripts/bash/setup.sh\n  ps: ../../scripts/powershell/setup.ps1";
         let result = adjust_script_paths(input);
-        assert!(result.contains(".rustyspec/scripts/bash/setup.sh"));
-        assert!(result.contains(".rustyspec/scripts/powershell/setup.ps1"));
+        assert!(result.contains(".solidspec/scripts/bash/setup.sh"));
+        assert!(result.contains(".solidspec/scripts/powershell/setup.ps1"));
         assert!(!result.contains("../../scripts/"));
     }
 
     #[test]
     fn already_adjusted_paths_not_double_adjusted() {
-        let input = ".rustyspec/scripts/bash/setup.sh";
+        let input = ".solidspec/scripts/bash/setup.sh";
         let result = adjust_script_paths(input);
         assert_eq!(result, input);
     }
@@ -163,7 +176,7 @@ mod tests {
     fn vibe_skill_has_required_frontmatter() {
         let output = render_vibe_skill("specify", "Create a spec", "Do something with $ARGUMENTS");
         assert!(output.starts_with("---\n"));
-        assert!(output.contains("name: rustyspec-specify"));
+        assert!(output.contains("name: solidspec-specify"));
         assert!(output.contains("user-invocable: true"));
         assert!(output.contains("allowed-tools:"));
         assert!(output.contains("- read_file"));
@@ -172,14 +185,27 @@ mod tests {
     }
 
     #[test]
+    fn opencode_skill_has_name_and_description() {
+        let output =
+            render_opencode_skill("specify", "Create a spec", "Do something with $ARGUMENTS");
+        assert!(output.starts_with("---\n"));
+        assert!(output.contains("name: solidspec-specify"));
+        assert!(output.contains("description: Create a spec"));
+        assert!(output.contains("Do something with $ARGUMENTS"));
+        // OpenCode skills must NOT have user-invocable or allowed-tools fields
+        assert!(!output.contains("user-invocable:"));
+        assert!(!output.contains("allowed-tools:"));
+    }
+
+    #[test]
     fn kimi_dot_separator_naming() {
-        assert_eq!(kimi_command_name("specify"), "rustyspec.specify");
-        assert_eq!(kimi_command_name("plan"), "rustyspec.plan");
+        assert_eq!(kimi_command_name("specify"), "solidspec.specify");
+        assert_eq!(kimi_command_name("plan"), "solidspec.plan");
     }
 
     #[test]
     fn standard_hyphen_separator_naming() {
-        assert_eq!(standard_command_name("specify"), "rustyspec-specify");
-        assert_eq!(standard_command_name("plan"), "rustyspec-plan");
+        assert_eq!(standard_command_name("specify"), "solidspec-specify");
+        assert_eq!(standard_command_name("plan"), "solidspec-plan");
     }
 }

@@ -6,7 +6,7 @@ use std::path::Path;
 use anyhow::Result;
 use tera::{Context, Tera};
 
-use crate::core::errors::RustySpecError;
+use crate::core::errors::SolidSpecError;
 
 /// Embedded default templates
 pub mod embedded {
@@ -72,7 +72,7 @@ pub fn render(template_str: &str, vars: &HashMap<String, String>) -> Result<Stri
     let mut tera = Tera::default();
     tera.autoescape_on(vec![]); // Disable HTML auto-escaping — we generate markdown, not HTML
     tera.add_raw_template("template", template_str)
-        .map_err(|e| RustySpecError::Template {
+        .map_err(|e| SolidSpecError::Template {
             template: "inline".into(),
             message: format!("Failed to parse template: {e}"),
             fix: "Check template syntax (Tera/Jinja2 format).".into(),
@@ -84,7 +84,7 @@ pub fn render(template_str: &str, vars: &HashMap<String, String>) -> Result<Stri
     }
 
     tera.render("template", &context)
-        .map_err(|e| RustySpecError::Template {
+        .map_err(|e| SolidSpecError::Template {
             template: "inline".into(),
             message: format!("Failed to render template: {e}"),
             fix: "Ensure all required variables are provided.".into(),
@@ -104,16 +104,16 @@ pub fn copy_embedded_templates(target_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Copy all embedded scripts to `.rustyspec/scripts/`.
+/// Copy all embedded scripts to `.solidspec/scripts/`.
 /// Always overwrites (scripts are not user-customizable).
-pub fn copy_embedded_scripts(rustyspec_dir: &Path) -> Result<()> {
-    let bash_dir = rustyspec_dir.join("scripts/bash");
+pub fn copy_embedded_scripts(solidspec_dir: &Path) -> Result<()> {
+    let bash_dir = solidspec_dir.join("scripts/bash");
     std::fs::create_dir_all(&bash_dir)?;
     for (name, content) in scripts::bash_scripts() {
         std::fs::write(bash_dir.join(name), content)?;
     }
 
-    let ps_dir = rustyspec_dir.join("scripts/powershell");
+    let ps_dir = solidspec_dir.join("scripts/powershell");
     std::fs::create_dir_all(&ps_dir)?;
     for (name, content) in scripts::powershell_scripts() {
         std::fs::write(ps_dir.join(name), content)?;
@@ -238,18 +238,18 @@ mod tests {
     #[test]
     fn copy_embedded_scripts_creates_files() {
         let dir = tempfile::TempDir::new().unwrap();
-        let rustyspec_dir = dir.path().join(".rustyspec");
-        copy_embedded_scripts(&rustyspec_dir).unwrap();
+        let solidspec_dir = dir.path().join(".solidspec");
+        copy_embedded_scripts(&solidspec_dir).unwrap();
 
         for (name, _) in scripts::bash_scripts() {
             assert!(
-                rustyspec_dir.join("scripts/bash").join(name).exists(),
+                solidspec_dir.join("scripts/bash").join(name).exists(),
                 "Missing bash script: {name}"
             );
         }
         for (name, _) in scripts::powershell_scripts() {
             assert!(
-                rustyspec_dir.join("scripts/powershell").join(name).exists(),
+                solidspec_dir.join("scripts/powershell").join(name).exists(),
                 "Missing powershell script: {name}"
             );
         }
@@ -258,14 +258,14 @@ mod tests {
     #[test]
     fn copy_embedded_scripts_overwrites_existing() {
         let dir = tempfile::TempDir::new().unwrap();
-        let rustyspec_dir = dir.path().join(".rustyspec");
-        std::fs::create_dir_all(rustyspec_dir.join("scripts/bash")).unwrap();
-        std::fs::write(rustyspec_dir.join("scripts/bash/common.sh"), "OLD").unwrap();
+        let solidspec_dir = dir.path().join(".solidspec");
+        std::fs::create_dir_all(solidspec_dir.join("scripts/bash")).unwrap();
+        std::fs::write(solidspec_dir.join("scripts/bash/common.sh"), "OLD").unwrap();
 
-        copy_embedded_scripts(&rustyspec_dir).unwrap();
+        copy_embedded_scripts(&solidspec_dir).unwrap();
 
         let content =
-            std::fs::read_to_string(rustyspec_dir.join("scripts/bash/common.sh")).unwrap();
+            std::fs::read_to_string(solidspec_dir.join("scripts/bash/common.sh")).unwrap();
         assert_ne!(content, "OLD", "Scripts should be overwritten on copy");
         assert!(content.contains("get_repo_root"));
     }

@@ -1,0 +1,16 @@
+# Cargo Audit Configuration
+# See: https://docs.rs/cargo-audit/latest/cargo_audit/config/struct.AuditConfig.html
+
+[advisories]
+# Empty allowlist — deny all by default
+# Uncomment to temporarily ignore a specific advisory:
+# ignore = ["RUSTSEC-YYYY-NNNN"]
+
+[output]
+quiet = false
+
+[output.deny]
+warnings = true
+
+[target]
+# Audit for the current target architecture

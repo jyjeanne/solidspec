@@ -1,0 +1,36 @@
+# Schema: security-first
+# Adds a mandatory security review before tasks can be generated.
+name: security-first
+version: "1.0"
+description: "Security-audited SDD workflow — plan must pass security review before tasks"
+
+artifacts:
+  - id: spec
+    generates: ["spec.md"]
+    requires: []
+    instruction: "Create a feature specification with user stories, functional requirements, and acceptance criteria."
+    template: "spec-template.md"
+
+  - id: plan
+    generates: ["plan.md"]
+    requires: ["spec"]
+    instruction: "Create an architecture plan with decisions, data model, and constitution compliance."
+    template: "plan-template.md"
+
+  - id: security-review
+    generates: ["security-review.md"]
+    requires: ["plan"]
+    instruction: "Perform an OWASP Top 10 security audit of the architecture plan. Flag authentication gaps, injection risks, data exposure, and missing security controls. Output findings by severity (Critical/High/Medium/Low)."
+    template: null
+
+  - id: tasks
+    generates: ["tasks.md"]
+    requires: ["plan", "security-review"]
+    instruction: "Generate a phased task breakdown. Every security finding must have a corresponding mitigation task."
+    template: "tasks-template.md"
+
+  - id: implement
+    generates: ["tasks.md"]
+    requires: ["tasks"]
+    instruction: "Execute tasks in order, checking off completed work. Verify security mitigations are implemented."
+    template: null

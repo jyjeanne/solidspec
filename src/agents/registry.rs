@@ -5,6 +5,7 @@ use anyhow::Result;
 
 use super::config::{AGENTS, AgentConfig, find_agent};
 use super::formats;
+use super::guardrails;
 
 /// Detected agent in a repository.
 #[derive(Debug, Clone)]
@@ -14,7 +15,7 @@ pub struct DetectedAgent {
     pub cli_available: bool,
 }
 
-/// RustySpec commands to register with agents.
+/// SolidSpec commands to register with agents.
 const COMMANDS: &[(&str, &str)] = &[
     ("specify", "Create a new feature specification"),
     ("clarify", "Resolve ambiguities in a specification"),
@@ -51,7 +52,7 @@ pub fn detect_agents(project_root: &Path) -> Vec<DetectedAgent> {
         .collect()
 }
 
-/// Register RustySpec commands for a specific agent.
+/// Register SolidSpec commands for a specific agent.
 pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -63,7 +64,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
         let body = match *cmd_name {
             "implement" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md, then implement the feature.\n\n\
+                    "Read the project context from .solidspec/AGENT.md, then implement the feature.\n\n\
                      The feature ID is: {arg}\n\
                      Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
                      Steps:\n\
@@ -73,12 +74,12 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
                      4. Execute each task in order, respecting phase dependencies\n\
                      5. Tasks marked [P] can be done in parallel\n\
                      6. After completing each task, update tasks.md: change `- [ ]` to `- [x]` for that task\n\
-                     7. When all tasks are done, run /rustyspec-analyze to validate"
+                     7. When all tasks are done, run /solidspec-analyze to validate"
                 )
             }
             "specify" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
                      Fill in the feature's spec.md with real content:\n\
@@ -94,7 +95,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "clarify" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/.\n\n\
                      Read spec.md and find all [NEEDS CLARIFICATION] markers.\n\
@@ -107,7 +108,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "plan" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/ and read spec.md for requirements.\n\n\
                      Fill in the planning documents with real content:\n\
@@ -122,7 +123,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "tasks" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/.\n\
                      Read spec.md and plan.md.\n\n\
@@ -136,7 +137,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "tests" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/.\n\
                      Read spec.md for acceptance scenarios.\n\n\
@@ -149,7 +150,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "analyze" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/.\n\n\
                      Validate cross-artifact consistency:\n\
@@ -161,7 +162,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             "review" => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md.\n\n\
+                    "Read the project context from .solidspec/AGENT.md.\n\n\
                      Feature ID: {arg}\n\
                      Find the matching directory under specs/.\n\n\
                      Perform a comprehensive spec quality review:\n\
@@ -174,13 +175,15 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             }
             _ => {
                 format!(
-                    "Read the project context from .rustyspec/AGENT.md, then execute the '{}' workflow for the feature specified by {arg}.",
+                    "Read the project context from .solidspec/AGENT.md, then execute the '{}' workflow for the feature specified by {arg}.",
                     cmd_name
                 )
             }
         };
 
-        let body = formats::translate_placeholder(&body, agent.arg_placeholder);
+        let mut body = formats::translate_placeholder(&body, agent.arg_placeholder);
+        body.push('\n');
+        body.push_str(&guardrails::compliance_footer());
 
         // Copilot: .agent.md and .prompt.md use different frontmatter formats
         if agent.id == "copilot" {
@@ -191,13 +194,13 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             let agents_dir = project_root
                 .join(agent.command_dir)
                 .join(agent.commands_subdir);
-            let file_name = format!("rustyspec-{cmd_name}{}", agent.extension);
+            let file_name = format!("solidspec-{cmd_name}{}", agent.extension);
             std::fs::write(agents_dir.join(&file_name), &agent_content)?;
 
             let prompts_dir = project_root.join(".github/prompts");
             std::fs::create_dir_all(&prompts_dir)?;
             std::fs::write(
-                prompts_dir.join(format!("rustyspec-{cmd_name}.prompt.md")),
+                prompts_dir.join(format!("solidspec-{cmd_name}.prompt.md")),
                 &prompt_content,
             )?;
             continue;
@@ -205,6 +208,9 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
 
         let content = if agent.id == "vibe" {
             let rendered = formats::render_vibe_skill(cmd_name, description, &body);
+            formats::adjust_script_paths(&rendered)
+        } else if agent.id == "opencode" {
+            let rendered = formats::render_opencode_skill(cmd_name, description, &body);
             formats::adjust_script_paths(&rendered)
         } else {
             let rendered = formats::render_command(agent.format, description, &body);
@@ -234,8 +240,8 @@ fn write_command_file(
         let skill_dir = cmd_dir.join(&skill_name);
         std::fs::create_dir_all(&skill_dir)?;
         std::fs::write(skill_dir.join("SKILL.md"), content)?;
-    } else if agent.id == "vibe" {
-        // Vibe: directory-based skills with hyphen-separator
+    } else if agent.id == "vibe" || agent.id == "opencode" {
+        // Vibe/OpenCode: directory-based skills with hyphen-separator (SKILL.md)
         let skill_name = formats::standard_command_name(cmd_name);
         let skill_dir = cmd_dir.join(&skill_name);
         std::fs::create_dir_all(&skill_dir)?;
@@ -253,7 +259,7 @@ fn write_command_file(
     Ok(())
 }
 
-/// Unregister all RustySpec commands for a specific agent.
+/// Unregister all SolidSpec commands for a specific agent.
 pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -270,14 +276,14 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
             if skill_dir.exists() {
                 std::fs::remove_dir_all(&skill_dir)?;
             }
-        } else if agent.id == "vibe" {
+        } else if agent.id == "vibe" || agent.id == "opencode" {
             let skill_name = formats::standard_command_name(cmd_name);
             let skill_dir = cmd_dir.join(&skill_name);
             if skill_dir.exists() {
                 std::fs::remove_dir_all(&skill_dir)?;
             }
         } else if agent.id == "copilot" {
-            let file_name = format!("rustyspec-{cmd_name}{}", agent.extension);
+            let file_name = format!("solidspec-{cmd_name}{}", agent.extension);
             let path = cmd_dir.join(&file_name);
             if path.exists() {
                 std::fs::remove_file(&path)?;
@@ -286,7 +292,7 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
             // Remove companion .prompt.md
             let prompt = project_root
                 .join(".github/prompts")
-                .join(format!("rustyspec-{cmd_name}.prompt.md"));
+                .join(format!("solidspec-{cmd_name}.prompt.md"));
             if prompt.exists() {
                 std::fs::remove_file(&prompt)?;
             }
@@ -431,7 +437,7 @@ mod tests {
         let cmd_dir = dir.path().join(".claude/commands");
         assert!(cmd_dir.exists());
 
-        let specify = cmd_dir.join("rustyspec-specify.md");
+        let specify = cmd_dir.join("solidspec-specify.md");
         assert!(specify.exists());
         let content = std::fs::read_to_string(&specify).unwrap();
         assert!(content.starts_with("---\n"));
@@ -446,7 +452,7 @@ mod tests {
         register_commands(dir.path(), gemini).unwrap();
 
         let cmd_dir = dir.path().join(".gemini/commands");
-        let specify = cmd_dir.join("rustyspec-specify.toml");
+        let specify = cmd_dir.join("solidspec-specify.toml");
         assert!(specify.exists());
         let content = std::fs::read_to_string(&specify).unwrap();
         assert!(content.contains("description = "));
@@ -462,13 +468,13 @@ mod tests {
         register_commands(dir.path(), copilot).unwrap();
 
         // .agent.md in .github/agents/
-        let agent_file = dir.path().join(".github/agents/rustyspec-specify.agent.md");
+        let agent_file = dir.path().join(".github/agents/solidspec-specify.agent.md");
         assert!(agent_file.exists());
 
         // .prompt.md in .github/prompts/
         let prompt_file = dir
             .path()
-            .join(".github/prompts/rustyspec-specify.prompt.md");
+            .join(".github/prompts/solidspec-specify.prompt.md");
         assert!(prompt_file.exists());
     }
 
@@ -478,8 +484,8 @@ mod tests {
         let kimi = find_agent("kimi").unwrap();
         register_commands(dir.path(), kimi).unwrap();
 
-        // Directory-based: .kimi/skills/rustyspec.specify/SKILL.md
-        let skill = dir.path().join(".kimi/skills/rustyspec.specify/SKILL.md");
+        // Directory-based: .kimi/skills/solidspec.specify/SKILL.md
+        let skill = dir.path().join(".kimi/skills/solidspec.specify/SKILL.md");
         assert!(
             skill.exists(),
             "Kimi skill not found at {}",
@@ -493,10 +499,10 @@ mod tests {
         let copilot = find_agent("copilot").unwrap();
         register_commands(dir.path(), copilot).unwrap();
 
-        let agent_file = dir.path().join(".github/agents/rustyspec-specify.agent.md");
+        let agent_file = dir.path().join(".github/agents/solidspec-specify.agent.md");
         let prompt_file = dir
             .path()
-            .join(".github/prompts/rustyspec-specify.prompt.md");
+            .join(".github/prompts/solidspec-specify.prompt.md");
         assert!(agent_file.exists());
         assert!(prompt_file.exists());
 
@@ -512,7 +518,7 @@ mod tests {
         register_commands(dir.path(), kimi).unwrap();
         unregister_commands(dir.path(), kimi).unwrap();
 
-        let skill = dir.path().join(".kimi/skills/rustyspec.specify");
+        let skill = dir.path().join(".kimi/skills/solidspec.specify");
         assert!(!skill.exists());
     }
 
@@ -523,7 +529,7 @@ mod tests {
         assert_eq!(registered, vec!["claude"]);
         assert!(
             dir.path()
-                .join(".claude/commands/rustyspec-specify.md")
+                .join(".claude/commands/solidspec-specify.md")
                 .exists()
         );
     }
@@ -555,8 +561,8 @@ mod tests {
         let vibe = find_agent("vibe").unwrap();
         register_commands(dir.path(), vibe).unwrap();
 
-        // Directory-based: .vibe/skills/rustyspec-specify/SKILL.md
-        let skill = dir.path().join(".vibe/skills/rustyspec-specify/SKILL.md");
+        // Directory-based: .vibe/skills/solidspec-specify/SKILL.md
+        let skill = dir.path().join(".vibe/skills/solidspec-specify/SKILL.md");
         assert!(
             skill.exists(),
             "Vibe skill not found at {}",
@@ -564,7 +570,7 @@ mod tests {
         );
 
         let content = std::fs::read_to_string(&skill).unwrap();
-        assert!(content.contains("name: rustyspec-specify"));
+        assert!(content.contains("name: solidspec-specify"));
         assert!(content.contains("user-invocable: true"));
         assert!(content.contains("allowed-tools:"));
     }
@@ -576,7 +582,34 @@ mod tests {
         register_commands(dir.path(), vibe).unwrap();
         unregister_commands(dir.path(), vibe).unwrap();
 
-        let skill = dir.path().join(".vibe/skills/rustyspec-specify");
+        let skill = dir.path().join(".vibe/skills/solidspec-specify");
+        assert!(!skill.exists());
+    }
+
+    #[test]
+    fn opencode_creates_directory_based_skills() {
+        let dir = TempDir::new().unwrap();
+        let opencode = find_agent("opencode").unwrap();
+        register_commands(dir.path(), opencode).unwrap();
+
+        let skill = dir.path().join(".opencode/skills/solidspec-specify/SKILL.md");
+        assert!(skill.exists(), "OpenCode skill not found at {}", skill.display());
+
+        let content = std::fs::read_to_string(&skill).unwrap();
+        assert!(content.starts_with("---\n"), "Missing YAML frontmatter");
+        assert!(content.contains("name: solidspec-specify"), "Missing name field");
+        assert!(content.contains("description:"), "Missing description field");
+        assert!(content.contains("Before You Skip Any Step"), "Missing compliance guardrails");
+    }
+
+    #[test]
+    fn unregister_removes_opencode_skills() {
+        let dir = TempDir::new().unwrap();
+        let opencode = find_agent("opencode").unwrap();
+        register_commands(dir.path(), opencode).unwrap();
+        unregister_commands(dir.path(), opencode).unwrap();
+
+        let skill = dir.path().join(".opencode/skills/solidspec-specify");
         assert!(!skill.exists());
     }
 
@@ -589,7 +622,7 @@ mod tests {
         register_commands(dir.path(), kimi).unwrap();
         assert!(
             dir.path()
-                .join(".kimi/skills/rustyspec.specify/SKILL.md")
+                .join(".kimi/skills/solidspec.specify/SKILL.md")
                 .exists()
         );
 
@@ -598,8 +631,23 @@ mod tests {
         register_commands(dir.path(), claude).unwrap();
         assert!(
             dir.path()
-                .join(".claude/commands/rustyspec-specify.md")
+                .join(".claude/commands/solidspec-specify.md")
                 .exists()
         );
+    }
+
+    #[test]
+    fn command_files_contain_compliance_guardrails() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let content = std::fs::read_to_string(
+            dir.path().join(".claude/commands/solidspec-specify.md"),
+        )
+        .unwrap();
+        assert!(content.contains("Before You Skip Any Step"));
+        assert!(content.contains("Mandatory Verification Checklist"));
+        assert!(content.contains("[NEEDS CLARIFICATION]"));
     }
 }

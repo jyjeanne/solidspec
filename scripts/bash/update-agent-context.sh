@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Regenerate .rustyspec/AGENT.md from constitution and current specs
+# Regenerate .solidspec/AGENT.md from constitution and current specs
 source "$(dirname "$0")/common.sh"
 
 root="$(get_repo_root)"
-agent_file="$root/.rustyspec/AGENT.md"
-constitution="$root/.rustyspec/constitution.md"
+agent_file="$root/.solidspec/AGENT.md"
+constitution="$root/.solidspec/constitution.md"
 date="$(date +%Y-%m-%d)"
 
-# Read project name from rustyspec.toml
-project_name="$(sed -n 's/^name\s*=\s*"\([^"]*\)".*/\1/p' "$root/rustyspec.toml" 2>/dev/null | head -1)"
+# Read project name from solidspec.toml
+project_name="$(sed -n 's/^name\s*=\s*"\([^"]*\)".*/\1/p' "$root/solidspec.toml" 2>/dev/null | head -1)"
 project_name="${project_name:-unknown}"
 
 cat > "$agent_file" <<EOF
-# RustySpec Agent Context
+# SolidSpec Agent Context
 
 **Project**: $project_name
 **Updated**: $date
@@ -56,13 +56,13 @@ cat >> "$agent_file" <<EOF
 
 ## Available Commands
 
-- \`/rustyspec-specify\` — Create feature specification
-- \`/rustyspec-clarify\` — Resolve spec ambiguities
-- \`/rustyspec-plan\` — Generate architecture plan
-- \`/rustyspec-tasks\` — Generate task breakdown
-- \`/rustyspec-implement\` — Execute tasks
-- \`/rustyspec-analyze\` — Validate consistency
-- \`/rustyspec-checklist\` — Quality validation
+- \`/solidspec-specify\` — Create feature specification
+- \`/solidspec-clarify\` — Resolve spec ambiguities
+- \`/solidspec-plan\` — Generate architecture plan
+- \`/solidspec-tasks\` — Generate task breakdown
+- \`/solidspec-implement\` — Execute tasks
+- \`/solidspec-analyze\` — Validate consistency
+- \`/solidspec-checklist\` — Quality validation
 EOF
 
 echo "Updated $agent_file"

@@ -11,7 +11,7 @@ pub fn run(
 ) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
     let feature_dir_name = feature::resolve_feature(feature_id, &project_root)?;
     let feature_dir = project_root.join("specs").join(&feature_dir_name);

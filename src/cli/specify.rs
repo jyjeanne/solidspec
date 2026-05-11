@@ -16,7 +16,7 @@ pub fn run(feature_name: &str) -> Result<()> {
 
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
     let specs_dir = project_root.join("specs");
     let num = feature::next_feature_number(&specs_dir)?;
@@ -50,7 +50,7 @@ pub fn run(feature_name: &str) -> Result<()> {
     std::fs::create_dir_all(&checklists_dir)?;
 
     // Render spec from template
-    let root_config = config::RootConfig::load(&project_root.join("rustyspec.toml"))?;
+    let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))?;
     let vars = build_template_vars(&root_config, &feature_id, feature_name, &branch_name);
 
     // Resolve spec template through 4-layer hierarchy

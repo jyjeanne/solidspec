@@ -8,7 +8,7 @@ pub fn fire_hooks(trigger: &str, project_root: &Path, registry: &ExtensionRegist
     let hooks = registry.enabled_hooks(trigger);
     for (ext_id, hook) in &hooks {
         let hook_path = project_root
-            .join(".rustyspec/extensions")
+            .join(".solidspec/extensions")
             .join(ext_id)
             .join(&hook.file);
 

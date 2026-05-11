@@ -1,4 +1,4 @@
-# RustySpec Agent Context
+# SolidSpec Agent Context
 
 **Project**: {{ project_name }}
 **Updated**: {{ date }}
@@ -15,10 +15,10 @@ This project follows Specification-Driven Development (SDD). Key governance:
 
 ## Available Commands
 
-- `rustyspec specify <name>` — Create feature specification
-- `rustyspec clarify <id>` — Resolve spec ambiguities
-- `rustyspec plan <id>` — Generate architecture plan
-- `rustyspec tasks <id>` — Generate task breakdown
-- `rustyspec implement <id>` — Execute tasks
-- `rustyspec analyze <id>` — Validate consistency
-- `rustyspec checklist <id>` — Quality validation
+- `solidspec specify <name>` — Create feature specification
+- `solidspec clarify <id>` — Resolve spec ambiguities
+- `solidspec plan <id>` — Generate architecture plan
+- `solidspec tasks <id>` — Generate task breakdown
+- `solidspec implement <id>` — Execute tasks
+- `solidspec analyze <id>` — Validate consistency
+- `solidspec checklist <id>` — Quality validation

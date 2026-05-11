@@ -11,10 +11,10 @@
 # Claude Code local settings
 .claude/
 
-# Generated artifacts from running rustyspec on itself
-.rustyspec/
+# Generated artifacts from running solidspec on itself
+.solidspec/
 .vibe/
-rustyspec.toml
+solidspec.toml
 specs/
 
 # OS

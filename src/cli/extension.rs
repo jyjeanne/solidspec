@@ -49,7 +49,7 @@ pub enum ExtensionCommands {
 pub fn run(cmd: ExtensionCommands) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root =
-        config::find_project_root(&cwd).context("Not inside a RustySpec project.")?;
+        config::find_project_root(&cwd).context("Not inside a SolidSpec project.")?;
 
     match cmd {
         ExtensionCommands::Add { source, dev } => {

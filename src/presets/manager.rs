@@ -16,11 +16,11 @@ pub fn add_preset(project_root: &Path, source_dir: &Path, priority: u32) -> Resu
     let preset_id = manifest.preset.id.clone();
 
     // Load registry
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let mut registry = PresetRegistry::load(&registry_path)?;
 
     // Create preset directory and copy files
-    let target_dir = project_root.join(".rustyspec/presets").join(&preset_id);
+    let target_dir = project_root.join(".solidspec/presets").join(&preset_id);
     if target_dir.exists() {
         bail!(
             "Preset directory already exists. Remove '{}' first.",
@@ -47,13 +47,13 @@ pub fn add_preset(project_root: &Path, source_dir: &Path, priority: u32) -> Resu
 
 /// Remove an installed preset.
 pub fn remove_preset(project_root: &Path, preset_id: &str) -> Result<()> {
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let mut registry = PresetRegistry::load(&registry_path)?;
 
     registry.remove(preset_id)?;
 
     // Remove preset directory
-    let preset_dir = project_root.join(".rustyspec/presets").join(preset_id);
+    let preset_dir = project_root.join(".solidspec/presets").join(preset_id);
     if preset_dir.exists() {
         std::fs::remove_dir_all(&preset_dir)?;
     }
@@ -64,28 +64,28 @@ pub fn remove_preset(project_root: &Path, preset_id: &str) -> Result<()> {
 
 /// List installed presets.
 pub fn list_presets(project_root: &Path) -> Result<Vec<PresetEntry>> {
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let registry = PresetRegistry::load(&registry_path)?;
     Ok(registry.list())
 }
 
 /// Search presets by keyword.
 pub fn search_presets(project_root: &Path, query: &str) -> Result<Vec<PresetEntry>> {
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let registry = PresetRegistry::load(&registry_path)?;
     Ok(registry.search(query))
 }
 
 /// Get info about a specific preset.
 pub fn info_preset(project_root: &Path, preset_id: &str) -> Result<Option<PresetEntry>> {
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let registry = PresetRegistry::load(&registry_path)?;
     Ok(registry.get(preset_id))
 }
 
 /// Get sorted priorities for template resolution.
 pub fn get_preset_priorities(project_root: &Path) -> Result<Vec<(String, u32)>> {
-    let registry_path = project_root.join(".rustyspec/presets/.registry");
+    let registry_path = project_root.join(".solidspec/presets/.registry");
     let registry = PresetRegistry::load(&registry_path)?;
     Ok(registry.sorted_priorities())
 }
@@ -127,8 +127,8 @@ mod tests {
     use tempfile::TempDir;
 
     fn setup_project(dir: &Path) {
-        std::fs::create_dir_all(dir.join(".rustyspec/presets")).unwrap();
-        std::fs::write(dir.join(".rustyspec/presets/.registry"), "{}").unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/presets")).unwrap();
+        std::fs::write(dir.join(".solidspec/presets/.registry"), "{}").unwrap();
     }
 
     fn create_preset_source(dir: &Path, id: &str) -> std::path::PathBuf {
@@ -160,17 +160,17 @@ mod tests {
         // Files copied
         assert!(
             dir.path()
-                .join(".rustyspec/presets/my-preset/preset.yml")
+                .join(".solidspec/presets/my-preset/preset.yml")
                 .exists()
         );
         assert!(
             dir.path()
-                .join(".rustyspec/presets/my-preset/templates/spec-template.md")
+                .join(".solidspec/presets/my-preset/templates/spec-template.md")
                 .exists()
         );
 
         // Registry updated
-        let reg = PresetRegistry::load(&dir.path().join(".rustyspec/presets/.registry")).unwrap();
+        let reg = PresetRegistry::load(&dir.path().join(".solidspec/presets/.registry")).unwrap();
         let entry = reg.get("my-preset").unwrap();
         assert_eq!(entry.priority, 10);
     }
@@ -193,9 +193,9 @@ mod tests {
         add_preset(dir.path(), &src, 10).unwrap();
 
         remove_preset(dir.path(), "to-remove").unwrap();
-        assert!(!dir.path().join(".rustyspec/presets/to-remove").exists());
+        assert!(!dir.path().join(".solidspec/presets/to-remove").exists());
 
-        let reg = PresetRegistry::load(&dir.path().join(".rustyspec/presets/.registry")).unwrap();
+        let reg = PresetRegistry::load(&dir.path().join(".solidspec/presets/.registry")).unwrap();
         assert!(reg.get("to-remove").is_none());
     }
 

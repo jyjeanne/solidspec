@@ -3,14 +3,14 @@ use std::path::Path;
 use anyhow::Result;
 use git2::{Repository, Signature};
 
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
 
 pub fn is_git_repo(path: &Path) -> bool {
     Repository::discover(path).is_ok()
 }
 
 pub fn init_repo(path: &Path) -> Result<()> {
-    let repo = Repository::init(path).map_err(|e| RustySpecError::Git {
+    let repo = Repository::init(path).map_err(|e| SolidSpecError::Git {
         message: format!("Failed to init git repo at {}: {e}", path.display()),
         fix: "Check directory permissions or init manually with 'git init'.".into(),
     })?;
@@ -22,13 +22,13 @@ pub fn init_repo(path: &Path) -> Result<()> {
 
     let tree_oid = index.write_tree()?;
     let tree = repo.find_tree(tree_oid)?;
-    let sig = Signature::now("RustySpec", "noreply@rustyspec.dev")?;
+    let sig = Signature::now("SolidSpec", "noreply@solidspec.dev")?;
 
     repo.commit(
         Some("HEAD"),
         &sig,
         &sig,
-        "Initial commit from RustySpec template",
+        "Initial commit from SolidSpec template",
         &tree,
         &[],
     )?;
@@ -37,7 +37,7 @@ pub fn init_repo(path: &Path) -> Result<()> {
 }
 
 pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
-    let repo = Repository::open(repo_path).map_err(|e| RustySpecError::Git {
+    let repo = Repository::open(repo_path).map_err(|e| SolidSpecError::Git {
         message: format!("Cannot open repo: {e}"),
         fix: "Ensure you're inside a git repository.".into(),
     })?;
@@ -46,7 +46,7 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
     let commit = head.peel_to_commit()?;
 
     repo.branch(branch_name, &commit, false)
-        .map_err(|e| RustySpecError::Git {
+        .map_err(|e| SolidSpecError::Git {
             message: format!("Failed to create branch '{branch_name}': {e}"),
             fix: "Check if a branch with this name already exists.".into(),
         })?;
@@ -96,7 +96,7 @@ mod tests {
             commit
                 .message()
                 .unwrap()
-                .contains("Initial commit from RustySpec")
+                .contains("Initial commit from SolidSpec")
         );
     }
 

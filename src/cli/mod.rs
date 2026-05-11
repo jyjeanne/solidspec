@@ -1,4 +1,5 @@
 pub mod analyze;
+pub mod change;
 pub mod check;
 pub mod checklist;
 pub mod clarify;
@@ -11,6 +12,7 @@ pub mod plan;
 pub mod preset;
 pub mod review;
 pub mod specify;
+pub mod status;
 pub mod tasks;
 pub mod tests_cmd;
 pub mod upgrade;
@@ -21,7 +23,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    name = "rustyspec",
+    name = "solidspec",
     version,
     about = "Specification-Driven Development CLI"
 )]
@@ -36,7 +38,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Initialize a new RustySpec project
+    /// Initialize a new SolidSpec project
     Init {
         /// Project name (initializes in current directory if omitted)
         name: Option<String>,
@@ -177,13 +179,19 @@ pub enum Commands {
         command: preset::PresetCommands,
     },
 
+    /// Manage changes (delta specs) for brownfield modifications
+    Change {
+        #[command(subcommand)]
+        command: change::ChangeCommands,
+    },
+
     /// Manage extensions
     Extension {
         #[command(subcommand)]
         command: extension::ExtensionCommands,
     },
 
-    /// Refresh templates and scripts after a RustySpec update
+    /// Refresh templates and scripts after a SolidSpec update
     Upgrade {
         /// Skip confirmation prompts
         #[arg(long)]
@@ -198,6 +206,16 @@ pub enum Commands {
 
     /// Verify system prerequisites
     Check,
+
+    /// Show artifact completion status for a feature (DAG-based)
+    Status {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Workflow schema to use (default: spec-driven)
+        #[arg(long, default_value = "spec-driven")]
+        schema: String,
+    },
 }
 
 pub fn run(cli: Cli) -> Result<()> {
@@ -252,9 +270,14 @@ pub fn run(cli: Cli) -> Result<()> {
             no_agent,
         ),
         Commands::Preset { command } => preset::run(command),
+        Commands::Change { command } => change::run(command),
         Commands::Extension { command } => extension::run(command),
         Commands::Upgrade { force } => upgrade::run(force),
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
+        Commands::Status {
+            feature_id,
+            schema,
+        } => status::run(feature_id.as_deref(), &schema),
     }
 }

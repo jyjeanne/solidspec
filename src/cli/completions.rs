@@ -9,7 +9,7 @@ use super::Cli;
 pub fn generate_completions(shell: Shell) -> Result<String> {
     let mut cmd = Cli::command();
     let mut buf = Vec::new();
-    generate(shell, &mut cmd, "rustyspec", &mut buf);
+    generate(shell, &mut cmd, "solidspec", &mut buf);
     Ok(String::from_utf8(buf)?)
 }
 
@@ -46,7 +46,7 @@ mod tests {
         let output = generate_completions(Shell::PowerShell).unwrap();
         assert!(!output.is_empty());
         // PowerShell completions use Register-ArgumentCompleter
-        assert!(output.contains("rustyspec"));
+        assert!(output.contains("solidspec"));
     }
 
     #[test]

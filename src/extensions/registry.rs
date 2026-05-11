@@ -172,7 +172,7 @@ mod tests {
             version: "1.0.0".into(),
             installed_timestamp: "2026-03-14T00:00:00Z".into(),
             enabled: true,
-            commands: HashMap::from([("claude".into(), vec![format!("rustyspec.{id}.cmd")])]),
+            commands: HashMap::from([("claude".into(), vec![format!("solidspec.{id}.cmd")])]),
             hooks: vec![HookEntry {
                 trigger: "after_tasks".into(),
                 file: "hooks/run.sh".into(),
@@ -205,7 +205,7 @@ mod tests {
     fn update_preserves_timestamp() {
         let mut reg = ExtensionRegistry::default();
         reg.add(sample_entry("x")).unwrap();
-        let original_ts = reg.get("x").unwrap().installed_timestamp.clone();
+        let original_ts = reg.get("x").unwrap().installed_timestamp;
 
         let mut updated = sample_entry("x");
         updated.installed_timestamp = "2099-01-01T00:00:00Z".into();

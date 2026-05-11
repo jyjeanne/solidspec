@@ -22,24 +22,24 @@ pub fn run(
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| "my_project".to_string());
 
-    println!("Initializing RustySpec project: {project_name}");
+    println!("Initializing SolidSpec project: {project_name}");
 
     // Create directory structure
     create_directory_structure(&project_dir)?;
 
     // Save root config
     let root_config = RootConfig::new(&project_name);
-    root_config.save(&project_dir.join("rustyspec.toml"))?;
+    root_config.save(&project_dir.join("solidspec.toml"))?;
 
     // Save internal config
     let internal_config = ProjectInternalConfig::default();
-    internal_config.save(&project_dir.join(".rustyspec/config.toml"))?;
+    internal_config.save(&project_dir.join(".solidspec/config.toml"))?;
 
     // Copy embedded templates (preserves existing)
-    templates::copy_embedded_templates(&project_dir.join(".rustyspec/templates"))?;
+    templates::copy_embedded_templates(&project_dir.join(".solidspec/templates"))?;
 
     // Copy embedded scripts (always overwrite)
-    templates::copy_embedded_scripts(&project_dir.join(".rustyspec"))?;
+    templates::copy_embedded_scripts(&project_dir.join(".solidspec"))?;
 
     // Generate constitution from template (preserves existing)
     generate_constitution(&project_dir, &project_name)?;
@@ -67,7 +67,7 @@ pub fn run(
         script_type: script_type.into(),
         installed_at: chrono::Utc::now().to_rfc3339(),
     };
-    init_options.save(&project_dir.join(".rustyspec/init-options.json"))?;
+    init_options.save(&project_dir.join(".solidspec/init-options.json"))?;
 
     // Git init
     if !no_git && !git::is_git_repo(&project_dir) {
@@ -102,9 +102,9 @@ fn resolve_project_dir(name: Option<&str>, here: bool) -> Result<PathBuf> {
 
 fn create_directory_structure(project_dir: &Path) -> Result<()> {
     let dirs = [
-        ".rustyspec/templates/overrides",
-        ".rustyspec/presets",
-        ".rustyspec/extensions/.cache/catalogs",
+        ".solidspec/templates/overrides",
+        ".solidspec/presets",
+        ".solidspec/extensions/.cache/catalogs",
         "specs",
     ];
 
@@ -114,8 +114,8 @@ fn create_directory_structure(project_dir: &Path) -> Result<()> {
 
     // Create empty registry files
     let registries = [
-        ".rustyspec/presets/.registry",
-        ".rustyspec/extensions/.registry",
+        ".solidspec/presets/.registry",
+        ".solidspec/extensions/.registry",
     ];
     for reg in &registries {
         let path = project_dir.join(reg);
@@ -128,7 +128,7 @@ fn create_directory_structure(project_dir: &Path) -> Result<()> {
 }
 
 fn generate_constitution(project_dir: &Path, project_name: &str) -> Result<()> {
-    let path = project_dir.join(".rustyspec/constitution.md");
+    let path = project_dir.join(".solidspec/constitution.md");
     if path.exists() {
         println!("  Constitution already exists, preserving");
         return Ok(());
@@ -148,7 +148,7 @@ fn generate_constitution(project_dir: &Path, project_name: &str) -> Result<()> {
 }
 
 fn generate_agent_file(project_dir: &Path, project_name: &str) -> Result<()> {
-    let path = project_dir.join(".rustyspec/AGENT.md");
+    let path = project_dir.join(".solidspec/AGENT.md");
 
     let mut vars = HashMap::new();
     vars.insert("project_name".into(), project_name.to_string());

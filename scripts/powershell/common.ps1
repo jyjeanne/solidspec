@@ -1,4 +1,4 @@
-# RustySpec common PowerShell functions
+# SolidSpec common PowerShell functions
 # Dot-source from other scripts: . "$PSScriptRoot\common.ps1"
 
 $ErrorActionPreference = 'Stop'
@@ -6,18 +6,18 @@ $ErrorActionPreference = 'Stop'
 function Get-RepoRoot {
     $dir = Get-Location
     while ($dir.Path -ne [System.IO.Path]::GetPathRoot($dir.Path)) {
-        if ((Test-Path "$dir\rustyspec.toml") -or (Test-Path "$dir\.rustyspec")) {
+        if ((Test-Path "$dir\solidspec.toml") -or (Test-Path "$dir\.solidspec")) {
             return $dir.Path
         }
         $dir = Split-Path $dir -Parent
     }
-    throw "Not inside a RustySpec project"
+    throw "Not inside a SolidSpec project"
 }
 
 function Get-CurrentBranch {
     # Level 1: env var
-    if ($env:RUSTYSPEC_FEATURE) {
-        return $env:RUSTYSPEC_FEATURE
+    if ($env:SOLIDSPEC_FEATURE) {
+        return $env:SOLIDSPEC_FEATURE
     }
 
     # Level 2: git branch

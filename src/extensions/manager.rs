@@ -16,11 +16,11 @@ pub fn add_extension_dev(project_root: &Path, source_dir: &Path) -> Result<Strin
     let manifest = ExtensionManifest::load(&manifest_path)?;
     let ext_id = manifest.extension.id.clone();
 
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let mut registry = ExtensionRegistry::load(&registry_path)?;
 
     // Copy to extensions dir
-    let target_dir = project_root.join(".rustyspec/extensions").join(&ext_id);
+    let target_dir = project_root.join(".solidspec/extensions").join(&ext_id);
     if target_dir.exists() {
         bail!(
             "Extension directory already exists. Remove '{}' first.",
@@ -39,12 +39,12 @@ pub fn add_extension_dev(project_root: &Path, source_dir: &Path) -> Result<Strin
 
 /// Remove an installed extension.
 pub fn remove_extension(project_root: &Path, ext_id: &str) -> Result<()> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let mut registry = ExtensionRegistry::load(&registry_path)?;
 
     registry.remove(ext_id)?;
 
-    let ext_dir = project_root.join(".rustyspec/extensions").join(ext_id);
+    let ext_dir = project_root.join(".solidspec/extensions").join(ext_id);
     if ext_dir.exists() {
         std::fs::remove_dir_all(&ext_dir)?;
     }
@@ -55,7 +55,7 @@ pub fn remove_extension(project_root: &Path, ext_id: &str) -> Result<()> {
 
 /// Enable a disabled extension.
 pub fn enable_extension(project_root: &Path, ext_id: &str) -> Result<()> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let mut registry = ExtensionRegistry::load(&registry_path)?;
     registry.enable(ext_id)?;
     registry.save(&registry_path)?;
@@ -64,7 +64,7 @@ pub fn enable_extension(project_root: &Path, ext_id: &str) -> Result<()> {
 
 /// Disable an extension (unregister commands, keep files).
 pub fn disable_extension(project_root: &Path, ext_id: &str) -> Result<()> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let mut registry = ExtensionRegistry::load(&registry_path)?;
     registry.disable(ext_id)?;
     registry.save(&registry_path)?;
@@ -72,25 +72,25 @@ pub fn disable_extension(project_root: &Path, ext_id: &str) -> Result<()> {
 }
 
 pub fn list_extensions(project_root: &Path) -> Result<Vec<ExtensionEntry>> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let registry = ExtensionRegistry::load(&registry_path)?;
     Ok(registry.list())
 }
 
 pub fn search_extensions(project_root: &Path, query: &str) -> Result<Vec<ExtensionEntry>> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let registry = ExtensionRegistry::load(&registry_path)?;
     Ok(registry.search(query))
 }
 
 pub fn info_extension(project_root: &Path, name: &str) -> Result<Option<ExtensionEntry>> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     let registry = ExtensionRegistry::load(&registry_path)?;
     registry.resolve(name)
 }
 
 pub fn load_registry(project_root: &Path) -> Result<ExtensionRegistry> {
-    let registry_path = project_root.join(".rustyspec/extensions/.registry");
+    let registry_path = project_root.join(".solidspec/extensions/.registry");
     ExtensionRegistry::load(&registry_path)
 }
 
@@ -170,8 +170,8 @@ mod tests {
     use tempfile::TempDir;
 
     fn setup_project(dir: &Path) {
-        std::fs::create_dir_all(dir.join(".rustyspec/extensions")).unwrap();
-        std::fs::write(dir.join(".rustyspec/extensions/.registry"), "{}").unwrap();
+        std::fs::create_dir_all(dir.join(".solidspec/extensions")).unwrap();
+        std::fs::write(dir.join(".solidspec/extensions/.registry"), "{}").unwrap();
     }
 
     fn create_ext_source(dir: &Path, id: &str) -> std::path::PathBuf {
@@ -189,7 +189,7 @@ extension:
   description: "Test"
 provides:
   commands:
-    - name: rustyspec.{id}.cmd
+    - name: solidspec.{id}.cmd
       file: commands/cmd.md
       description: "Test command"
 "#
@@ -210,7 +210,7 @@ provides:
         assert_eq!(id, "my-ext");
         assert!(
             dir.path()
-                .join(".rustyspec/extensions/my-ext/extension.yml")
+                .join(".solidspec/extensions/my-ext/extension.yml")
                 .exists()
         );
     }
@@ -244,7 +244,7 @@ provides:
         add_extension_dev(dir.path(), &src).unwrap();
 
         remove_extension(dir.path(), "rm-ext").unwrap();
-        assert!(!dir.path().join(".rustyspec/extensions/rm-ext").exists());
+        assert!(!dir.path().join(".solidspec/extensions/rm-ext").exists());
         let reg = load_registry(dir.path()).unwrap();
         assert!(reg.get("rm-ext").is_none());
     }
@@ -266,7 +266,7 @@ provides:
         disable_extension(dir.path(), "toggle").unwrap();
         let reg = load_registry(dir.path()).unwrap();
         assert!(!reg.get("toggle").unwrap().enabled);
-        assert!(dir.path().join(".rustyspec/extensions/toggle").exists()); // files still on disk
+        assert!(dir.path().join(".solidspec/extensions/toggle").exists()); // files still on disk
 
         enable_extension(dir.path(), "toggle").unwrap();
         let reg = load_registry(dir.path()).unwrap();

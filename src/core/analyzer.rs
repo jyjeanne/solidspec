@@ -3,7 +3,7 @@ use std::path::Path;
 use anyhow::Result;
 
 use super::constitution;
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
 use super::spec_parser;
 
 const MAX_FINDINGS: usize = 50;
@@ -45,10 +45,10 @@ pub struct AnalysisReport {
 pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<AnalysisReport> {
     let spec_path = feature_dir.join("spec.md");
     if !spec_path.exists() {
-        return Err(RustySpecError::Spec {
+        return Err(SolidSpecError::Spec {
             feature_id: feature_dir.display().to_string(),
             message: "spec.md not found".into(),
-            fix: "Run 'rustyspec specify' first.".into(),
+            fix: "Run 'solidspec specify' first.".into(),
         }
         .into());
     }
@@ -65,7 +65,7 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
         all_findings.push(Finding {
             severity: Severity::High,
             message: "plan.md missing — no architecture plan found".into(),
-            remediation: "Run 'rustyspec plan' to generate the implementation plan.".into(),
+            remediation: "Run 'solidspec plan' to generate the implementation plan.".into(),
         });
     }
 
@@ -76,7 +76,7 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
         all_findings.push(Finding {
             severity: Severity::High,
             message: "tasks.md missing — no task breakdown found".into(),
-            remediation: "Run 'rustyspec tasks' to generate the task breakdown.".into(),
+            remediation: "Run 'solidspec tasks' to generate the task breakdown.".into(),
         });
     }
 
@@ -88,12 +88,12 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
                 "{} unresolved [NEEDS CLARIFICATION] markers in spec.md",
                 spec.clarification_markers.len()
             ),
-            remediation: "Run 'rustyspec clarify' to resolve ambiguities.".into(),
+            remediation: "Run 'solidspec clarify' to resolve ambiguities.".into(),
         });
     }
 
     // Constitution compliance
-    let constitution_path = project_root.join(".rustyspec/constitution.md");
+    let constitution_path = project_root.join(".solidspec/constitution.md");
     if constitution_path.exists() {
         let const_result = constitution::load_constitution(&constitution_path)?;
         if has_plan {
@@ -145,7 +145,7 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
             all_findings.push(Finding {
                 severity: Severity::Medium,
                 message: "tasks.md contains no tasks".into(),
-                remediation: "Run 'rustyspec tasks' to regenerate.".into(),
+                remediation: "Run 'solidspec tasks' to regenerate.".into(),
             });
         }
     }
@@ -235,10 +235,10 @@ mod tests {
     }
 
     fn setup_constitution(project_root: &Path) {
-        let rustyspec = project_root.join(".rustyspec");
-        std::fs::create_dir_all(&rustyspec).unwrap();
+        let solidspec = project_root.join(".solidspec");
+        std::fs::create_dir_all(&solidspec).unwrap();
         std::fs::write(
-            rustyspec.join("constitution.md"),
+            solidspec.join("constitution.md"),
             "### Article VII: Simplicity\n### Article VIII: Anti-Abstraction\n### Article IX: Integration-First\n",
         ).unwrap();
     }

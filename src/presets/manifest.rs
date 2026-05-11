@@ -1,5 +1,10 @@
+use std::sync::LazyLock;
+
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
+
+static ID_RE: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(ID_REGEX).expect("invalid preset id regex"));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PresetManifest {
@@ -27,7 +32,7 @@ pub struct PresetInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PresetRequires {
     #[serde(default)]
-    pub rustyspec_version: String,
+    pub solidspec_version: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -73,8 +78,7 @@ impl PresetManifest {
         }
 
         // ID format
-        let id_re = regex::Regex::new(ID_REGEX).unwrap();
-        if !id_re.is_match(&self.preset.id) {
+        if !ID_RE.is_match(&self.preset.id) {
             bail!(
                 "Invalid preset ID '{}'. Must match {} (lowercase alphanumeric + hyphens).",
                 self.preset.id,
@@ -110,12 +114,12 @@ impl PresetManifest {
         }
 
         // Version specifier
-        if !self.requires.rustyspec_version.is_empty()
-            && semver::VersionReq::parse(&self.requires.rustyspec_version).is_err()
+        if !self.requires.solidspec_version.is_empty()
+            && semver::VersionReq::parse(&self.requires.solidspec_version).is_err()
         {
             bail!(
                 "Invalid version specifier '{}'. Use semver ranges like >=0.1.0",
-                self.requires.rustyspec_version
+                self.requires.solidspec_version
             );
         }
 
@@ -136,7 +140,7 @@ preset:
   description: "A test preset"
   author: Test
 requires:
-  rustyspec_version: ">=0.1.0"
+  solidspec_version: ">=0.1.0"
 provides:
   templates:
     - type: template
@@ -144,7 +148,7 @@ provides:
       file: templates/spec-template.md
       replaces: spec-template
     - type: command
-      name: rustyspec.specify
+      name: solidspec.specify
       file: commands/specify.md
 "#;
 
@@ -207,7 +211,7 @@ provides:
 
     #[test]
     fn invalid_version_specifier_errors() {
-        let yaml = "schema_version: '1.0'\npreset:\n  id: x\n  name: X\n  version: '1.0.0'\nrequires:\n  rustyspec_version: 'not-a-range'\n";
+        let yaml = "schema_version: '1.0'\npreset:\n  id: x\n  name: X\n  version: '1.0.0'\nrequires:\n  solidspec_version: 'not-a-range'\n";
         let err = PresetManifest::parse(yaml).unwrap_err().to_string();
         assert!(err.contains("version specifier"));
     }

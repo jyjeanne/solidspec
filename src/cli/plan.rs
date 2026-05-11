@@ -11,7 +11,7 @@ use crate::templates::resolver;
 pub fn run(feature_id: Option<&str>) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
-        .context("Not inside a RustySpec project. Run 'rustyspec init' first.")?;
+        .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
 
     let feature_dir_name = feature::resolve_feature(feature_id, &project_root)?;
     let feature_dir = project_root.join("specs").join(&feature_dir_name);
@@ -25,14 +25,14 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
     // Prerequisite: no unresolved markers
     if !spec.clarification_markers.is_empty() {
         anyhow::bail!(
-            "Spec has {} unresolved [NEEDS CLARIFICATION] markers. Run 'rustyspec clarify {}' first.",
+            "Spec has {} unresolved [NEEDS CLARIFICATION] markers. Run 'solidspec clarify {}' first.",
             spec.clarification_markers.len(),
             feature_dir_name
         );
     }
 
     // Load constitution and run first compliance check
-    let constitution_path = project_root.join(".rustyspec/constitution.md");
+    let constitution_path = project_root.join(".solidspec/constitution.md");
     let const_doc = constitution::load_constitution(&constitution_path)?;
     let gate_count = const_doc.gates.len();
     println!(
@@ -40,7 +40,7 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
     );
 
     // Load config for template vars
-    let root_config = config::RootConfig::load(&project_root.join("rustyspec.toml"))?;
+    let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))?;
     let date = chrono::Local::now().format("%Y-%m-%d").to_string();
 
     let mut vars = HashMap::new();
@@ -154,16 +154,16 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
 
     // Update AGENT.md
     let agent_vars = HashMap::from([
-        ("project_name".to_string(), root_config.project.name.clone()),
+        ("project_name".to_string(), root_config.project.name),
         (
             "date".to_string(),
             chrono::Local::now().format("%Y-%m-%d").to_string(),
         ),
     ]);
     let agent_content = templates::render(templates::embedded::AGENT_FILE_TEMPLATE, &agent_vars)?;
-    std::fs::write(project_root.join(".rustyspec/AGENT.md"), &agent_content)?;
+    std::fs::write(project_root.join(".solidspec/AGENT.md"), &agent_content)?;
     println!("  Updated AGENT.md");
 
-    println!("  Plan complete. Run 'rustyspec tasks {feature_dir_name}' next.");
+    println!("  Plan complete. Run 'solidspec tasks {feature_dir_name}' next.");
     Ok(())
 }

@@ -1,9 +1,17 @@
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Result;
 use regex::Regex;
 
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
+
+static FEATURE_DIR_PREFIX_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(\d{3})-").expect("invalid feature dir regex"));
+static FEATURE_DIR_FULL_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(\d{3})-.+$").expect("invalid feature dir full regex"));
+static FEATURE_BRANCH_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\d{3}-.+$").expect("invalid feature branch regex"));
 
 /// Scan `specs/` and return the next global feature number (highest + 1).
 pub fn next_feature_number(specs_dir: &Path) -> Result<u32> {
@@ -13,19 +21,17 @@ pub fn next_feature_number(specs_dir: &Path) -> Result<u32> {
 
     let mut max_num: u32 = 0;
 
-    let entries = std::fs::read_dir(specs_dir).map_err(|e| RustySpecError::Feature {
+    let entries = std::fs::read_dir(specs_dir).map_err(|e| SolidSpecError::Feature {
         message: format!("Cannot read specs directory: {e}"),
         fix: "Ensure 'specs/' directory exists and is readable.".into(),
     })?;
-
-    let re = Regex::new(r"^(\d{3})-").unwrap();
 
     for entry in entries {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             let name = entry.file_name();
             let name_str = name.to_string_lossy();
-            if let Some(caps) = re.captures(&name_str)
+            if let Some(caps) = FEATURE_DIR_PREFIX_RE.captures(&name_str)
                 && let Ok(num) = caps[1].parse::<u32>()
             {
                 max_num = max_num.max(num);
@@ -34,7 +40,7 @@ pub fn next_feature_number(specs_dir: &Path) -> Result<u32> {
     }
 
     if max_num >= 999 {
-        return Err(RustySpecError::Feature {
+        return Err(SolidSpecError::Feature {
             message: "Feature number overflow: all 999 IDs used".into(),
             fix: "Archive old features to free up numbers.".into(),
         }
@@ -52,7 +58,7 @@ pub fn format_feature_id(num: u32) -> String {
 pub fn generate_branch_name(description: &str) -> Result<String> {
     let description = description.trim();
     if description.is_empty() {
-        return Err(RustySpecError::Validation {
+        return Err(SolidSpecError::Validation {
             message: "Feature description must not be empty.".into(),
         }
         .into());
@@ -76,7 +82,7 @@ pub fn generate_branch_name(description: &str) -> Result<String> {
     };
 
     if slug.is_empty() {
-        return Err(RustySpecError::Validation {
+        return Err(SolidSpecError::Validation {
             message: "Could not generate a valid branch name from description.".into(),
         }
         .into());
@@ -94,13 +100,12 @@ fn sanitize(s: &str) -> String {
 
 /// Validate that a branch name matches the `\d{3}-.*` pattern.
 pub fn is_valid_feature_branch(name: &str) -> bool {
-    let re = Regex::new(r"^\d{3}-.+$").unwrap();
-    re.is_match(name)
+    FEATURE_BRANCH_RE.is_match(name)
 }
 
 /// 4-level feature resolution:
 /// 1. Explicit feature-id argument
-/// 2. RUSTYSPEC_FEATURE env var
+/// 2. SOLIDSPEC_FEATURE env var
 /// 3. Current Git branch (if matches \d{3}-.* pattern)
 /// 4. Latest feature directory in specs/ (by numeric prefix)
 pub fn resolve_feature(explicit_id: Option<&str>, project_root: &Path) -> Result<String> {
@@ -114,10 +119,10 @@ pub fn resolve_feature(explicit_id: Option<&str>, project_root: &Path) -> Result
     }
 
     // Level 2: env var
-    if let Ok(env_feature) = std::env::var("RUSTYSPEC_FEATURE") {
+    if let Ok(env_feature) = std::env::var("SOLIDSPEC_FEATURE") {
         let env_feature = env_feature.trim().to_string();
         if !env_feature.is_empty() {
-            log::debug!("Feature resolved via RUSTYSPEC_FEATURE env var: '{env_feature}'");
+            log::debug!("Feature resolved via SOLIDSPEC_FEATURE env var: '{env_feature}'");
             return find_feature_dir_by_prefix(&project_root.join("specs"), &env_feature);
         }
     }
@@ -139,9 +144,9 @@ pub fn resolve_feature(explicit_id: Option<&str>, project_root: &Path) -> Result
 /// Find a feature directory matching a prefix or exact name.
 pub fn find_feature_dir_by_prefix(specs_dir: &Path, prefix: &str) -> Result<String> {
     if !specs_dir.exists() {
-        return Err(RustySpecError::Feature {
+        return Err(SolidSpecError::Feature {
             message: "No specs/ directory found".into(),
-            fix: "Run 'rustyspec init' and 'rustyspec specify' first.".into(),
+            fix: "Run 'solidspec init' and 'solidspec specify' first.".into(),
         }
         .into());
     }
@@ -151,14 +156,13 @@ pub fn find_feature_dir_by_prefix(specs_dir: &Path, prefix: &str) -> Result<Stri
         return Ok(prefix.to_string());
     }
 
-    let re = Regex::new(r"^(\d{3})-.+$").unwrap();
     let mut matches = Vec::new();
 
     for entry in std::fs::read_dir(specs_dir)? {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             let name = entry.file_name().to_string_lossy().to_string();
-            if let Some(caps) = re.captures(&name) {
+            if let Some(caps) = FEATURE_DIR_FULL_RE.captures(&name) {
                 // Match only on the numeric prefix (3 digits), not free-form starts_with
                 if caps[1] == *prefix {
                     matches.push(name);
@@ -168,9 +172,9 @@ pub fn find_feature_dir_by_prefix(specs_dir: &Path, prefix: &str) -> Result<Stri
     }
 
     match matches.len() {
-        0 => Err(RustySpecError::Feature {
+        0 => Err(SolidSpecError::Feature {
             message: format!("No feature matching '{prefix}' found in specs/"),
-            fix: "Check feature ID with 'ls specs/' or run 'rustyspec specify'.".into(),
+            fix: "Check feature ID with 'ls specs/' or run 'solidspec specify'.".into(),
         }
         .into()),
         1 => Ok(matches.into_iter().next().unwrap()),
@@ -182,7 +186,7 @@ pub fn find_feature_dir_by_prefix(specs_dir: &Path, prefix: &str) -> Result<Stri
             if all_same_prefix {
                 Ok(matches.last().unwrap().clone())
             } else {
-                Err(RustySpecError::Feature {
+                Err(SolidSpecError::Feature {
                     message: format!(
                         "Ambiguous prefix '{}'. Matches: {}",
                         prefix,
@@ -200,21 +204,20 @@ pub fn find_feature_dir_by_prefix(specs_dir: &Path, prefix: &str) -> Result<Stri
 /// Get the latest (highest numbered) feature directory.
 fn latest_feature_dir(specs_dir: &Path) -> Result<String> {
     if !specs_dir.exists() {
-        return Err(RustySpecError::Feature {
+        return Err(SolidSpecError::Feature {
             message: "No specs/ directory found".into(),
-            fix: "Run 'rustyspec init' and 'rustyspec specify' first.".into(),
+            fix: "Run 'solidspec init' and 'solidspec specify' first.".into(),
         }
         .into());
     }
 
-    let re = Regex::new(r"^(\d{3})-.+$").unwrap();
     let mut best: Option<(u32, String)> = None;
 
     for entry in std::fs::read_dir(specs_dir)? {
         let entry = entry?;
         if entry.file_type()?.is_dir() {
             let name = entry.file_name().to_string_lossy().to_string();
-            if let Some(caps) = re.captures(&name)
+            if let Some(caps) = FEATURE_DIR_FULL_RE.captures(&name)
                 && let Ok(num) = caps[1].parse::<u32>()
                 && best.as_ref().is_none_or(|(n, _)| num > *n)
             {
@@ -224,9 +227,9 @@ fn latest_feature_dir(specs_dir: &Path) -> Result<String> {
     }
 
     best.map(|(_, name)| name).ok_or_else(|| {
-        RustySpecError::Feature {
+        SolidSpecError::Feature {
             message: "No feature directories found in specs/".into(),
-            fix: "Run 'rustyspec specify' to create a feature.".into(),
+            fix: "Run 'solidspec specify' to create a feature.".into(),
         }
         .into()
     })
@@ -329,7 +332,7 @@ mod tests {
     #[test]
     fn resolve_env_var_and_latest_fallback() {
         // Clean state
-        unsafe { std::env::remove_var("RUSTYSPEC_FEATURE") };
+        unsafe { std::env::remove_var("SOLIDSPEC_FEATURE") };
 
         // Part 1: env var wins
         let dir = TempDir::new().unwrap();
@@ -337,10 +340,10 @@ mod tests {
         std::fs::create_dir_all(specs.join("001-auth")).unwrap();
         std::fs::create_dir_all(specs.join("002-chat")).unwrap();
 
-        unsafe { std::env::set_var("RUSTYSPEC_FEATURE", "001") };
+        unsafe { std::env::set_var("SOLIDSPEC_FEATURE", "001") };
         let result = resolve_feature(None, dir.path()).unwrap();
         assert!(result.starts_with("001"), "Env var should win: {result}");
-        unsafe { std::env::remove_var("RUSTYSPEC_FEATURE") };
+        unsafe { std::env::remove_var("SOLIDSPEC_FEATURE") };
 
         // Part 2: fallback to latest (env var removed)
         let dir2 = TempDir::new().unwrap();

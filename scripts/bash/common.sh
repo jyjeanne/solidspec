@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
-# RustySpec common shell functions
+# SolidSpec common shell functions
 # Sourced by other scripts: source "$(dirname "$0")/common.sh"
 
 set -euo pipefail
 
-# Find the project root by walking up to rustyspec.toml
+# Find the project root by walking up to solidspec.toml
 get_repo_root() {
     local dir="$PWD"
     while [ "$dir" != "/" ]; do
-        if [ -f "$dir/rustyspec.toml" ] || [ -d "$dir/.rustyspec" ]; then
+        if [ -f "$dir/solidspec.toml" ] || [ -d "$dir/.solidspec" ]; then
             echo "$dir"
             return 0
         fi
         dir="$(dirname "$dir")"
     done
-    echo "Error: not inside a RustySpec project" >&2
+    echo "Error: not inside a SolidSpec project" >&2
     return 1
 }
 
 # Get the current feature branch or fallback
 get_current_branch() {
-    # Level 1: RUSTYSPEC_FEATURE env var
-    if [ -n "${RUSTYSPEC_FEATURE:-}" ]; then
-        echo "$RUSTYSPEC_FEATURE"
+    # Level 1: SOLIDSPEC_FEATURE env var
+    if [ -n "${SOLIDSPEC_FEATURE:-}" ]; then
+        echo "$SOLIDSPEC_FEATURE"
         return 0
     fi
 

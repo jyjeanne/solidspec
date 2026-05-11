@@ -1,7 +1,7 @@
-# RustySpec prerequisites check
+# SolidSpec prerequisites check
 . "$PSScriptRoot\common.ps1"
 
-Write-Host "RustySpec Prerequisites Check"
+Write-Host "SolidSpec Prerequisites Check"
 Write-Host "=============================="
 
 $errors = 0
@@ -20,21 +20,21 @@ try {
     $root = Get-RepoRoot
     Write-Host "[OK] Project root: $root"
 
-    if (Test-Path "$root\.rustyspec\constitution.md") {
+    if (Test-Path "$root\.solidspec\constitution.md") {
         Write-Host "[OK] Constitution file present"
     } else {
         Write-Host "[!!] Constitution file missing"
         $errors++
     }
 
-    if (Test-Path "$root\rustyspec.toml") {
-        Write-Host "[OK] rustyspec.toml found"
+    if (Test-Path "$root\solidspec.toml") {
+        Write-Host "[OK] solidspec.toml found"
     } else {
-        Write-Host "[!!] rustyspec.toml missing"
+        Write-Host "[!!] solidspec.toml missing"
         $errors++
     }
 } catch {
-    Write-Host "[!!] Not inside a RustySpec project"
+    Write-Host "[!!] Not inside a SolidSpec project"
     $errors++
 }
 

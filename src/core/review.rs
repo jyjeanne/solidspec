@@ -1,10 +1,18 @@
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Result;
 use regex::Regex;
 
-use super::errors::RustySpecError;
+use super::errors::SolidSpecError;
 use super::spec_parser;
+
+static US_STORY_LINK_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[US(\d+)\]").expect("invalid us story link regex"));
+static AUTH_TERMS_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\b(auth(entication|orization|enticate|orize)?|login|password|user\s+account|session\s+manag)\b")
+        .expect("invalid auth terms regex")
+});
 
 const MAX_FINDINGS: usize = 100;
 
@@ -95,10 +103,10 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
 
     let spec_path = feature_dir.join("spec.md");
     if !spec_path.exists() {
-        return Err(RustySpecError::Spec {
-            feature_id: feature_id.clone(),
+        return Err(SolidSpecError::Spec {
+            feature_id,
             message: "spec.md not found".into(),
-            fix: "Run 'rustyspec specify' first.".into(),
+            fix: "Run 'solidspec specify' first.".into(),
         }
         .into());
     }
@@ -136,7 +144,7 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
             dimension: Dimension::Completeness,
             severity: Severity::High,
             message: "plan.md missing — no architecture plan".into(),
-            remediation: "Run 'rustyspec plan' to generate the plan.".into(),
+            remediation: "Run 'solidspec plan' to generate the plan.".into(),
             location: None,
         });
         None
@@ -189,32 +197,27 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
     })
 }
 
+static PLACEHOLDER_PATTERNS: LazyLock<Vec<(Regex, &str, Severity)>> = LazyLock::new(|| {
+    vec![
+        (Regex::new(r"(?i)\[TODO[:\s]*[^\]]*\]").unwrap(), "TODO marker", Severity::Medium),
+        (Regex::new(r"(?i)\[TBD[:\s]*[^\]]*\]").unwrap(), "TBD marker", Severity::Medium),
+        (Regex::new(r"(?i)\[To be filled[^\]]*\]").unwrap(), "'To be filled' placeholder", Severity::Medium),
+        (Regex::new(r"(?i)\[PLACEHOLDER[^\]]*\]").unwrap(), "PLACEHOLDER marker", Severity::Medium),
+        (Regex::new(r"(?i)\[Brief Title\]").unwrap(), "'Brief Title' placeholder", Severity::Medium),
+        (Regex::new(r"(?i)\[NEEDS CLARIFICATION[^\]]*\]").unwrap(), "Unresolved clarification", Severity::High),
+        (Regex::new(r"(?i)\[Insert [^\]]+\]").unwrap(), "'Insert ...' placeholder", Severity::Medium),
+    ]
+});
+
 /// Detect placeholder text across any artifact.
 fn check_placeholders(content: &str, file_name: &str) -> Vec<ReviewFinding> {
     let mut findings = Vec::new();
-    let placeholder_patterns = [
-        (r"(?i)\[TODO[:\s]*[^\]]*\]", "TODO marker"),
-        (r"(?i)\[TBD[:\s]*[^\]]*\]", "TBD marker"),
-        (r"(?i)\[To be filled[^\]]*\]", "'To be filled' placeholder"),
-        (r"(?i)\[PLACEHOLDER[^\]]*\]", "PLACEHOLDER marker"),
-        (r"(?i)\[Brief Title\]", "'Brief Title' placeholder"),
-        (
-            r"(?i)\[NEEDS CLARIFICATION[^\]]*\]",
-            "Unresolved clarification",
-        ),
-        (r"(?i)\[Insert [^\]]+\]", "'Insert ...' placeholder"),
-    ];
 
-    for (pattern, label) in &placeholder_patterns {
-        let re = Regex::new(pattern).unwrap();
+    for (re, label, severity) in &*PLACEHOLDER_PATTERNS {
         for mat in re.find_iter(content) {
             findings.push(ReviewFinding {
                 dimension: Dimension::Completeness,
-                severity: if *label == "Unresolved clarification" {
-                    Severity::High
-                } else {
-                    Severity::Medium
-                },
+                severity: severity.clone(),
                 message: format!("{label} found in {file_name}: \"{}\"", mat.as_str()),
                 remediation: format!(
                     "Replace the placeholder in {file_name} with concrete content."
@@ -446,8 +449,7 @@ fn check_task_story_links(
         return findings;
     }
 
-    let us_re = Regex::new(r"\[US(\d+)\]").unwrap();
-    let referenced_stories: Vec<usize> = us_re
+    let referenced_stories: Vec<usize> = US_STORY_LINK_RE
         .captures_iter(tasks_content)
         .filter_map(|c| c[1].parse().ok())
         .collect();
@@ -481,7 +483,7 @@ fn check_test_coverage(spec: &spec_parser::ParsedSpec, tests_dir: &Path) -> Vec<
                 dimension: Dimension::Testability,
                 severity: Severity::High,
                 message: "No tests/ directory found".into(),
-                remediation: "Run 'rustyspec tests' to generate test scaffolds.".into(),
+                remediation: "Run 'solidspec tests' to generate test scaffolds.".into(),
                 location: None,
             });
         }
@@ -510,7 +512,7 @@ fn check_test_coverage(spec: &spec_parser::ParsedSpec, tests_dir: &Path) -> Vec<
             dimension: Dimension::Testability,
             severity: Severity::High,
             message: "tests/ directory exists but contains no test files".into(),
-            remediation: "Run 'rustyspec tests' to generate test scaffolds.".into(),
+            remediation: "Run 'solidspec tests' to generate test scaffolds.".into(),
             location: None,
         });
     }
@@ -548,8 +550,7 @@ fn check_security_hints(plan_content: &str, spec_content: &str) -> Vec<ReviewFin
 
     // If the spec mentions auth/users/passwords but plan has no security section
     // Use word-boundary patterns to avoid false positives ("author" matching "auth")
-    let auth_re = Regex::new(r"(?i)\b(auth(entication|orization|enticate|orize)?|login|password|user\s+account|session\s+manag)\b").unwrap();
-    let auth_related = auth_re.is_match(&combined);
+    let auth_related = AUTH_TERMS_RE.is_match(&combined);
 
     if auth_related {
         let plan_lower = plan_content.to_lowercase();
@@ -703,10 +704,10 @@ mod tests {
     }
 
     fn setup_project(project_root: &Path) {
-        let rustyspec = project_root.join(".rustyspec");
-        std::fs::create_dir_all(&rustyspec).unwrap();
+        let solidspec = project_root.join(".solidspec");
+        std::fs::create_dir_all(&solidspec).unwrap();
         std::fs::write(
-            rustyspec.join("constitution.md"),
+            solidspec.join("constitution.md"),
             "### Article VII: Simplicity\n",
         )
         .unwrap();
