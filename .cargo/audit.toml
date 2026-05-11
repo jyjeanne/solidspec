@@ -8,9 +8,4 @@
 
 [output]
 quiet = false
-
-[output.deny]
-warnings = true
-
-[target]
-# Audit for the current target architecture
+deny = ["warnings"]
