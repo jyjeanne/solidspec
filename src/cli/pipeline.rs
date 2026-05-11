@@ -387,7 +387,14 @@ fn invoke_or_handoff(
 ) -> Result<()> {
     println!("    → Invoking {} for '{}'...", agent_id, phase);
 
-    match invoker::invoke_agent(agent_id, phase, feature_dir_name, project_root, description, None) {
+    match invoker::invoke_agent(
+        agent_id,
+        phase,
+        feature_dir_name,
+        project_root,
+        description,
+        None,
+    ) {
         InvokeResult::Success { output } => {
             let preview = output.lines().take(3).collect::<Vec<_>>().join(" ");
             let preview = if preview.len() > 100 {

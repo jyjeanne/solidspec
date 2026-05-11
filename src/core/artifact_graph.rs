@@ -107,7 +107,7 @@ impl ArtifactGraph {
         while let Some(id) = queue.pop_front() {
             order.push(self.nodes.get(id).unwrap());
 
-        for (prereq, dependent) in &self.edges {
+            for (prereq, dependent) in &self.edges {
                 if *prereq == id {
                     let deg = in_degree.get_mut(dependent.as_str()).unwrap();
                     *deg -= 1;
@@ -193,40 +193,63 @@ mod tests {
     fn spec_driven_graph() -> ArtifactGraph {
         ArtifactGraph::new(vec![
             ArtifactNode {
-                id: "spec".into(), generates: vec!["spec.md".into()],
-                requires: vec![], instruction: "".into(), template: None,
+                id: "spec".into(),
+                generates: vec!["spec.md".into()],
+                requires: vec![],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "clarify".into(), generates: vec!["spec.md".into()],
-                requires: vec!["spec".into()], instruction: "".into(), template: None,
+                id: "clarify".into(),
+                generates: vec!["spec.md".into()],
+                requires: vec!["spec".into()],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "plan".into(), generates: vec!["plan.md".into()],
-                requires: vec!["spec".into()], instruction: "".into(), template: None,
+                id: "plan".into(),
+                generates: vec!["plan.md".into()],
+                requires: vec!["spec".into()],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "tasks".into(), generates: vec!["tasks.md".into()],
+                id: "tasks".into(),
+                generates: vec!["tasks.md".into()],
                 requires: vec!["spec".into(), "plan".into()],
-                instruction: "".into(), template: None,
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "tests".into(), generates: vec!["tests/".into()],
-                requires: vec!["spec".into()], instruction: "".into(), template: None,
+                id: "tests".into(),
+                generates: vec!["tests/".into()],
+                requires: vec!["spec".into()],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "implement".into(), generates: vec!["tasks.md".into()],
+                id: "implement".into(),
+                generates: vec!["tasks.md".into()],
                 requires: vec!["tasks".into()],
-                instruction: "".into(), template: None,
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "analyze".into(), generates: vec!["analysis-report.md".into()],
-                requires: vec!["spec".into()], instruction: "".into(), template: None,
+                id: "analyze".into(),
+                generates: vec!["analysis-report.md".into()],
+                requires: vec!["spec".into()],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "review".into(), generates: vec!["review-report.md".into()],
-                requires: vec!["spec".into()], instruction: "".into(), template: None,
+                id: "review".into(),
+                generates: vec!["review-report.md".into()],
+                requires: vec!["spec".into()],
+                instruction: "".into(),
+                template: None,
             },
-        ]).expect("valid graph")
+        ])
+        .expect("valid graph")
     }
 
     #[test]
@@ -298,12 +321,18 @@ mod tests {
     fn duplicate_artifact_id_errors() {
         let nodes = vec![
             ArtifactNode {
-                id: "spec".into(), generates: vec!["a.md".into()],
-                requires: vec![], instruction: "".into(), template: None,
+                id: "spec".into(),
+                generates: vec!["a.md".into()],
+                requires: vec![],
+                instruction: "".into(),
+                template: None,
             },
             ArtifactNode {
-                id: "spec".into(), generates: vec!["b.md".into()],
-                requires: vec![], instruction: "".into(), template: None,
+                id: "spec".into(),
+                generates: vec!["b.md".into()],
+                requires: vec![],
+                instruction: "".into(),
+                template: None,
             },
         ];
         assert!(ArtifactGraph::new(nodes).is_err());
@@ -312,9 +341,11 @@ mod tests {
     #[test]
     fn unknown_dependency_errors() {
         let nodes = vec![ArtifactNode {
-            id: "spec".into(), generates: vec!["spec.md".into()],
+            id: "spec".into(),
+            generates: vec!["spec.md".into()],
             requires: vec!["nonexistent".into()],
-            instruction: "".into(), template: None,
+            instruction: "".into(),
+            template: None,
         }];
         assert!(ArtifactGraph::new(nodes).is_err());
     }

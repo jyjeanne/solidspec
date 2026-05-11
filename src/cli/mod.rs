@@ -275,9 +275,6 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Upgrade { force } => upgrade::run(force),
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
-        Commands::Status {
-            feature_id,
-            schema,
-        } => status::run(feature_id.as_deref(), &schema),
+        Commands::Status { feature_id, schema } => status::run(feature_id.as_deref(), &schema),
     }
 }

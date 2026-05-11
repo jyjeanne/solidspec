@@ -315,10 +315,7 @@ pub fn slugify(title: &str) -> String {
 }
 
 /// Create a change directory with proposal and delta-spec scaffold.
-pub fn create_change(
-    feature_dir: &Path,
-    title: &str,
-) -> Result<(String, PathBuf)> {
+pub fn create_change(feature_dir: &Path, title: &str) -> Result<(String, PathBuf)> {
     let slug = slugify(title);
     if slug.is_empty() {
         bail!("Could not generate a valid change slug from title.");
@@ -481,7 +478,8 @@ mod tests {
 
     #[test]
     fn merge_deltas_adds_new_requirements() {
-        let main = "- **FR-001**: System MUST do something\n- **FR-002**: System MUST do another thing\n";
+        let main =
+            "- **FR-001**: System MUST do something\n- **FR-002**: System MUST do another thing\n";
         let delta = DeltaSpec {
             added: vec![DeltaRequirement {
                 id: "FR-042".into(),
@@ -610,7 +608,11 @@ mod tests {
         std::fs::create_dir_all(feature.join("changes/archive/old-change")).unwrap();
 
         let changes = list_changes(&feature).unwrap();
-        assert_eq!(changes.len(), 1, "archive dir should not appear in changes list");
+        assert_eq!(
+            changes.len(),
+            1,
+            "archive dir should not appear in changes list"
+        );
         assert_eq!(changes[0].title, "Test change");
     }
 

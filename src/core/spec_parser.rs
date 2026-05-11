@@ -13,15 +13,13 @@ static USER_STORY_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 static SCENARIO_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\*\*Given\*\*\s+(.+)").expect("invalid scenario regex"));
-static REQUIREMENT_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"\*\*(FR-\d{3})\*\*:\s*(.+)").expect("invalid requirement regex")
-});
+static REQUIREMENT_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*\*(FR-\d{3})\*\*:\s*(.+)").expect("invalid requirement regex"));
 static CLARIFICATION_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\[NEEDS CLARIFICATION[:\s]*([^\]]*)\]").expect("invalid clarification regex")
 });
-static ENTITY_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"\*\*\[([^\]]+)\]\*\*:\s*(.*)").expect("invalid entity regex")
-});
+static ENTITY_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\*\*\[([^\]]+)\]\*\*:\s*(.*)").expect("invalid entity regex"));
 
 /// Parsed representation of a spec.md file.
 #[derive(Debug, Clone)]
@@ -121,13 +119,15 @@ fn extract_clarification_markers(content: &str) -> Vec<ClarificationMarker> {
         .lines()
         .enumerate()
         .flat_map(|(line_num, line)| {
-            CLARIFICATION_RE.captures_iter(line).map(move |caps| ClarificationMarker {
-                text: caps
-                    .get(1)
-                    .map(|m| m.as_str().trim().to_string())
-                    .unwrap_or_default(),
-                line_number: line_num + 1,
-            })
+            CLARIFICATION_RE
+                .captures_iter(line)
+                .map(move |caps| ClarificationMarker {
+                    text: caps
+                        .get(1)
+                        .map(|m| m.as_str().trim().to_string())
+                        .unwrap_or_default(),
+                    line_number: line_num + 1,
+                })
         })
         .collect()
 }

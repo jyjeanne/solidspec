@@ -126,15 +126,15 @@ pub fn check_plan_compliance(constitution: &Constitution, plan_content: &str) ->
                     violations.push("Future-proofing language detected".into());
                 }
             }
-            "Anti-Abstraction Gate" => {
-                if plan_lower.contains("wrapper") || plan_lower.contains("abstraction layer") {
-                    violations.push("Wrapper/abstraction layer detected".into());
-                }
+            "Anti-Abstraction Gate"
+                if plan_lower.contains("wrapper") || plan_lower.contains("abstraction layer") =>
+            {
+                violations.push("Wrapper/abstraction layer detected".into());
             }
-            "Integration-First Gate" => {
-                if plan_lower.contains("mock") && !plan_lower.contains("contract") {
-                    violations.push("Mocks used without contract tests".into());
-                }
+            "Integration-First Gate"
+                if plan_lower.contains("mock") && !plan_lower.contains("contract") =>
+            {
+                violations.push("Mocks used without contract tests".into());
             }
             _ => {}
         }

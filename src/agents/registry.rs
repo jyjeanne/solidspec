@@ -592,14 +592,29 @@ mod tests {
         let opencode = find_agent("opencode").unwrap();
         register_commands(dir.path(), opencode).unwrap();
 
-        let skill = dir.path().join(".opencode/skills/solidspec-specify/SKILL.md");
-        assert!(skill.exists(), "OpenCode skill not found at {}", skill.display());
+        let skill = dir
+            .path()
+            .join(".opencode/skills/solidspec-specify/SKILL.md");
+        assert!(
+            skill.exists(),
+            "OpenCode skill not found at {}",
+            skill.display()
+        );
 
         let content = std::fs::read_to_string(&skill).unwrap();
         assert!(content.starts_with("---\n"), "Missing YAML frontmatter");
-        assert!(content.contains("name: solidspec-specify"), "Missing name field");
-        assert!(content.contains("description:"), "Missing description field");
-        assert!(content.contains("Before You Skip Any Step"), "Missing compliance guardrails");
+        assert!(
+            content.contains("name: solidspec-specify"),
+            "Missing name field"
+        );
+        assert!(
+            content.contains("description:"),
+            "Missing description field"
+        );
+        assert!(
+            content.contains("Before You Skip Any Step"),
+            "Missing compliance guardrails"
+        );
     }
 
     #[test]
@@ -642,10 +657,9 @@ mod tests {
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
 
-        let content = std::fs::read_to_string(
-            dir.path().join(".claude/commands/solidspec-specify.md"),
-        )
-        .unwrap();
+        let content =
+            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-specify.md"))
+                .unwrap();
         assert!(content.contains("Before You Skip Any Step"));
         assert!(content.contains("Mandatory Verification Checklist"));
         assert!(content.contains("[NEEDS CLARIFICATION]"));

@@ -202,7 +202,10 @@ mod tests {
         for phase in &["specify", "plan", "implement", "review"] {
             let prompt = persona_prompt(phase);
             assert!(!prompt.is_empty(), "Empty prompt for {phase}");
-            assert!(prompt.contains("## Role:"), "Missing role section for {phase}");
+            assert!(
+                prompt.contains("## Role:"),
+                "Missing role section for {phase}"
+            );
             assert!(
                 prompt.contains("## Expected Output"),
                 "Missing output section for {phase}"

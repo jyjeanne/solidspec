@@ -41,8 +41,7 @@ pub struct SchemaArtifact {
 pub mod builtin {
     pub const SPEC_DRIVEN: &str = include_str!("../../schemas/spec-driven/schema.yaml");
     pub const MINIMAL: &str = include_str!("../../schemas/minimal/schema.yaml");
-    pub const SECURITY_FIRST: &str =
-        include_str!("../../schemas/security-first/schema.yaml");
+    pub const SECURITY_FIRST: &str = include_str!("../../schemas/security-first/schema.yaml");
 
     #[allow(dead_code)]
     pub fn names() -> Vec<&'static str> {
@@ -247,9 +246,7 @@ mod tests {
     #[test]
     fn resolve_project_local_override() {
         let dir = TempDir::new().unwrap();
-        let workflows = dir
-            .path()
-            .join(".solidspec/workflows/custom");
+        let workflows = dir.path().join(".solidspec/workflows/custom");
         std::fs::create_dir_all(&workflows).unwrap();
         std::fs::write(
             workflows.join("schema.yaml"),

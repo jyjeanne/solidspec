@@ -73,10 +73,7 @@ pub fn run(command: ChangeCommands) -> Result<()> {
 
             let changes = change::list_changes(&feature_dir)?;
             if changes.is_empty() {
-                println!(
-                    "No active changes for feature '{}'.",
-                    feature_dir_name
-                );
+                println!("No active changes for feature '{}'.", feature_dir_name);
                 println!(
                     "Run 'solidspec change propose {} \"Title\"' to create one.",
                     feature_dir_name
@@ -104,10 +101,7 @@ pub fn run(command: ChangeCommands) -> Result<()> {
 
             change::archive_change(&feature_dir, &change_slug)?;
             println!("Archived change '{}'.", change_slug);
-            println!(
-                "  Deltas merged into {}/spec.md",
-                feature_dir_name
-            );
+            println!("  Deltas merged into {}/spec.md", feature_dir_name);
             println!(
                 "  Moved to {}/changes/archive/{}",
                 feature_dir_name, change_slug

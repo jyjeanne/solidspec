@@ -38,7 +38,10 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
         "{} artifacts, {} complete, {} ready",
         graph.nodes.len(),
         completed.len(),
-        states.values().filter(|s| **s == ArtifactState::Ready).count(),
+        states
+            .values()
+            .filter(|s| **s == ArtifactState::Ready)
+            .count(),
     );
     println!();
 
@@ -48,11 +51,16 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
         ids.iter().map(|id| graph.nodes.get(id).unwrap()).collect()
     });
 
-    println!("{:<5} {:<15} {:<15} {:<30}", "#", "Artifact", "Status", "Depends On");
+    println!(
+        "{:<5} {:<15} {:<15} {:<30}",
+        "#", "Artifact", "Status", "Depends On"
+    );
     println!("{:-<65}", "");
 
     for (i, node) in order.iter().enumerate() {
-        let state = states.get(&node.id).expect("artifact missing from states map");
+        let state = states
+            .get(&node.id)
+            .expect("artifact missing from states map");
         let status = match state {
             ArtifactState::Done => "✓ done".to_string(),
             ArtifactState::Ready => "▶ ready".to_string(),
@@ -66,17 +74,14 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
             node.requires.join(", ")
         };
 
-        println!(
-            "{:<5} {:<15} {:<15} {:<30}",
-            i + 1,
-            node.id,
-            status,
-            deps,
-        );
+        println!("{:<5} {:<15} {:<15} {:<30}", i + 1, node.id, status, deps,);
     }
 
     println!();
-    println!("Run 'solidspec pipeline {} --from <phase>' to execute a phase.", feature_dir_name);
+    println!(
+        "Run 'solidspec pipeline {} --from <phase>' to execute a phase.",
+        feature_dir_name
+    );
 
     Ok(())
 }

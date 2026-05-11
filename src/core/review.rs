@@ -199,13 +199,41 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
 
 static PLACEHOLDER_PATTERNS: LazyLock<Vec<(Regex, &str, Severity)>> = LazyLock::new(|| {
     vec![
-        (Regex::new(r"(?i)\[TODO[:\s]*[^\]]*\]").unwrap(), "TODO marker", Severity::Medium),
-        (Regex::new(r"(?i)\[TBD[:\s]*[^\]]*\]").unwrap(), "TBD marker", Severity::Medium),
-        (Regex::new(r"(?i)\[To be filled[^\]]*\]").unwrap(), "'To be filled' placeholder", Severity::Medium),
-        (Regex::new(r"(?i)\[PLACEHOLDER[^\]]*\]").unwrap(), "PLACEHOLDER marker", Severity::Medium),
-        (Regex::new(r"(?i)\[Brief Title\]").unwrap(), "'Brief Title' placeholder", Severity::Medium),
-        (Regex::new(r"(?i)\[NEEDS CLARIFICATION[^\]]*\]").unwrap(), "Unresolved clarification", Severity::High),
-        (Regex::new(r"(?i)\[Insert [^\]]+\]").unwrap(), "'Insert ...' placeholder", Severity::Medium),
+        (
+            Regex::new(r"(?i)\[TODO[:\s]*[^\]]*\]").unwrap(),
+            "TODO marker",
+            Severity::Medium,
+        ),
+        (
+            Regex::new(r"(?i)\[TBD[:\s]*[^\]]*\]").unwrap(),
+            "TBD marker",
+            Severity::Medium,
+        ),
+        (
+            Regex::new(r"(?i)\[To be filled[^\]]*\]").unwrap(),
+            "'To be filled' placeholder",
+            Severity::Medium,
+        ),
+        (
+            Regex::new(r"(?i)\[PLACEHOLDER[^\]]*\]").unwrap(),
+            "PLACEHOLDER marker",
+            Severity::Medium,
+        ),
+        (
+            Regex::new(r"(?i)\[Brief Title\]").unwrap(),
+            "'Brief Title' placeholder",
+            Severity::Medium,
+        ),
+        (
+            Regex::new(r"(?i)\[NEEDS CLARIFICATION[^\]]*\]").unwrap(),
+            "Unresolved clarification",
+            Severity::High,
+        ),
+        (
+            Regex::new(r"(?i)\[Insert [^\]]+\]").unwrap(),
+            "'Insert ...' placeholder",
+            Severity::Medium,
+        ),
     ]
 });
 
