@@ -525,11 +525,12 @@ fn render_generic(
     );
     for s in scenarios {
         out.push_str(&format!(
-            "TEST \"{then}\":\n\
+            "TEST \"{escaped_then}\":\n\
              \x20\x20GIVEN: {given}\n\
              \x20\x20WHEN: {when}\n\
              \x20\x20THEN: {then}\n\
              \x20\x20STATUS: NOT IMPLEMENTED\n\n",
+            escaped_then = s.then.replace('\"', "\\\""),
             given = s.given,
             when = s.when,
             then = s.then,

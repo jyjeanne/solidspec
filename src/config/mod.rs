@@ -59,10 +59,18 @@ impl Default for GitConfig {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TemplatesConfig {
     #[serde(default = "default_override_dir")]
     pub override_dir: String,
+}
+
+impl Default for TemplatesConfig {
+    fn default() -> Self {
+        Self {
+            override_dir: default_override_dir(),
+        }
+    }
 }
 
 /// Project context injected into every agent prompt.

@@ -75,6 +75,22 @@ pub fn run(
 
     std::fs::create_dir_all(&output_dir)?;
 
+    // Clean up stale test files from previous runs (matching framework extension)
+    if let Ok(entries) = std::fs::read_dir(&output_dir) {
+        let ext = &fw.file_extension;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_default();
+            // Remove only generated test files (us<N>_ pattern)
+            if name.starts_with("us") && name.ends_with(ext.as_str()) && path.is_file() {
+                std::fs::remove_file(&path).ok();
+            }
+        }
+    }
+
     // Group scenarios by story index
     let mut story_groups: std::collections::HashMap<
         usize,
@@ -95,11 +111,6 @@ pub fn run(
         let priority = &group[0].story_priority;
         let file_name = test_generator::test_file_name(*idx, title, &fw);
         let file_path = output_dir.join(&file_name);
-
-        if file_path.exists() {
-            println!("  Warning: {} already exists, skipping", file_name);
-            continue;
-        }
 
         let content =
             test_generator::render_test_file(&feature_dir_name, *idx, title, priority, group, &fw);

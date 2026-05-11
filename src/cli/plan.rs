@@ -133,7 +133,13 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
         feature_dir_name,
         spec.user_stories
             .iter()
-            .map(|s| format!("1. **{}** ({}): [validation steps]", s.title, s.priority))
+            .enumerate()
+            .map(|(i, s)| format!(
+                "{}. **{}** ({}): [validation steps]",
+                i + 1,
+                s.title,
+                s.priority
+            ))
             .collect::<Vec<_>>()
             .join("\n")
     );

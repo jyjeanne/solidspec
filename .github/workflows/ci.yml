@@ -37,8 +37,17 @@ jobs:
       - name: Build
         run: cargo build --verbose --locked
 
-      - name: Run tests
+      - name: Run unit + integration tests
         run: cargo test --verbose --locked --all-features
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run integration tests (pipeline, change, status, check, completions)
+        run: cargo test --bin solidspec --verbose --locked
 
   clippy:
     name: Clippy
