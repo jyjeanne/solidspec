@@ -29,12 +29,14 @@ Ranked by **what users care about most**:
 
 ## Roadmap
 
-Features committed for implementation, in order:
+| Version | Feature | Status |
+|---------|---------|--------|
+| v0.2.0 | **Spec-to-Test Generation** | ✅ Implemented |
+| v0.3.0 | **Multi-Agent Pipeline** + Anti-Rationalization + Personas + DAG Graph + Schema Workflows + Delta Specs + OpenCode Skills | ✅ Implemented |
+| v0.4.0 | Parallel Fan-Out + Doubt-Driven Development + Spec Import from Issues | 🚧 Planned |
+| v1.0.0 | TUI Builder + Traceability Matrix + Drift Detection | 📅 Future |
 
-| Version | Feature | Status | Spec |
-|---------|---------|--------|------|
-| v0.2.0 | **Spec-to-Test Generation** | Planned | [spec-to-test-generation.md](spec-to-test-generation.md) |
-| v0.3.0 | **Multi-Agent Pipeline** | Planned | [multi-agent-pipeline.md](multi-agent-pipeline.md) |
+Full roadmap with status: [ROADMAP.md](../../ROADMAP.md)
 
 ---
 

@@ -137,7 +137,37 @@ solidspec --version
 
 ---
 
-## Quick Start (5 minutes)
+## Quick Reference — Most Used Commands
+
+```bash
+# Bootstrap a new project
+solidspec init --here
+
+# Create a feature spec (auto-numbers to 001, 002, ...)
+solidspec specify "Your feature description"
+
+# See what's ready to work on (DAG-based)
+solidspec status
+
+# Generate architecture plan + data model + contracts
+solidspec plan
+
+# Generate phased task breakdown with [P] parallel markers
+solidspec tasks
+
+# Generate test scaffolds from acceptance scenarios
+solidspec tests
+
+# Run the full pipeline automatically (scaffold only, no AI agent)
+solidspec pipeline --new "Feature name" --no-agent
+
+# Propose a change to an existing feature (brownfield)
+solidspec change propose "Add social login" --feature-id 001
+```
+
+---
+
+## Quick Start (3 commands)
 
 ### 1. Initialize your project
 
