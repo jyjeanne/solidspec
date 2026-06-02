@@ -22,11 +22,12 @@ fn full_pipeline_scaffold_generates_all_artifacts() {
 
     assert!(dir.path().join("solidspec.toml").exists());
     assert!(dir.path().join(".solidspec/constitution.md").exists());
-    assert!(dir
-        .path()
-        .join(".solidspec/templates")
-        .join("spec-template.md")
-        .exists());
+    assert!(
+        dir.path()
+            .join(".solidspec/templates")
+            .join("spec-template.md")
+            .exists()
+    );
 
     Command::cargo_bin("solidspec")
         .unwrap()
