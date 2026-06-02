@@ -6,17 +6,26 @@ SolidSpec is a Rust CLI tool (`solidspec`) implementing Specification-Driven Dev
 
 See [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for full system architecture and data flows.
 
-## Build and Test
+## Build, Test, Lint, Format
 
 ```bash
 # Build
 cargo build --release
 
-# Test (uses assert_cmd + tempfile for CLI integration tests)
+# All tests (inline unit + assert_cmd integration tests)
 cargo test
+
+# Single module's tests
+cargo test --lib <module_name>   # e.g. cargo test --lib spec_parser
 
 # Run locally
 cargo run -- [subcommand]
+
+# Lint (warnings are errors in CI)
+cargo clippy -- -D warnings
+
+# Format check (CI gate — no rustfmt.toml, uses defaults)
+cargo fmt --check
 ```
 
 Rust edition: **2024**. No Makefile or justfile — Cargo is the sole build tool.
@@ -38,7 +47,7 @@ Each `src/cli/` file maps 1-to-1 to a subcommand. Never add business logic there
 
 ## Key Conventions
 
-**Errors:** Use `SolidSpecError` (`src/core/errors.rs`) with `thiserror`. Every error variant must include a `fix` field with a human-actionable suggestion. Use `anyhow::Result` in fallible functions.
+**Errors:** Use `SolidSpecError` (`src/core/errors.rs`) with `thiserror`. Every variant **except `Validation`** must include a `fix: String` field with a human-actionable suggestion. The `fix` text is shown in the error Display output. Use `anyhow::Result` in fallible functions.
 
 **CLI parsing:** Clap derive macros (`#[derive(Parser)]`). Global `--debug` flag lives on the root `Cli` struct.
 
@@ -59,11 +68,15 @@ Each `src/cli/` file maps 1-to-1 to a subcommand. Never add business logic there
 
 **Feature resolution** cascades: explicit CLI arg → env var → current git branch → latest `specs/` directory.
 
+**Tests:** Unit tests live in inline `#[cfg(test)] mod tests` blocks in each source file (`cargo test --bin solidspec`). Integration tests that invoke the CLI binary live in `tests/` (`cargo test --test <name>`), using `assert_cmd` + `predicates` + `tempfile`. Tests using `Command::cargo_bin("solidspec")` **must** be in `tests/` — `CARGO_BIN_EXE_solidspec` is only set there.
+
+**Shell scripts:** Bash/PS scripts in `scripts/` are **not standalone** — they are embedded in the binary via `include_str!()` in `src/templates/mod.rs` and extracted at runtime.
+
 ## Module Organization
 
 - Max 2 directory levels under `src/`
 - `mod.rs` re-exports public symbols; sub-files are focused on a single concern
-- `src/core/` modules: `spec_parser`, `task_generator`, `test_generator`, `constitution`, `analyzer`, `review`, `git`, `feature`, `errors`, `token`, `vscode`, `pipeline`
+- `src/core/` modules: `spec_parser`, `task_generator`, `test_generator`, `constitution`, `analyzer`, `review`, `git`, `feature`, `errors`, `token`, `vscode`, `pipeline`, `artifact_graph` (DAG engine, Kahn's algorithm), `schema` (workflow schema loading, 3-level resolution), `change` (delta spec parser, archive merge)
 
 ## Documentation
 

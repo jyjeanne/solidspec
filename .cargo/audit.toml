@@ -2,9 +2,10 @@
 # See: https://docs.rs/cargo-audit/latest/cargo_audit/config/struct.AuditConfig.html
 
 [advisories]
-# Empty allowlist — deny all by default
-# Uncomment to temporarily ignore a specific advisory:
-# ignore = ["RUSTSEC-YYYY-NNNN"]
+# RUSTSEC-2026-0097: rand 0.8.x unsound with custom global logger.
+# This is a transitive dependency of tera 1.x, which pins rand = "0.8".
+# tera 2.x (which drops this dep) is still in alpha; ignore until it stabilises.
+ignore = ["RUSTSEC-2026-0097"]
 
 [output]
 quiet = false

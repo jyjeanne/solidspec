@@ -63,7 +63,7 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
 pub fn current_branch(repo_path: &Path) -> Option<String> {
     let repo = Repository::open(repo_path).ok()?;
     let head = repo.head().ok()?;
-    head.shorthand().map(String::from)
+    head.shorthand().ok().map(String::from)
 }
 
 #[cfg(test)]

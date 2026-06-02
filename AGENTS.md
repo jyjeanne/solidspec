@@ -41,8 +41,9 @@ No Makefile, no justfile — Cargo is the only task runner.
 ## Tests
 
 - **Unit tests**: inline `#[cfg(test)] mod tests` blocks inside each source file.
-- **Integration tests**: also inline in CLI handler files, using `assert_cmd` + `predicates` + `tempfile`. No separate `tests/` directory exists.
-- Run a single test file: `cargo test --lib <module_name>` (e.g., `cargo test --lib spec_parser`).
+- **Integration tests**: in `tests/` directory (`tests/change.rs`, `tests/check.rs`, `tests/completions.rs`, `tests/pipeline.rs`, `tests/status.rs`), using `assert_cmd` + `predicates` + `tempfile`. These require `CARGO_BIN_EXE_solidspec` which is only available to files in `tests/`.
+- Run a single test file: `cargo test --test <name>` (e.g., `cargo test --test pipeline`).
+- Run inline unit tests: `cargo test --bin solidspec`.
 
 ## Shell scripts
 

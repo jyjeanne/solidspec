@@ -21,7 +21,7 @@ semver = "1"
 tera = "1"
 
 # Git integration
-git2 = "0.19"
+git2 = "0.21"
 
 # Regex
 regex = "1"
