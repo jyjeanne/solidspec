@@ -1,7 +1,7 @@
 <p align="center">
   <img src="docs/picture/logo.jpg" alt="SolidSpec Logo" width="600">
   <p align="center">
-    <strong>AI-Powered Software Development — Multi-Methodology, One CLI</strong>
+    <strong>AI-Powered Software Development tool — Multi-Methodology,  CLI based</strong>
   </p>
   <p align="center">
     SolidSpec scaffolds your AI agents into structured development workflows. Pick the methodology that fits
