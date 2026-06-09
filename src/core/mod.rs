@@ -14,6 +14,7 @@ pub mod review;
 pub mod schema;
 pub mod spec_parser;
 pub mod task_generator;
+pub mod tdd;
 pub mod test_generator;
 pub mod token;
 pub mod vscode;

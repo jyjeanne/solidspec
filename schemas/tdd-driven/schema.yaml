@@ -1,0 +1,124 @@
+# Schema: tdd-driven
+# AI-Augmented Test-Driven Development workflow.
+# Identical to spec-driven except:
+#   - `tests` (scaffolds) is replaced by `tdd-tests` (real failing tests — RED phase)
+#   - `tdd-refactor` is added after `implement` (REFACTOR phase)
+# All other phases are reused unchanged.
+name: tdd-driven
+version: "1.1"
+description: "AI-TDD workflow — RED-GREEN-REFACTOR with AI agents and human approval gates"
+
+artifacts:
+  - id: spec
+    generates: ["spec.md"]
+    requires: []
+    instruction: "Create a feature specification with user stories, functional requirements (FR-### format), acceptance criteria (one per story), key entities, success criteria, and edge cases. Acceptance criteria must be testable and unambiguous — they become the direct input for test generation. Each acceptance criterion must describe observable behavior from the caller's perspective, not internal implementation steps."
+    template: "spec-template.md"
+
+  - id: clarify
+    generates: ["spec.md"]
+    requires: ["spec"]
+    instruction: "Find and resolve all [NEEDS CLARIFICATION] markers in spec.md. Propose concrete resolutions. Update spec.md with the resolved content. Pay special attention to acceptance criteria — each must be precise enough to drive a single, unambiguous failing test."
+    template: null
+
+  - id: plan
+    generates: ["plan.md"]
+    requires: ["spec"]
+    instruction: "Create an architecture plan: decisions with rationale, project structure, data model, technology stack, contracts, and constitution compliance check. When designing module interfaces, identify deep-module opportunities: prefer a small public interface hiding complex implementation over a large surface area. For each new module, document: (1) the public interface that will be tested, (2) external dependencies that will be injected (not created internally), (3) whether functions return results or produce side effects — prefer results for testability. These decisions will drive the RED phase."
+    template: "plan-template.md"
+
+  - id: tasks
+    generates: ["tasks.md"]
+    requires: ["spec", "plan"]
+    instruction: "Generate a phased task breakdown (Setup → Foundational → User Stories → Polish). Mark parallel-safe tasks with [P]. Link to user stories with [US#]. Keep tasks small — maximum one behavior per task. For each task, note which acceptance criterion (or sub-behavior) it satisfies. During the GREEN phase the agent will work task-by-task, applying a mini RED-GREEN loop per task: target the one failing test for that task, write minimal code to pass it, confirm no regressions, then move to the next task. Do not batch all implementations."
+    template: "tasks-template.md"
+
+  - id: tdd-tests
+    generates: ["tests/", "tdd-red-report.md"]
+    requires: ["spec", "tasks"]
+    instruction: |
+      RED phase — write failing tests using vertical slices, NOT horizontal batching.
+
+      STEP 1 — INTERFACE DESIGN (before any test code):
+      Read spec.md and plan.md. Identify every public API that tests will call. For each:
+      - Design the function/method signature for testability: accept external dependencies as parameters (do not create them internally); return results rather than side effects where possible.
+      - Identify mock boundaries: mock ONLY external systems (HTTP clients, databases, clocks, file I/O). Do NOT mock your own modules or internal collaborators.
+      - If framework auto-detection fails (no Cargo.toml, package.json, pyproject.toml, go.mod), STOP and report the failure — do not proceed with guesses.
+
+      STEP 2 — TRACER BULLET (first cycle only):
+      Pick the single most critical acceptance criterion. Write ONE test for it. Run it.
+      The test must FAIL for the right reason — a missing implementation, not a compile error or wrong assertion. Fix setup issues until the failure reason is correct before proceeding.
+
+      STEP 3 — REMAINING TESTS (one per behavior):
+      Each acceptance criterion may describe multiple behaviors. Decompose each criterion into individual behaviors (one test per behavior). Test names must describe WHAT, not HOW: 'user_can_log_in_with_email' not 'calls_verify_password'. Write each test; confirm it compiles and fails before writing the next.
+
+      STEP 4 — TEST QUALITY CHECK (before writing tdd-red-report.md):
+      Verify every test:
+      - Describes observable behavior, not internal implementation steps
+      - Calls only public APIs — no private methods, no direct DB queries to verify results
+      - Would survive a complete internal refactor without modification
+      - Has one logical assertion (or one coherent group)
+
+      STEP 5 — Fill in tdd-red-report.md with interface decisions, framework, cycle table, counts, and the quality checklist.
+
+      FORBIDDEN: Writing any real implementation logic. Tests must fail because the code does not yet exist.
+    template: null
+
+  - id: implement
+    generates: ["tasks.md"]
+    requires: ["tdd-tests"]
+    instruction: |
+      GREEN phase — implement one failing test at a time. DO NOT look at all failing tests and write bulk implementation.
+
+      For each failing test (work in the order they appear in the cycle table in tdd-red-report.md):
+      1. Run the full test suite to identify the next failing test to target.
+      2. Write ONLY the code needed to make that one test GREEN. Resist adding code for anticipated future tests.
+      3. Run the full suite again: the target test must be GREEN; no previously-passing test may go RED.
+      4. Update tasks.md: change `- [ ]` to `- [x]` for the task this test covers.
+      5. Move to the next failing test.
+
+      Stop when all tests are GREEN. At that point, tdd-refactor begins.
+      FORBIDDEN: Adding features not covered by any failing test. FORBIDDEN: Writing code for tests not yet targeted.
+    template: null
+
+  - id: tdd-refactor
+    generates: ["tdd-refactor-report.md"]
+    requires: ["implement"]
+    instruction: |
+      REFACTOR phase — improve code quality without changing any behavior.
+
+      PRE-CONDITION: Run the full test suite. Every test must be GREEN before starting.
+      If any test is failing, STOP — go back to implement phase.
+
+      Look for these refactor candidates in priority order:
+      1. Duplication → extract to a shared function or class
+      2. Long methods → extract private helpers (keep tests targeting the public interface, not the helpers)
+      3. Shallow modules → deepen: reduce the number of public methods, hide more complexity inside
+      4. Feature envy → move logic to where the data lives
+      5. Primitive obsession → introduce value objects for domain concepts
+      6. Interface creep → do not add new public methods during refactor; the surface area must stay the same or shrink
+
+      After EVERY individual change: run the full test suite. Every test must remain GREEN.
+
+      FORBIDDEN: Changing test code. FORBIDDEN: Adding new behavior. FORBIDDEN: Expanding the public interface.
+
+      Write tdd-refactor-report.md: for each change, list the file, the refactor type (from the list above), before/after description, and the test run result (must be GREEN).
+    template: null
+
+  - id: analyze
+    generates: ["analysis-report.md"]
+    requires: ["spec"]
+    instruction: "Validate cross-artifact consistency. Check requirement traceability (FR-### → plan → tasks → tdd-tests). Entity coverage. Constitution compliance. Output findings by severity. In TDD mode: verify each acceptance criterion in spec.md has at least one corresponding test in tests/; verify tdd-red-report.md interface decisions align with plan.md."
+    template: null
+
+  - id: review
+    generates: ["review-report.md"]
+    requires: ["spec"]
+    instruction: "Perform comprehensive spec quality review. Check placeholders, ambiguous language, requirement quality, acceptance scenario coverage, and security heuristics. Score dimensions 0-10. In TDD mode: verify tdd-red-report.md shows no unexpectedly-passing tests at RED phase (if any pass unexpectedly, flag those behaviors as already-implemented and confirm they are intentionally excluded from the implement phase)."
+    template: null
+
+  - id: ship
+    generates: ["ship-report.md"]
+    requires: ["analyze", "review"]
+    instruction: "Run 'solidspec ship' to execute parallel fan-out review (code, security, tests, performance) and produce a SHIP/HOLD decision. ship-report.md contains per-lane scores and blocking findings."
+    template: null

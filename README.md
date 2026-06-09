@@ -1,16 +1,17 @@
 <p align="center">
-  <img src="docs/picture/logo.png" alt="SolidSpec Logo" width="600">
+  <img src="docs/picture/logo.jpg" alt="SolidSpec Logo" width="600">
   <p align="center">
-    <strong>Specification-Driven Development for the AI era</strong>
+    <strong>AI-Powered Software Development — Multi-Methodology, One CLI</strong>
   </p>
   <p align="center">
-    A Rust CLI that transforms feature descriptions into structured specs, plans, and tasks &mdash; then lets your AI agent build them.
-    Now with <strong>IDSD</strong> (Intent-Driven Specification Development) for evidence-based validation and full traceability.
+    SolidSpec scaffolds your AI agents into structured development workflows. Pick the methodology that fits
+    your feature — from a quick spike to a fully-traced, intent-anchored production build — and SolidSpec
+    drives every artifact, every agent prompt, and every quality gate from idea to ship.
   </p>
   <p align="center">
+    <a href="#workflows-and-methodologies">Workflows</a> &bull;
+    <a href="#choosing-a-workflow">Compare</a> &bull;
     <a href="#install">Install</a> &bull;
-    <a href="#the-8-step-workflow">Workflow</a> &bull;
-    <a href="#sdd-vs-idsd-which-to-choose">SDD vs IDSD</a> &bull;
     <a href="#parallel-fan-out-ship-gate">Ship Gate</a> &bull;
     <a href="#using-with-claude-code">Claude Code</a> &bull;
     <a href="#using-with-mistral-vibe">Mistral Vibe</a> &bull;
@@ -24,72 +25,221 @@
 
 ## The Problem
 
-You describe a feature to your AI coding agent. It generates code. But the code doesn't match what you actually needed &mdash; scope creeps, edge cases are missed, and there's no traceability from requirements to implementation.
+You describe a feature to your AI coding agent. It generates code. But the code doesn't match what you actually needed &mdash; scope creeps, edge cases are missed, tests are written after the fact (or not at all), and there's no traceability from requirements to implementation.
 
-**SolidSpec fixes this** by inserting a structured specification layer between your idea and the code. Every feature gets a spec, a plan, and a task list &mdash; all versioned in your repo, all driving the AI's implementation.
+**SolidSpec fixes this** by inserting a structured layer between your idea and the code. Every feature gets a spec, a plan, and a task list &mdash; all versioned in your repo, all driving the AI. Which structure exactly depends on what you're building:
 
-### The deeper problem SDD alone can't solve
+- Shipping a quick internal tool? Use `minimal` &mdash; four artifacts, done in minutes.
+- Building a payment feature? Use `security-first` &mdash; OWASP audit gates the task list.
+- Writing a library with strict contracts? Use `tdd-driven` &mdash; real failing tests before any implementation.
+- Building a product feature with uncertain scope? Use `intent-driven` &mdash; capture the *why* first, measure it at the end.
+- Tackling a complex feature that needs structured implementation? Use `apex-driven`.
+- Need all of the above? Use `intent-apex`.
 
-Even with a perfect spec, a common failure mode remains: **intent drift**. The spec describes *what* to build, but not *why* it must exist. Over multiple iterations, implementations drift away from the original intent without anyone noticing — requirements are technically satisfied while the actual user need is not.
+**SolidSpec works with 20 AI agents** (Claude Code, Copilot, Vibe, Gemini, Cursor, Windsurf, Codex, and more), registers slash commands in each agent's native format, and can invoke them automatically via a fully automated or mixed-mode pipeline.
 
-**SolidSpec's IDSD mode** (Intent-Driven Specification Development) adds a root anchor to the chain: an `intent.md` file that captures *why* the capability must exist, what constraints bound it, and what evidence will confirm success. Every subsequent artifact traces back to this intent. Drift is measured continuously and surfaced as a first-class metric.
+---
 
-## The 8-Step Workflow
+## Workflows and Methodologies
 
-Each pipeline phase uses a specialized **agent persona** — the agent gets role-specific instructions, an expected output format, and a verification checklist before it starts. An **anti-rationalization table** prevents the most common agent shortcuts ("I'll add tests later", "This is too simple for a spec").
+SolidSpec ships **7 built-in workflows** covering the full spectrum from lightweight to rigorous. All share the same DAG engine, schema format, agent registration, and pipeline infrastructure.
 
-### SDD — Specification-Driven Development (default)
+### At a Glance
 
-```
-                    You describe a feature
-                            |
-                            v
-  +----------------------------------------------------------+
-  |                                                          |
-  |   1. solidspec specify   -->  spec.md                    |
-  |   2. solidspec clarify   -->  resolve ambiguities        |
-  |   3. solidspec plan      -->  plan.md + research +       |
-  |                               data-model + contracts     |
-  |   4. solidspec tasks     -->  tasks.md (phased, parallel)|
-  |   5. solidspec tests     -->  test scaffolds (per story) |
-  |   6. solidspec implement -->  AI builds from tasks       |
-  |   7. solidspec analyze   -->  consistency report         |
-  |   8. solidspec review    -->  quality review report      |
-  |   9. solidspec ship      -->  SHIP / HOLD decision       |
-  |      (4 parallel AI review lanes run concurrently)       |
-  |                                                          |
-  |   solidspec pipeline --new "feature"                     |
-  +----------------------------------------------------------+
-                            |
-                            v
-                  Working, traced code
-```
+| Schema | Artifacts | Methodology | Key addition over `spec-driven` |
+|--------|-----------|-------------|--------------------------------|
+| `minimal` | 4 | Lean SDD | No tests, no review — just spec → plan → tasks → implement |
+| `spec-driven` | 9 | Full SDD | Constitution gates, test scaffolds, analyze, review, ship gate |
+| `security-first` | 5 | SDD + security | Mandatory OWASP audit gates the task list |
+| `tdd-driven` | 10 | AI-TDD | Real failing tests (RED) before implementation; refactor phase after |
+| `intent-driven` | 11 | IDSD | Intent capture (WHY), evidence collection, drift detection |
+| `apex-driven` | 9 | SDD + APEX | Structured A-P-E-X implementation replaces manual handoff |
+| `intent-apex` | 11 | IDSD + APEX | Intent-anchored with APEX implementation and evidence collection |
 
-### IDSD — Intent-Driven Specification Development (opt-in)
+---
+
+### `minimal` — Lean Specification
+
+The fastest path from idea to implementation. No test scaffolds, no review phase, no ship gate. Four artifacts, minimal ceremony.
 
 ```
-                    You capture the WHY first
-                            |
-                            v
-  +----------------------------------------------------------+
-  |                                                          |
-  |   0. solidspec intent    -->  intent.md (ICE model)      |
-  |      WHY it exists · WHAT bounds it · HOW to measure it  |
-  |                          |                               |
-  |   1–8. (same SDD phases, enriched by intent)             |
-  |                          |                               |
-  |   9. solidspec evidence  -->  evidence-report.md         |
-  |      per-criterion satisfaction from implemented tests   |
-  |                                                          |
-  |   solidspec pipeline --new "feature" --schema intent-driven|
-  +----------------------------------------------------------+
-                            |
-                            v
-           Working, traced code with measured intent coverage
-           INT-001 → FR-001 → T001 → test_file.md
+  spec.md → plan.md → tasks.md → implement
 ```
 
-Every artifact references the one before it. In IDSD mode, requirements trace all the way back to the original intent. Drift is measured automatically at every `solidspec analyze` run.
+**Use when:**
+- Internal utility scripts or tooling with no ambiguity
+- Hackathon projects or time-boxed spikes
+- The requirements are fully known by the implementer
+- You want the discipline of a written spec but not the full SDD ceremony
+
+**Avoid when:** quality gates, traceability, or external stakeholders matter.
+
+---
+
+### `spec-driven` — Full Specification-Driven Development (default)
+
+The standard SolidSpec workflow. Structured spec, architecture plan, phased tasks, test scaffolds, cross-artifact consistency check, preflight review, and a 4-lane parallel ship gate.
+
+```
+  spec → clarify → plan → tasks → tests → implement → analyze → review → ship
+```
+
+**Use when:**
+- Most greenfield features in a team or solo project
+- Adding a new capability to an existing codebase
+- You need traceability from requirements to tasks but not full intent-to-evidence traceability
+- Brownfield features (combine with `solidspec change propose` for delta specs)
+- The default if you're unsure which schema to pick
+
+---
+
+### `security-first` — Security-Gated Development
+
+Identical to `spec-driven` through the plan phase, then adds a mandatory OWASP Top 10 security review before tasks can be generated. Security findings must be resolved — every finding becomes a mitigation task.
+
+```
+  spec → plan → security-review → tasks → implement
+```
+
+**Use when:**
+- Payment processing, billing, or financial transactions
+- Authentication, authorization, session management, or OAuth flows
+- Any feature that stores, transmits, or processes PII, credentials, or sensitive data
+- Healthcare, legal, or regulated-industry features
+- API endpoints exposed to the public internet
+- Features that modify access control or permission models
+
+**Key difference:** Tasks cannot be generated until `security-review.md` exists. This is a hard DAG dependency — it cannot be skipped.
+
+---
+
+### `tdd-driven` — AI Test-Driven Development
+
+Brings RED-GREEN-REFACTOR discipline to AI-assisted development. The agent writes real failing tests first (not scaffolds), then implements one test at a time, then refactors with all tests green. Three human-approval gates: before writing tests, before implementing, before refactoring.
+
+```
+  spec → clarify → plan → tasks
+       → tdd-tests (RED)
+       → implement (GREEN — one test at a time)
+       → tdd-refactor (REFACTOR — interface must not grow)
+       → analyze → review → ship
+```
+
+**Use when:**
+- Library code or SDK with a stable public API that multiple consumers depend on
+- Complex business logic (pricing engines, rule evaluators, state machines)
+- Code that will be maintained by a large team or refactored frequently
+- Replacing or rewriting a working system where regressions must be prevented
+- Any feature where "all tests green" is the contractual definition of done
+- You want the AI to prove that each behavior works before moving to the next
+
+**Key difference over `spec-driven`:**
+- `tests` (scaffold) → `tdd-tests` (real failing tests using the project's framework)
+- New `tdd-refactor` phase: the AI refactors without adding behavior
+- Agent command bodies enforce: tracer-bullet first, vertical slices, mock boundaries (only external systems), interface preservation during refactor
+
+---
+
+### `intent-driven` — IDSD (Intent-Driven Specification Development)
+
+Adds a root intent anchor before the spec and evidence collection after implementation. Every requirement traces back to the original intent. Drift is measured continuously.
+
+```
+  intent (WHY) → spec → clarify → plan → tasks → tests
+               → implement → evidence → analyze → review → ship
+```
+
+**Use when:**
+- Greenfield features with uncertain or evolving scope
+- Features subject to compliance, audit, or stakeholder approval
+- Long-lived features that will evolve over many iterations (drift detection prevents silent requirement creep)
+- The team suspects implementation has diverged from the original vision
+- You need a versioned, traceable record proving *why* each requirement exists
+
+**Key additions:**
+- `intent.md` (ICE model): Goal / Constraints / Evidence before the first spec line
+- `evidence-report.md`: per-criterion satisfaction from implemented tests
+- Intent drift score in every `solidspec analyze` run
+- Full traceability chain: `INT-001 → FR-001 → T001 → test_file`
+
+---
+
+### `apex-driven` — APEX-Enhanced SDD
+
+SDD with the APEX (Analyze-Plan-Execute-eXamine) implementation workflow replacing the manual handoff. APEX injects `spec.md + plan.md + tasks.md` as pre-loaded context and provides parallel exploration agents and adversarial code review.
+
+```
+  spec → clarify → plan → tasks → tests → apex → analyze → review → ship
+```
+
+**Use when:**
+- Complex features where the implementation itself benefits from a structured A-P-E-X cycle
+- Team-driven development where the agent's implementation choices need structured examination
+- You want to skip the manual `implement` handoff without losing structure
+
+---
+
+### `intent-apex` — Intent + APEX (Maximum Rigor)
+
+The most comprehensive workflow: intent-anchored requirements, evidence-based validation, AND structured APEX implementation. Every requirement traces to intent; every implementation cycle is structured.
+
+```
+  intent → spec → clarify → plan → tasks → tests
+         → apex → evidence → analyze → review → ship
+```
+
+**Use when:**
+- Enterprise or product-critical features where every decision must be justifiable
+- Compliance-driven development (the evidence report is a versioned, auditable artifact)
+- Complex features that are both uncertain in scope (IDSD value) AND complex in implementation (APEX value)
+- When you need the maximum possible traceability, structure, and quality assurance
+
+---
+
+## Choosing a Workflow
+
+### Decision table
+
+| Situation | Recommended |
+|-----------|-------------|
+| Quick script or internal tool, requirements fully known | `minimal` |
+| Standard team feature, new capability, brownfield addition | `spec-driven` |
+| Payment, auth, PII, or any security-sensitive feature | `security-first` |
+| Library, SDK, or API with strict behavioral contracts | `tdd-driven` |
+| Business logic that will be refactored often | `tdd-driven` |
+| Rewriting existing working code — regressions are unacceptable | `tdd-driven` |
+| Feature with uncertain scope or evolving requirements | `intent-driven` |
+| Compliance, audit, or stakeholder-approval required | `intent-driven` |
+| Feature likely to drift from original intent over iterations | `intent-driven` |
+| Complex implementation needing structured A-P-E-X execution | `apex-driven` |
+| Regulated feature with both uncertain scope AND complex implementation | `intent-apex` |
+
+### Comparison matrix
+
+| | `minimal` | `spec-driven` | `security-first` | `tdd-driven` | `intent-driven` | `apex-driven` | `intent-apex` |
+|--|:---------:|:-------------:|:----------------:|:------------:|:---------------:|:-------------:|:-------------:|
+| **Artifacts** | 4 | 9 | 5 | 10 | 11 | 9 | 11 |
+| **Ceremony level** | Low | Medium | Medium | Medium | High | Medium | Very High |
+| **Test scaffolds** | ✗ | ✓ | ✗ | Real (RED) | ✓ | ✓ | ✓ |
+| **TDD RED-GREEN-REFACTOR** | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| **Security audit gate** | ✗ | ✗ | ✓ mandatory | ✗ | ✗ | ✗ | ✗ |
+| **Intent capture (WHY)** | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ |
+| **Evidence collection** | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ |
+| **Intent drift detection** | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ |
+| **APEX implementation** | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ |
+| **Parallel ship gate** | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
+| **Full trace chain** | ✗ | partial | ✗ | partial | ✓ full | partial | ✓ full |
+| **Suitable for CI gate** | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
+
+### Rule of thumb
+
+> Use **`minimal`** when you know exactly what to build and speed matters.
+> Use **`spec-driven`** when you need structure without overhead.
+> Use **`security-first`** when trust boundaries are at stake.
+> Use **`tdd-driven`** when contracts matter more than speed.
+> Use **`intent-driven`** when you need to prove *why* it was built.
+> Use **`apex-driven`** when the implementation itself is the hard part.
+> Use **`intent-apex`** when all of the above apply.
 
 ---
 
@@ -127,8 +277,6 @@ echo 'export PATH="$PATH:$HOME/solidspec/target/release"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-Replace `$HOME/solidspec` with the actual path where you cloned the repository.
-
 ---
 
 ### Add to PATH — Windows
@@ -150,25 +298,10 @@ Copy-Item .\target\release\solidspec.exe "$env:USERPROFILE\bin\solidspec.exe"
 )
 ```
 
-**Option B — add the build output directory to PATH for the current session only**
-
-```powershell
-$env:PATH += ";$(Get-Location)\target\release"
-```
-
-To make Option B permanent, add it to your PowerShell profile (`$PROFILE`):
-
-```powershell
-Add-Content $PROFILE "`n`$env:PATH += `";C:\path\to\solidspec\target\release`""
-```
-
----
-
 **Verify the installation:**
 
 ```bash
 solidspec --version
-# solidspec 0.1.0
 ```
 
 ---
@@ -185,17 +318,13 @@ solidspec specify "Your feature description"
 # See what's ready to work on (DAG-based)
 solidspec status
 
-# Generate architecture plan + data model + contracts
-solidspec plan
-
-# Generate phased task breakdown with [P] parallel markers
-solidspec tasks
-
-# Generate test scaffolds from acceptance scenarios
-solidspec tests
-
 # Run the full pipeline automatically (scaffold only, no AI agent)
 solidspec pipeline --new "Feature name" --no-agent
+
+# Run with a specific workflow schema
+solidspec pipeline --new "Feature name" --schema tdd-driven --no-agent
+solidspec pipeline --new "Feature name" --schema intent-driven --no-agent
+solidspec pipeline --new "Feature name" --schema security-first --no-agent
 
 # Propose a change to an existing feature (brownfield)
 solidspec change propose "Add social login" --feature-id 001
@@ -221,54 +350,22 @@ SolidSpec creates:
 - `.solidspec/` &mdash; constitution, templates, config
 - `specs/` &mdash; where feature artifacts live
 - `solidspec.toml` &mdash; project configuration
-- `.claude/commands/solidspec-*.md` &mdash; 9 slash commands for your agent
+- `.claude/commands/solidspec-*.md` &mdash; slash commands for your agent
 
-### 2. Describe your feature
+### 2. Choose your workflow and describe your feature
 
 ```bash
+# Standard workflow (spec-driven is the default)
 solidspec specify "TODO list with CRUD operations and local storage"
+
+# Or run the full pipeline for a specific workflow in one command
+solidspec pipeline --new "TODO list with CRUD" --schema spec-driven --no-agent
+solidspec pipeline --new "Payment checkout flow" --schema tdd-driven --no-agent
+solidspec pipeline --new "User auth system" --schema security-first --no-agent
+solidspec pipeline --new "Task manager feature" --schema intent-driven --no-agent
 ```
 
-This creates `specs/001-todo-list-crud/spec.md` with:
-- Prioritized user stories (P1, P2, P3)
-- Functional requirements (FR-001, FR-002...)
-- Acceptance scenarios (Given/When/Then)
-- Quality checklist
-
-### 3. Plan the architecture
-
-```bash
-solidspec plan 001
-```
-
-Generates `plan.md`, `research.md`, `data-model.md`, `quickstart.md`, and `contracts/`.
-
-### 4. Generate tasks
-
-```bash
-solidspec tasks 001
-```
-
-Produces a phased task breakdown:
-
-```
-Phase 1: Setup
-  - [ ] T001 Create project structure
-  - [ ] T002 Initialize dependencies
-
-Phase 2: Foundational
-  - [ ] T003 Setup data models
-  - [ ] T004 [P] Create Task model in src/models/task.rs
-
-Phase 3: User Story 1 - Add a task (P1)
-  - [ ] T005 [US1] Implement add task functionality
-  - [ ] T006 [P] [US1] Add validation and error handling
-
-Phase 4: User Story 2 - View tasks (P1)
-  ...
-```
-
-### 5. Let your AI agent build it
+### 3. Let your AI agent build it
 
 Use the slash command in your AI agent:
 
@@ -278,46 +375,36 @@ Use the slash command in your AI agent:
 
 ---
 
-## SDD vs IDSD: Which to Choose?
+## SDD vs IDSD vs TDD: Which to Choose?
 
-Both workflows share the same eight-phase pipeline and the same artifacts. IDSD extends the chain by one phase on each side (intent capture before spec, evidence collection after implement) and enriches `analyze` and `review` with additional metrics.
-
-### Where SDD falls short
+### Where SDD alone falls short
 
 | SDD limitation | Impact |
 |----------------|--------|
 | Spec describes *what* but not *why* | Implementations can satisfy requirements while missing the actual user need |
 | No measurement of whether the code achieves the original goal | Drift goes undetected until user feedback |
-| Requirements → tasks traceability stops at `tasks.md` | No end-to-end chain to test files |
-| Review quality is heuristic-only | No evidence that acceptance criteria were actually implemented |
+| Test scaffolds are stubs, not real failing tests | AI can implement without ever running a test |
 | "All tests green" can mask intent drift | Technically correct, functionally wrong |
 
 ### What IDSD adds
 
 | IDSD addition | Benefit |
 |---------------|---------|
-| `intent.md` (ICE model) | Anchors the *why* before the *what*; changes must justify themselves against the intent |
-| Intent drift score | `solidspec analyze` reports % of evidence criteria not yet covered — visible in every run |
-| Evidence-based validation | `solidspec evidence` maps each evidence criterion to implemented tests; produces a satisfaction report |
-| Full traceability chain | `INT-001 → FR-001 → T001 → test_file.md` — visible as ASCII tree in `solidspec analyze` |
-| `IntentAlignment` review dimension | Scores 0–10: traces every FR to an evidence criterion, flags draft-status intent |
-| Intent coverage metric | % of evidence criteria with at least one passing implemented test |
+| `intent.md` (ICE model) | Anchors the *why* before the *what* |
+| Intent drift score | `solidspec analyze` reports % of evidence criteria not yet covered |
+| Evidence-based validation | Maps each evidence criterion to implemented tests |
+| Full traceability chain | `INT-001 → FR-001 → T001 → test_file.md` |
+| `IntentAlignment` review dimension | Scores 0–10 in `review-report.md` |
 
-### Decision table
+### What TDD adds
 
-| Situation | Choose |
-|-----------|--------|
-| Greenfield feature with uncertain scope | **IDSD** — intent anchors the why before requirements proliferate |
-| Feature subject to compliance or audit | **IDSD** — `evidence-report.md` is a traceable, versioned artefact |
-| Long-lived feature that will evolve over many iterations | **IDSD** — drift score catches requirement creep automatically |
-| Team suspects implementation diverged from the original vision | **IDSD** — run `solidspec analyze` to quantify the gap |
-| Rapid prototype or spike with well-known requirements | **SDD** — less ceremony, faster to first output |
-| Brownfield change to an existing feature | **SDD** + `solidspec change propose` — delta specs are lighter than full intent capture |
-| Simple internal utility with no ambiguity | **SDD** — the `minimal` schema (4 phases) is sufficient |
-
-### Rule of thumb
-
-> Use **SDD** when you know *what* to build. Use **IDSD** when you need to prove *why* it was built and *whether* it was built correctly.
+| TDD addition | Benefit |
+|--------------|---------|
+| Real failing tests before implementation | Agent cannot skip to code — tests must compile and fail first |
+| Tracer-bullet first cycle | Most critical behavior proved end-to-end before expanding |
+| One-test-at-a-time GREEN phase | No bulk implementation; each behavior proven in isolation |
+| Dedicated REFACTOR phase | Code quality improved without adding behavior; tests protect against regression |
+| Mock boundary enforcement | Only external systems mocked; internal collaborators are never mocked |
 
 ### IDSD Quick Start
 
@@ -329,25 +416,44 @@ solidspec pipeline --new "Allow users to manage tasks" --schema intent-driven --
 Or step by step:
 
 ```bash
-# 0. Capture the intent — fill in Goal, Constraints, Evidence, then set Status: active
 solidspec intent "Allow users to manage tasks"
-
-# 1–8. Standard SDD phases (clarify, plan, tasks, tests, implement, analyze, review)
 solidspec specify "Task manager with CRUD and local persistence"
 solidspec plan 001
-solidspec tasks 001          # manually add [FR-001] tags to tasks for trace links
-solidspec tests 001          # add // T001 comments to test files for Task→Test links
-solidspec implement 001      # AI agent handoff
-
-# 9. Collect evidence — see per-criterion satisfaction
+solidspec tasks 001
+solidspec tests 001
+solidspec implement 001
 solidspec evidence 001
-solidspec evidence 001 --update   # rewrite intent.md Status automatically
-
-# Full traceability chain + drift score in every analyze run
 solidspec analyze 001
 ```
 
-For a complete walkthrough with a "Task Manager" example, see [docs/idsd-workflow-guide.md](docs/idsd-workflow-guide.md).
+For a complete walkthrough, see [docs/idsd-workflow-guide.md](docs/idsd-workflow-guide.md).
+
+### TDD Quick Start
+
+```bash
+# Full TDD pipeline scaffold
+solidspec pipeline --new "Authentication service" --schema tdd-driven --no-agent
+```
+
+Or step by step (human-approval gates at tdd-tests, implement, tdd-refactor):
+
+```bash
+solidspec specify "Auth service with JWT and refresh tokens"
+solidspec plan 001
+solidspec tasks 001
+
+# RED phase — agent writes real failing tests from acceptance criteria
+solidspec tdd-tests 001
+# Review tdd-red-report.md, then open your agent: /solidspec-tdd-tests
+
+# GREEN phase — implement one failing test at a time
+solidspec implement 001
+# Agent follows the cycle table in tdd-red-report.md
+
+# REFACTOR phase — improve without changing behavior
+solidspec tdd-refactor 001
+# Agent produces tdd-refactor-report.md with per-change audit
+```
 
 ---
 
@@ -451,49 +557,6 @@ block_on_critical = true
 timeout = 300
 ```
 
-### CLI overrides
-
-```bash
-# Override the agent for a single lane at the command line
-solidspec ship --code-agent claude --security-agent gemini
-
-# Adjust timeout for slow agents
-solidspec ship --timeout 600
-
-# Filter to a subset of lanes
-solidspec ship --lane security,tests
-```
-
-### Output
-
-`solidspec ship` writes `specs/<NNN>-<feature>/ship-report.md` with:
-
-```markdown
-# Ship Report: 001-auth-system
-
-<!-- ship: true -->
-<!-- generated: 2026-06-09T10:30:00Z -->
-
-**Decision**: SHIP
-
-## Lane Scores
-
-| Lane | Agent | Score | Threshold | Status |
-|------|-------|-------|-----------|--------|
-| Code Review    | claude | 88/100 | 70 | ✓ Pass |
-| Security Audit | gemini | 92/100 | 80 | ✓ Pass |
-| Test Coverage  | claude | 76/100 | 70 | ✓ Pass |
-| Performance    | claude | 65/100 | 60 | ✓ Pass |
-
-## Re-run
-
-\`\`\`bash
-solidspec ship 001-auth-system
-\`\`\`
-```
-
-The `<!-- ship: true|false -->` header is machine-readable for CI parsing.
-
 ### CI / CD integration
 
 ```yaml
@@ -512,21 +575,13 @@ solidspec ship --fail-on-hold --lane security,code && git push
 
 ## Using with Claude Code
 
-Claude Code gets 9 slash commands automatically registered in `.claude/commands/`.
+Claude Code gets slash commands automatically registered in `.claude/commands/`.
 
 ### Setup
 
 ```bash
-# Ensure .claude/ exists (Claude Code creates it automatically)
 mkdir -p .claude
-
-# Initialize SolidSpec
 solidspec init --here
-```
-
-You'll see:
-```
-Registered commands for 1 agent(s): claude
 ```
 
 ### Available slash commands
@@ -537,29 +592,27 @@ Registered commands for 1 agent(s): claude
 | `/solidspec-clarify` | Resolve ambiguities in a spec |
 | `/solidspec-plan` | Generate architecture plan + supporting docs |
 | `/solidspec-tasks` | Generate phased task breakdown |
+| `/solidspec-tests` | Generate test scaffolds from acceptance scenarios |
+| `/solidspec-tdd-tests` | Write real failing tests — TDD RED phase |
 | `/solidspec-implement` | Execute tasks from the breakdown |
-| `/solidspec-tests` | Generate and enhance test scaffolds |
+| `/solidspec-tdd-refactor` | Refactor while keeping all tests GREEN |
 | `/solidspec-analyze` | Validate cross-artifact consistency |
 | `/solidspec-review` | Review spec quality with preflight heuristics |
 | `/solidspec-checklist` | Generate quality validation checklist |
 
 ### Step-by-step with Claude Code
 
-**Step 1** &mdash; Open your project in Claude Code and run:
+**Step 1** &mdash; Specify your feature:
 
 ```
 /solidspec-specify Simple TODO app with add, edit, delete, and local storage
 ```
 
-Claude reads the AGENT.md context, creates a feature branch, and generates `spec.md` with structured user stories, requirements, and acceptance scenarios.
-
-**Step 2** &mdash; Review and refine the spec, then:
+**Step 2** &mdash; Plan the architecture:
 
 ```
 /solidspec-plan
 ```
-
-Claude generates the architecture plan, data model, API contracts, and research document. Constitution gates are checked automatically.
 
 **Step 3** &mdash; Generate tasks:
 
@@ -567,15 +620,11 @@ Claude generates the architecture plan, data model, API contracts, and research 
 /solidspec-tasks
 ```
 
-Claude creates `tasks.md` with phased, parallelizable tasks linked to user stories.
-
 **Step 4** &mdash; Build it:
 
 ```
 /solidspec-implement
 ```
-
-Claude reads the task list and implements each task in order, respecting dependencies and `[P]` parallel markers. Completed tasks are marked `[X]`.
 
 **Step 5** &mdash; Validate:
 
@@ -583,77 +632,18 @@ Claude reads the task list and implements each task in order, respecting depende
 /solidspec-analyze
 ```
 
-Claude checks that all requirements trace to plan sections, all plan sections trace to tasks, and the constitution is respected.
-
 ---
 
 ## Using with Mistral Vibe
 
-Mistral Vibe gets 9 skills registered as directories in `.vibe/skills/`. Each skill has a `SKILL.md` with the `user-invocable: true` frontmatter so it appears in Vibe's slash command list.
-
-### Setup
+Mistral Vibe gets skills registered as directories in `.vibe/skills/`.
 
 ```bash
 mkdir -p .vibe
 solidspec init --here
 ```
 
-You'll see:
-```
-Registered commands for 1 agent(s): vibe
-```
-
-Skills are created at:
-```
-.vibe/skills/
-  solidspec-specify/SKILL.md
-  solidspec-clarify/SKILL.md
-  solidspec-plan/SKILL.md
-  solidspec-tasks/SKILL.md
-  solidspec-implement/SKILL.md
-  solidspec-tests/SKILL.md
-  solidspec-analyze/SKILL.md
-  solidspec-review/SKILL.md
-  solidspec-checklist/SKILL.md
-```
-
-### Step-by-step with Mistral Vibe
-
-**Step 1** &mdash; In Vibe, run:
-
-```
-/solidspec-specify Real-time chat with message history and user presence
-```
-
-Vibe generates a structured spec with prioritized user stories and quality checklist.
-
-**Step 2** &mdash; Generate the plan:
-
-```
-/solidspec-plan
-```
-
-Vibe creates the architecture plan with constitution compliance checks, data model, and API contracts.
-
-**Step 3** &mdash; Break it into tasks:
-
-```
-/solidspec-tasks
-```
-
-**Step 4** &mdash; Implement:
-
-```
-/solidspec-implement
-```
-
-Vibe reads `tasks.md` and builds each task, marking them complete as it goes.
-
-**Step 5** &mdash; Quality check:
-
-```
-/solidspec-analyze
-```
+Skills are created at `.vibe/skills/solidspec-*/SKILL.md`. Usage is identical to Claude Code but with Vibe's `/skill-name` format.
 
 ---
 
@@ -661,39 +651,9 @@ Vibe reads `tasks.md` and builds each task, marking them complete as it goes.
 
 Copilot gets `.agent.md` command files in `.github/agents/` with companion `.prompt.md` files in `.github/prompts/`.
 
-### Setup
-
 ```bash
 mkdir -p .github
 solidspec init --here
-```
-
-You'll see:
-```
-Registered commands for 1 agent(s): copilot
-```
-
-### How it works
-
-Copilot commands are registered as:
-- `.github/agents/solidspec-specify.agent.md`
-- `.github/agents/solidspec-plan.agent.md`
-- `.github/agents/solidspec-tasks.agent.md`
-- `.github/agents/solidspec-implement.agent.md`
-- etc.
-
-Each also gets a companion `.github/prompts/solidspec-*.prompt.md`.
-
-### Step-by-step with Copilot
-
-The workflow is the same as Claude Code &mdash; use the slash commands:
-
-```
-/solidspec-specify E-commerce cart with checkout and payment
-/solidspec-plan
-/solidspec-tasks
-/solidspec-implement
-/solidspec-analyze
 ```
 
 ---
@@ -708,420 +668,245 @@ solidspec init --here
 # Registered commands for 2 agent(s): claude, vibe
 ```
 
-Both agents get the same commands and work from the same spec artifacts. You can:
-- Use Claude Code for specification and planning
-- Switch to Vibe for implementation
-- Use either for analysis
-- Or automate everything with `solidspec pipeline` &mdash; assign agents per phase in `solidspec.toml`
-
-The artifacts in `specs/` are agent-agnostic &mdash; any agent can read and build from them.
+Both agents get the same commands and work from the same spec artifacts. The artifacts in `specs/` are agent-agnostic — any agent can read and build from them.
 
 ### Automated multi-agent pipeline
 
 ```bash
 # Configure agent assignments in solidspec.toml, then:
 solidspec pipeline --new "Todo list REST API" --auto
+solidspec pipeline --new "Payment checkout" --schema tdd-driven --auto
+solidspec pipeline --new "Auth feature" --schema intent-driven --auto
 ```
-
-The pipeline invokes each agent's CLI automatically. Claude Code gets `-p` with `--allowedTools`, Vibe gets `-p` (auto-approve). Agents that don't have CLI support fall back to manual handoff.
 
 ---
 
 ## Use Cases
 
-### Use Case 1: New project from scratch
+### Use Case 1: Standard greenfield feature (spec-driven)
 
-You're starting a brand new project and want structured, AI-driven development from day one.
-
-**Scenario:** You're building a personal finance tracker as a web app.
-
-#### Step 1 &mdash; Create and initialize the project
+You're starting a personal finance tracker. Full structure, test scaffolds, review, ship gate.
 
 ```bash
 mkdir finance-tracker && cd finance-tracker
-
-# Set up your AI agent directory
-mkdir .claude    # or .vibe, .github, etc.
-
-# Initialize SolidSpec
+mkdir .claude
 solidspec init --here
-```
 
-Your project now has:
-```
-finance-tracker/
-  .solidspec/          # Constitution, templates, config
-  .claude/commands/    # 7 slash commands for Claude Code
-  specs/               # Empty — ready for features
-  solidspec.toml       # Project config
-  .git/                # Git repo with initial commit
-```
-
-#### Step 2 &mdash; Specify your first feature
-
-```bash
-solidspec specify "Dashboard showing income, expenses, and monthly balance with charts"
-```
-
-SolidSpec creates a feature branch `001-dashboard-showing-income-expenses`, generates `spec.md` with user stories, requirements, and a quality checklist. Edit the spec to refine it.
-
-#### Step 3 &mdash; Plan and generate tasks
-
-```bash
+solidspec specify "Dashboard showing income, expenses, and monthly balance"
 solidspec plan 001
 solidspec tasks 001
+# In Claude Code: /solidspec-implement, /solidspec-analyze
+solidspec ship --no-agent    # SHIP/HOLD decision
 ```
-
-You now have a full plan (architecture, data model, API contracts) and a phased task list ready for your AI agent.
-
-#### Step 4 &mdash; Build with your AI agent
-
-Open the project in Claude Code (or Vibe, Copilot, etc.) and run:
-
-```
-/solidspec-implement
-```
-
-The agent reads the task list and builds each task in order. When done, validate:
-
-```
-/solidspec-analyze
-```
-
-#### Step 5 &mdash; Add the next feature
-
-```bash
-solidspec specify "Transaction import from CSV and bank API"
-```
-
-SolidSpec auto-numbers it `002`, creates a new branch, and the cycle repeats. Each feature is self-contained in its own `specs/002-*` directory.
 
 ---
 
-### Use Case 2: Adding SolidSpec to an existing project
+### Use Case 2: Library or API with strict contracts (tdd-driven)
 
-You have an existing codebase and want to use SolidSpec for new features going forward.
+You're building an authentication library that multiple services will depend on. Behavioral contracts must be precise and regression-free.
 
-**Scenario:** You have a Node.js API that's been running for 6 months. You want to add a notification system using structured SDD.
+```bash
+solidspec pipeline --new "JWT authentication library" --schema tdd-driven --no-agent
+```
 
-#### Step 1 &mdash; Initialize SolidSpec in your existing repo
+The pipeline scaffolds:
+1. `spec.md` — acceptance criteria become the exact test behaviors
+2. `plan.md` — interface design and mock boundaries documented
+3. `tasks.md` — per-task AC links for the one-test-one-impl cycle
+4. `tdd-red-report.md` — scaffold for real failing tests (agent fills in)
+5. `tests/` — empty directory for the RED-phase test files
+6. `tdd-refactor-report.md` — scaffold for the REFACTOR phase audit
+
+**Step by step:**
+
+```bash
+# Prepare the spec and plan
+solidspec specify "JWT library with sign, verify, refresh"
+solidspec plan 001
+solidspec tasks 001
+
+# RED phase: open agent and write all failing tests first
+solidspec tdd-tests 001
+# In Claude Code: /solidspec-tdd-tests
+# Agent: designs interfaces, writes tracer bullet test (most critical AC),
+#         writes remaining tests — all must FAIL at end of this phase
+
+# GREEN phase: implement one test at a time
+solidspec implement 001
+# Agent follows the cycle table in tdd-red-report.md: one failing test targeted,
+# minimal code written, full suite re-run, repeat
+
+# REFACTOR phase: clean up without adding behavior
+solidspec tdd-refactor 001
+# Agent produces tdd-refactor-report.md with before/after for each change
+# Every change followed by a full test run — all GREEN required
+
+solidspec analyze 001
+solidspec ship --no-agent
+```
+
+---
+
+### Use Case 3: Payment or auth feature (security-first)
+
+You're adding Stripe integration. OWASP audit required before any code is written.
+
+```bash
+solidspec pipeline --new "Stripe payment integration" --schema security-first --no-agent
+```
+
+The DAG enforces: `tasks.md` cannot be generated until `security-review.md` exists. The security review artifact contains OWASP findings; every finding becomes a mandatory mitigation task.
+
+```bash
+solidspec specify "Checkout with Stripe, subscription billing, refunds"
+solidspec plan 001
+# Plan is reviewed by AI for OWASP Top 10 issues
+solidspec pipeline 001 --from security-review --schema security-first --no-agent
+# Now check security-review.md: Critical/High findings must be resolved
+solidspec tasks 001   # Only available after security-review.md is written
+solidspec implement 001
+```
+
+---
+
+### Use Case 4: Product feature with uncertain scope (intent-driven)
+
+You're building a notification system for a SaaS product. The scope is unclear; stakeholders have varying expectations. You need a traceable record.
+
+```bash
+# Capture the WHY before any requirements are written
+solidspec intent "Allow users to receive timely notifications across channels"
+# Fill in intent.md: Goal (one sentence), Constraints, Evidence criteria, Risks
+
+solidspec specify "Real-time notification system with email, push, in-app"
+solidspec plan 001
+solidspec tasks 001
+solidspec tests 001
+# Implement (handoff to AI agent)
+
+solidspec evidence 001        # per-criterion satisfaction from implemented tests
+solidspec evidence 001 --update  # rewrite intent.md Status automatically
+solidspec analyze 001         # drift score + INT→FR→T traceability tree
+solidspec review 001
+solidspec ship 001 --no-agent
+```
+
+---
+
+### Use Case 5: Adding SolidSpec to an existing project
+
+You have a Node.js API that's been running for 6 months. New features going forward should be structured.
 
 ```bash
 cd ~/projects/my-existing-api
-
-# Create your AI agent directory if it doesn't exist
 mkdir -p .claude
+solidspec init --here   # adds .solidspec/, specs/ — existing code untouched
 
-# Initialize SolidSpec without overwriting anything
-solidspec init --here
-```
-
-SolidSpec adds its own directories (`.solidspec/`, `specs/`) without touching your existing code. Your `.gitignore`, `package.json`, `src/`, etc. are untouched.
-
-```
-my-existing-api/
-  src/                 # Your existing code — untouched
-  package.json         # Your existing config — untouched
-  .solidspec/          # NEW: SolidSpec config + templates
-  .claude/commands/    # NEW: 7 slash commands
-  specs/               # NEW: empty, ready for features
-  solidspec.toml       # NEW: project config
-```
-
-#### Step 2 &mdash; Edit the constitution for your project
-
-The default constitution assumes a greenfield project. For an existing project, edit `.solidspec/constitution.md` to match your team's actual principles:
-
-```bash
-# Open and customize
+# Edit the constitution to match your team's actual patterns
 $EDITOR .solidspec/constitution.md
-```
 
-For example, you might:
-- Change "Library-First" to match your monorepo structure
-- Add your team's testing conventions
-- Reference your existing API patterns
-
-#### Step 3 &mdash; Specify the new feature
-
-```bash
+# New feature — reference existing models and patterns in the spec
 solidspec specify "Real-time notification system with email, push, and in-app channels"
-```
-
-SolidSpec creates `specs/001-real-time-notification-system/spec.md`. Edit the spec to reference your existing codebase:
-
-- Mention existing models the notification system needs to integrate with
-- Reference your existing auth middleware
-- Note your current database and message queue setup
-
-#### Step 4 &mdash; Plan with awareness of existing code
-
-```bash
 solidspec plan 001
-```
-
-Edit `plan.md` to reference your existing architecture:
-- Point to existing services the new feature depends on
-- Reference your current test infrastructure
-- Note existing patterns to follow
-
-#### Step 5 &mdash; Generate and execute tasks
-
-```bash
 solidspec tasks 001
+# /solidspec-implement in Claude Code
 ```
-
-The task list includes a Foundational phase for integration points with your existing code. Use your AI agent:
-
-```
-/solidspec-implement
-```
-
-The agent builds the notification system, following the plan that's aware of your existing codebase.
-
-#### Step 6 &mdash; Continue with more features
-
-```bash
-solidspec specify "User preference center for notification settings"
-# Auto-numbered as 002, new branch, new spec
-```
-
-Each new feature follows the same structured workflow. Old code stays untouched, new features are fully specified and traced.
 
 ---
 
-### Use Case 3: Ship gate before merging a feature
+### Use Case 6: Ship gate before merging a feature
 
-You have finished implementing a feature and want a structured, multi-dimensional quality gate before merging to main.
-
-**Scenario:** Feature `001-auth-system` is implemented. You want a SHIP / HOLD decision before the PR is opened.
-
-#### Step 1 — Quick smoke run (no AI agent)
+Quick smoke check, then full AI review, then CI gate.
 
 ```bash
 # Heuristic-only run — instant, no agent tokens consumed
 solidspec ship --no-agent
+# Fix any HOLD findings, then:
 
-# Output:
-# Ship Assessment: 001-auth-system
-#
-# Launching 4 review lanes (concurrent)...
-#   ✓ Code Review      (claude)   88/100  done in 0.0s
-#   ✓ Security Audit   (claude)   91/100  done in 0.0s
-#   ✗ Test Coverage    (claude)   62/100  done in 0.0s  ← below threshold (70)
-#   ✓ Performance      (claude)   78/100  done in 0.0s
-#
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#   Ship Decision: HOLD ✗
-#
-#   Blocking issues (2 findings):
-#   [TESTS/HIGH]   Missing test scaffold for US3 password-reset scenario
-#   [TESTS/MEDIUM] No edge-case tests for invalid token expiry
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# Report: specs/001-auth-system/ship-report.md
-# Re-run: solidspec ship 001-auth-system
-```
-
-The heuristic run identifies gaps in test coverage using `solidspec review` findings filtered to the `tests` dimension cluster.
-
-#### Step 2 — Fix the identified gaps and re-run
-
-After adding the missing test scaffolds:
-
-```bash
-solidspec ship --no-agent
-# Ship Decision: SHIP ✓
-```
-
-#### Step 3 — Full AI agent run before the PR
-
-Once heuristics pass, run the full AI review for deeper analysis:
-
-```bash
+# Full AI review
 solidspec ship 001
+
+# CI gate
+solidspec ship --fail-on-hold --ignore-timeout
 ```
 
-Each lane invokes the configured agent with a focused prompt. The security lane uses a stricter threshold (80 vs 70) and unconditionally blocks on any `CRITICAL` finding.
-
-#### Step 4 — CI gate
-
-Add to your CI pipeline:
-
+Add to CI:
 ```yaml
-# .github/workflows/ship-gate.yml
-- name: Fan-out ship gate
-  run: solidspec ship --fail-on-hold --timeout 300
-  # Exits 0 → SHIP, exits 1 → HOLD (PR blocked)
-```
-
-Or as a pre-push hook:
-
-```bash
-# .git/hooks/pre-push
-solidspec ship --fail-on-hold --no-agent --lane security,code
+- name: Ship gate
+  run: solidspec ship --fail-on-hold --ignore-timeout
 ```
 
 ---
 
-### Use Case 4: Security-focused review for a payment feature
+### Use Case 7: Complex enterprise feature (intent-apex)
 
-You're adding a payment integration and want to ensure the security lane gets extra scrutiny.
-
-**Scenario:** Feature `003-stripe-integration` — you want the security lane run by a specific model with a higher threshold.
-
-#### Step 1 — Override the security lane agent and threshold at runtime
+You're building a compliance reporting module. Scope is uncertain, implementation is complex, and every decision must be auditable.
 
 ```bash
-solidspec ship 003 --security-agent gemini --lane security
+solidspec pipeline --new "Compliance reporting engine" --schema intent-apex --no-agent
 ```
 
-Runs only the security lane, using Gemini as the reviewer. The threshold still comes from `solidspec.toml` (default 80).
-
-#### Step 2 — Configure a permanent override in `solidspec.toml`
-
-```toml
-[fan_out]
-security_agent     = "gemini"
-security_threshold = 90          # Stricter: 90/100 required for payment features
-block_on_critical  = true        # Any Critical finding in any lane blocks ship
-```
-
-```bash
-# Now all runs use Gemini for security with 90% threshold
-solidspec ship 003
-```
-
-#### Step 3 — Dry run to preview the lane configuration
-
-```bash
-solidspec ship --dry-run
-
-# Ship Assessment (dry run): 003-stripe-integration
-#
-# Lane               Agent        Threshold
-# --------------------------------------------
-# Code Review        claude       70
-# Security Audit     gemini       90
-# Test Coverage      claude       70
-# Performance        claude       60
-#
-# No files created (dry run).
-```
-
----
-
-### Use Case 5: Run a subset of lanes for a fast hotfix review
-
-You've applied a hotfix and only need to re-check code quality and security — test coverage and performance haven't changed.
-
-```bash
-# Run only the code and security lanes
-solidspec ship --lane code,security --no-agent
-
-# Or with AI agents for a thorough security check
-solidspec ship --lane code,security --security-agent gemini
-```
-
-The filtered report shows only the two executed lanes:
-
-```markdown
-## Lane Scores
-
-| Lane           | Agent  | Score  | Threshold | Status  |
-|----------------|--------|--------|-----------|---------|
-| Code Review    | claude | 92/100 | 70        | ✓ Pass  |
-| Security Audit | gemini | 88/100 | 80        | ✓ Pass  |
-```
-
----
-
-### Use Case 6: IDSD workflow with full traceability + ship gate
-
-Using the `intent-driven` schema, every artifact traces back to the original intent. The ship gate is the final artifact in the IDSD chain.
-
-```bash
-# Full IDSD pipeline including ship gate
-solidspec intent "Allow users to authenticate securely"
-solidspec pipeline 001 --schema intent-driven --no-agent   # scaffold all artifacts
-
-# After the AI agent fills in the artifacts:
-solidspec evidence 001       # measure per-criterion satisfaction
-solidspec analyze 001        # drift score + traceability tree
-solidspec review 001         # preflight heuristics
-solidspec ship 001 --no-agent   # fan-out SHIP/HOLD gate
-
-# Check the full status — all 11 artifacts including ship
-solidspec status 001 --schema intent-driven
-```
-
-The `intent-driven` schema DAG: `intent → spec → clarify → plan → tasks → tests → implement → evidence → analyze → review → ship`. All 11 artifacts in topological order, all generated and traced.
-
----
-
-#### Key differences between new and existing projects
-
-| | New project | Existing project |
-|---|---|---|
-| **Init** | Creates project structure from scratch | Adds `.solidspec/` and `specs/` alongside existing code |
-| **Constitution** | Use defaults | Customize to match your team's existing patterns |
-| **Spec writing** | Describe features freely | Reference existing models, APIs, and patterns |
-| **Plan** | Greenfield architecture | Integration-aware, references existing services |
-| **Tasks** | Full setup from scratch | Foundational phase focuses on integration points |
-| **Git** | Clean history from first commit | Feature branches alongside your existing branches |
+The `intent-apex` pipeline provides:
+- `intent.md` — Goal, Constraints, Evidence criteria anchoring everything
+- Full SDD spec, plan, tasks
+- APEX structured implementation with parallel exploration agents
+- `evidence-report.md` — per-criterion satisfaction from APEX output
+- Full `INT→FR→T→code` traceability chain
+- Parallel ship gate with 4 review lanes
 
 ---
 
 ## Multi-Agent Pipeline
 
-Run the entire SDD workflow with one command, using different AI agents per phase. The pipeline **invokes each agent's CLI automatically** to fill spec artifacts with real content &mdash; not just empty templates.
+Run the entire workflow with one command, using different AI agents per phase.
 
 ```toml
 # solidspec.toml
 [pipeline]
-specify = "claude"       # Claude writes specs
-plan = "claude"          # Claude for architecture
-tasks = "claude"         # Claude for task breakdown
-tests = "claude"         # Claude for test generation
-implement = "vibe"       # Mistral Vibe for code
-analyze = "claude"       # Claude for cross-checking
-review = "claude"        # Claude for quality review
+specify = "claude"
+plan    = "claude"
+tasks   = "claude"
+tests   = "claude"
+implement = "vibe"
+analyze = "claude"
+review  = "claude"
 ```
 
 ```bash
-# Full SDD pipeline on a new feature (agents invoked automatically)
+# Full spec-driven pipeline
 solidspec pipeline --new "User auth with OAuth" --auto
 
-# Full IDSD pipeline — adds intent capture (phase 0) and evidence collection (phase 8)
+# TDD pipeline
+solidspec pipeline --new "User auth with OAuth" --schema tdd-driven --auto
+
+# IDSD pipeline
 solidspec pipeline --new "User auth with OAuth" --schema intent-driven --auto
 
 # Partial pipeline
 solidspec pipeline 001 --from plan --to tasks
 
 # Preview without executing
-solidspec pipeline 001 --dry-run
+solidspec pipeline 001 --dry-run --schema tdd-driven
 
 # Scaffold only — generate templates without invoking AI agents
-solidspec pipeline --new "Feature name" --no-agent
-solidspec pipeline --new "Feature name" --schema intent-driven --no-agent
+solidspec pipeline --new "Feature name" --no-agent --schema security-first
 ```
 
-### How it works
+### Pipeline phases per schema
 
-The SDD pipeline runs 9 phases in order: **specify → clarify → plan → tasks → tests → implement → analyze → review → ship**.
+| Schema | Phases (in order) |
+|--------|-------------------|
+| `minimal` | specify → plan → tasks → implement |
+| `spec-driven` | specify → clarify → plan → tasks → tests → implement → analyze → review |
+| `security-first` | specify → plan → security-review → tasks → implement |
+| `tdd-driven` | specify → clarify → plan → tasks → tdd-tests → implement → tdd-refactor → analyze → review |
+| `intent-driven` | intent → specify → clarify → plan → tasks → tests → implement → evidence → analyze → review |
+| `apex-driven` | specify → clarify → plan → tasks → tests → apex → analyze → review |
+| `intent-apex` | intent → specify → clarify → plan → tasks → tests → apex → evidence → analyze → review |
 
-The IDSD pipeline runs 11 phases: **intent → specify → clarify → plan → tasks → tests → implement → evidence → analyze → review → ship**. The `intent` phase (phase 0) captures the ICE model before the spec is written. The `evidence` phase (phase 8) cross-references implemented test scaffolds against each evidence criterion in `intent.md`. The `ship` phase runs the 4-lane parallel fan-out review.
-
-For each Auto phase (specify, clarify, plan, tasks, tests, analyze):
-1. SolidSpec generates the template scaffold (spec.md, plan.md, etc.)
-2. SolidSpec invokes the agent's CLI non-interactively with detailed, phase-specific instructions
-3. The agent reads the scaffold and fills it with real content
-
-The `implement` phase is always a **handoff** &mdash; it tells you which agent to open and waits for confirmation.
+`ship` is available as a separate command (`solidspec ship`) for all schemas that include it in their DAG.
 
 ### Execution modes
-
-The pipeline detects agent CLI availability upfront and reports the mode:
 
 ```
 Pipeline: 001-todo-api [fully automated]     # All agents have CLI support
@@ -1129,46 +914,11 @@ Pipeline: 001-todo-api [mixed mode]          # Some need manual handoff
 Pipeline: 001-todo-api [scaffold-only]       # --no-agent flag used
 ```
 
-If an agent's CLI is not installed, the pipeline falls back to handoff mode for that phase (shows the manual command to run).
-
-### Supported agent CLI invocations
-
-| Agent | CLI Binary | Non-interactive Flag |
-|-------|-----------|---------------------|
-| Claude Code | `claude` | `-p` + `--allowedTools` |
-| opencode | `opencode` | `-p` |
-| Mistral Vibe | `vibe` | `-p` (auto-approves tools) |
-| Gemini CLI | `gemini` | `-p` |
-| Codex CLI | `codex` | `exec` subcommand |
-| Copilot CLI | `copilot` | `-p` + `--allow-all-tools` |
-| Kimi Code | `kimi` | `--yolo` |
-| Qwen Code | `qwen` | `-p` |
-| Cursor | `cursor-agent` | `-n` |
-| Auggie CLI | `auggie` | `-p` |
-| CodeBuddy | `codebuddy` | `-p` |
-| Roo Code | `roo-code-cli` | `--headless` |
-
-A `pipeline-log.md` is generated in the feature directory with timestamps, agents, duration, and status per phase.
-
-### Real-world example
-
-A pipeline test with Claude Code (specify/plan/tasks/tests/analyze) + Mistral Vibe (implement) on a "Todo List REST API" produced:
-
-| Phase | Agent | Duration | Output |
-|-------|-------|----------|--------|
-| specify | Claude | 40s | 5 user stories, 14 acceptance scenarios, 12 FRs |
-| plan | Claude | 95s | Node.js + Express + SQLite stack, API contracts |
-| tasks | Claude | 75s | 20 tasks across 8 phases with FR references |
-| tests | Claude | 88s | 5 test files with concrete assertions |
-| implement | Vibe | manual | Full CRUD API, 22 passing integration tests |
-
-Total: ~5 minutes for automated phases, fully working API with tests.
-
 ---
 
 ## Spec-to-Test Generation
 
-Generate runnable test scaffolds from your spec's acceptance scenarios:
+Generate runnable test scaffolds from your spec's acceptance scenarios (`spec-driven`, `intent-driven`, `apex-driven`):
 
 ```bash
 solidspec tests 001
@@ -1177,56 +927,67 @@ solidspec tests 001
 # Generated: 4 test files
 ```
 
-Auto-detects your test framework from project files (Jest, Vitest, pytest, cargo test, Go, generic). Each test has Given/When/Then comments and a failing body:
+Auto-detects your test framework from project files (Jest, Vitest, pytest, cargo test, Go, generic). Each test has Given/When/Then comments and a failing body.
 
-```javascript
-describe('US1: Add a new task', () => {
-  test('task appears in list with pending status', () => {
-    // Given: the app is open
-    // When: user types a task title and clicks "Add"
-    // Then: the task appears in the list with status "pending"
-    throw new Error('TODO: implement this test');
-  });
-});
-```
+**TDD mode** (`tdd-driven`) uses `solidspec tdd-tests` instead — the agent writes actual, framework-specific failing tests from acceptance criteria. The difference:
 
-Override framework with `--framework pytest`, preview with `--dry-run`.
+| `tests` (SDD) | `tdd-tests` (TDD) |
+|---------------|-------------------|
+| Scaffold with TODO body | Real assertions that fail because code is absent |
+| Agent fills in later | Agent must run the tests; all must FAIL before moving on |
+| Any order | Tracer bullet first, remaining in AC order |
+| No interface design step | Agent designs interfaces before writing any test |
 
 ---
 
 ## Generated Artifacts
 
-For each feature, SolidSpec generates a complete artifact tree:
+### `spec-driven` / `intent-driven`
 
 ```
-specs/001-todo-list-crud/
+specs/001-feature-name/
   spec.md                  # User stories, requirements, acceptance criteria
-  clarifications.md        # Decision log with session dates
   plan.md                  # Architecture plan with constitution gates
-  research.md              # Technology investigation
-  data-model.md            # Entity definitions and relationships
-  quickstart.md            # Key validation scenarios
-  contracts/               # API specifications
-    api.md
   tasks.md                 # Phased task breakdown
   tests/                   # Test scaffolds from acceptance scenarios
-    us1_add_task.test.js
-    us2_view_tasks.test.js
-  checklists/
-    requirements.md        # Quality validation checklist
   analysis-report.md       # Cross-artifact consistency report
   review-report.md         # Preflight heuristic review report
-  ship-report.md           # Fan-out SHIP/HOLD decision (<!-- ship: true|false -->)
-  pipeline-log.md          # Pipeline execution log (agents, timing, status)
+  ship-report.md           # Fan-out SHIP/HOLD decision
+  intent.md                # (IDSD only) ICE model — Goal/Constraints/Evidence
+  evidence-report.md       # (IDSD only) per-criterion satisfaction
+  pipeline-log.md          # Pipeline execution log
 ```
 
-All artifacts are Markdown. All are version-controlled. All trace back to the original spec.
+### `tdd-driven`
+
+```
+specs/001-feature-name/
+  spec.md
+  plan.md
+  tasks.md
+  tdd-red-report.md        # Interface design + tracer bullet + cycle table + quality checklist
+  tests/                   # Real failing tests (RED phase output)
+  tdd-refactor-report.md   # Per-change audit: refactor type, before/after, test result
+  analysis-report.md
+  review-report.md
+  ship-report.md
+```
+
+### `security-first`
+
+```
+specs/001-feature-name/
+  spec.md
+  plan.md
+  security-review.md       # OWASP audit — findings by severity
+  tasks.md                 # Every finding has a mitigation task
+```
 
 ---
 
 ## Agent Guardrails
 
-Every command and pipeline prompt includes built-in guardrails that prevent the most common AI agent shortcuts:
+Every command and pipeline prompt includes built-in guardrails:
 
 | Agent excuse | Built-in rebuttal |
 |-------------|-------------------|
@@ -1237,17 +998,103 @@ Every command and pipeline prompt includes built-in guardrails that prevent the 
 | "It works — ship it" | "It works" is not a review |
 | "I'll update the docs later" | Docs and code rot at different rates |
 
-Each pipeline phase also gets a **specialized persona** — the agent is given a role (Spec Writer, Architect, Test Engineer, Code Reviewer, etc.), an expected output format, and a mission checklist of verification items before it can consider its work complete.
+TDD-specific guardrails:
 
-These guardrails are injected automatically into every agent prompt — no configuration needed.
+| TDD excuse | Built-in rebuttal |
+|------------|-------------------|
+| "I'll write all tests first then all code" | That is horizontal slicing — DO NOT DO THIS |
+| "The test passes unexpectedly" | STOP — record in tdd-red-report.md and investigate before proceeding |
+| "I'll mock the internal service" | Mock ONLY external systems — never your own modules |
+| "I'll add this public method during refactor" | Interface must not grow — FORBIDDEN |
+
+---
+
+## DAG-Based Workflow (Schema-Driven)
+
+SolidSpec uses a **DAG (Directed Acyclic Graph)** artifact engine. Workflows are defined as dependency graphs in YAML schema files:
+
+```yaml
+# schemas/tdd-driven/schema.yaml (excerpt)
+artifacts:
+  - id: tdd-tests
+    generates: ["tests/", "tdd-red-report.md"]
+    requires: ["spec", "tasks"]
+  - id: implement
+    generates: ["tasks.md"]
+    requires: ["tdd-tests"]
+  - id: tdd-refactor
+    generates: ["tdd-refactor-report.md"]
+    requires: ["implement"]
+```
+
+### Workflow status at a glance
+
+```bash
+solidspec status 001 --schema tdd-driven
+
+# Feature: 001-auth  |  Schema: tdd-driven (built-in)
+# 10 artifacts, 3 complete, 1 ready
+#
+# #   Artifact       Status          Depends On
+# ─────────────────────────────────────────────────
+# 1   spec           ✓ done          —
+# 2   clarify        ✓ done          spec
+# 3   plan           ✓ done          spec
+# 4   tasks          ▶ ready         spec, plan
+# 5   tdd-tests      ⏸ blocked       spec, tasks
+# 6   implement      ⏸ blocked       tdd-tests
+# 7   tdd-refactor   ⏸ blocked       implement
+# ...
+```
+
+### Custom workflows
+
+Drop a `schema.yaml` in `.solidspec/workflows/<name>/` and use it via `--schema`:
+
+```bash
+solidspec status 001 --schema custom
+solidspec pipeline 001 --schema custom
+```
+
+---
+
+## Change-Based Workflow (Delta Specs)
+
+For **brownfield modifications** — changing existing features without rewriting the entire spec:
+
+```bash
+# Propose a change to an existing feature
+solidspec change propose "Add social login" --feature-id 001
+
+# List active changes
+solidspec change list --feature-id 001
+
+# Archive when done (merges deltas into main spec)
+solidspec change archive add-social-login --feature-id 001
+```
+
+Delta specs describe only what changed (ADDED/MODIFIED/REMOVED requirements). On archive, SolidSpec merges deltas into `spec.md` automatically.
+
+---
+
+## Project Constitution
+
+Every SolidSpec project gets a `constitution.md` defining architectural principles:
+
+| Gate | What it checks |
+|------|---------------|
+| **Simplicity** | Max 3 projects, no speculative features |
+| **Anti-Abstraction** | Use frameworks directly, no wrapper layers |
+| **Integration-First** | Contract tests before implementation, real services over mocks |
+
+The `plan` command evaluates these gates automatically.
 
 ---
 
 ## Project Context Configuration
 
-SolidSpec can inject project-specific conventions into every agent prompt via the `[context]` section in `solidspec.toml`:
-
 ```toml
+# solidspec.toml
 [context]
 description = """
 We use Rust edition 2024.
@@ -1263,165 +1110,11 @@ implement = "One task at a time. Update checkboxes as you go."
 review = "Check for placeholders, ambiguous language, traceability gaps."
 ```
 
-When configured, the context appears at the top of every agent prompt, keeping the agent aligned with project conventions without repetition.
-
----
-
-## DAG-Based Workflow (Schema-Driven)
-
-SolidSpec uses a **DAG (Directed Acyclic Graph)** artifact engine instead of a rigid linear pipeline. Workflows are defined as dependency graphs in YAML schema files:
-
-```yaml
-# schemas/spec-driven/schema.yaml
-artifacts:
-  - id: spec
-    generates: ["spec.md"]
-    requires: []
-  - id: plan
-    generates: ["plan.md"]
-    requires: ["spec"]
-  - id: tasks
-    generates: ["tasks.md"]
-    requires: ["spec", "plan"]
-  - id: implement
-    generates: ["tasks.md"]
-    requires: ["tasks"]
-```
-
-Artifacts can be created in **any order** as long as their dependencies are met. The tool computes what's ready via Kahn's algorithm topological sort.
-
-### Workflow status at a glance
-
-```bash
-solidspec status 001
-
-# Feature: 001-auth  |  Schema: spec-driven (built-in)
-# 8 artifacts, 2 complete, 3 ready
-#
-# #   Artifact   Status            Depends On
-# --------------------------------------------------------
-# 1   spec       ✓ done            —
-# 2   clarify    ▶ ready           spec
-# 3   plan       ✓ done            spec
-# 4   tasks      ⏸ blocked (plan)  spec, plan
-# 5   tests      ▶ ready           spec
-# ...
-```
-
-### Built-in workflow schemas
-
-| Schema | Artifacts | Use case |
-|--------|-----------|----------|
-| `spec-driven` (default) | 9 | Full SDD pipeline, constitution gates, review, ship gate |
-| `minimal` | 4 | Spec → Plan → Tasks → Implement |
-| `security-first` | 5 | Adds mandatory OWASP security review before tasks |
-| `intent-driven` | 11 | Full IDSD pipeline — adds intent capture (phase 0), evidence collection (phase 8), drift detection, full traceability chain, and ship gate |
-
-### Custom workflows
-
-Drop a `schema.yaml` in `.solidspec/workflows/<name>/` and use it via `--schema`:
-
-```bash
-solidspec status 001 --schema custom
-solidspec pipeline 001 --schema security-first
-```
-
-Schema resolution: project-local → built-in → default fallback.
-
----
-
-## Change-Based Workflow (Delta Specs)
-
-For **brownfield modifications** — changing existing features without rewriting the entire spec. Each change is a lightweight folder with a proposal, delta specs (ADDED/MODIFIED/REMOVED), and tasks:
-
-```bash
-# Propose a change to an existing feature
-solidspec change propose "Add social login" --feature-id 001
-
-# List active changes
-solidspec change list --feature-id 001
-
-# Archive when done (merges deltas into main spec)
-solidspec change archive add-social-login --feature-id 001
-```
-
-### How delta specs work
-
-Instead of restating the full specification, delta specs describe only what changed:
-
-```markdown
-# Delta Spec: Add social login
-
-## Added Requirements
-- **FR-042**: System MUST support OAuth2 login via Google
-- **FR-043**: System MUST support OAuth2 login via GitHub
-
-## Modified Requirements
-- **FR-012**: User profile MUST include OAuth provider (was: email only)
-
-## Removed Requirements
-- FR-008
-```
-
-On archive, SolidSpec automatically merges deltas into the main `spec.md` — preserving existing requirements, updating modified ones in-place, and appending new ones.
-
-### Change directory structure
-
-```
-specs/001-auth/
-├── spec.md                        # Main spec (current)
-├── plan.md
-├── tasks.md
-├── changes/                        # Active change proposals
-│   ├── add-social-login/
-│   │   ├── proposal.md             # Why + what + impact + non-goals
-│   │   ├── delta-spec.md           # ADDED/MODIFIED/REMOVED
-│   │   └── .change.yaml            # Metadata (status, created_at)
-│   └── add-two-factor/
-│       └── ...
-└── archive/                        # Completed changes
-    └── add-dark-mode/
-        └── ...
-```
-
----
-
-## Project Constitution
-
-Every SolidSpec project gets a `constitution.md` defining architectural principles:
-
-| Gate | What it checks |
-|------|---------------|
-| **Simplicity** | Max 3 projects, no speculative features |
-| **Anti-Abstraction** | Use frameworks directly, no wrapper layers |
-| **Integration-First** | Contract tests before implementation, real services over mocks |
-
-The `plan` command evaluates these gates automatically. Violations are reported but don't block &mdash; the plan is generated with warnings so you can decide how to proceed.
-
----
-
-## Template System
-
-Templates control what gets generated. They follow a 4-layer priority hierarchy:
-
-| Priority | Location | Use case |
-|----------|----------|----------|
-| 1 (highest) | `.solidspec/templates/overrides/` | Project-specific tweaks |
-| 2 | `.solidspec/presets/<id>/templates/` | Team workflow presets |
-| 3 | `.solidspec/extensions/<id>/templates/` | Extension templates |
-| 4 (lowest) | Embedded in binary | Defaults |
-
-Install a custom preset:
-
-```bash
-solidspec preset add ./my-team-preset --priority 5
-```
-
 ---
 
 ## All Commands
 
-### SDD commands
+### Core workflow commands
 
 | Command | Description |
 |---------|-------------|
@@ -1430,27 +1123,46 @@ solidspec preset add ./my-team-preset --priority 5
 | `solidspec clarify [id]` | Resolve `[NEEDS CLARIFICATION]` markers |
 | `solidspec plan [id]` | Generate plan + research + data model + contracts |
 | `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers |
-| `solidspec implement [id]` | Execute tasks with hook support and `--pass` for iterations |
 | `solidspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
-| `solidspec analyze [id]` | Validate consistency (read-only) with severity levels; shows trace tree and drift in IDSD mode |
-| `solidspec review [id]` | Review spec quality with preflight heuristics and dimension scoring (8 dimensions in IDSD mode) |
-| `solidspec checklist [id]` | Generate/append quality checklists (`--append`) |
-| `solidspec ship [id]` | Run parallel fan-out review (4 concurrent AI lanes) → `SHIP` / `HOLD` decision + `ship-report.md` (`--lane`, `--no-agent`, `--fail-on-hold`, `--dry-run`, `--timeout`, `--ignore-timeout`) |
-| `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--auto`, `--no-agent`, `--schema`) |
-| `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`); shows intent drift in IDSD mode |
+| `solidspec implement [id]` | Execute tasks with hook support |
+| `solidspec analyze [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode |
+| `solidspec review [id]` | Review spec quality with dimension scoring |
+| `solidspec checklist [id]` | Generate/append quality checklists |
+
+### TDD commands
+
+| Command | Description |
+|---------|-------------|
+| `solidspec tdd-tests [id]` | Write real failing tests from acceptance criteria (TDD RED phase). Creates `tdd-red-report.md` with interface design, tracer bullet, cycle table, and quality checklist. |
+| `solidspec tdd-refactor [id]` | Scaffold the REFACTOR phase report. Requires `tdd-red-report.md`. Produces `tdd-refactor-report.md` with refactor candidates checklist and change audit table. |
+
+Both commands accept `--dry-run` (print scaffold without writing files) and an optional `feature-id` positional argument.
+
+### IDSD commands
+
+| Command | Description |
+|---------|-------------|
+| `solidspec intent <title>` | Capture intent using the ICE model (`intent.md`). IDSD phase 0. |
+| `solidspec evidence [id]` | Cross-reference evidence criteria against implemented tests. Writes `evidence-report.md`. Add `--update` to rewrite `intent.md` Status automatically. |
+
+### Pipeline and status commands
+
+| Command | Description |
+|---------|-------------|
+| `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--only`, `--auto`, `--no-agent`, `--schema`, `--force`, `--dry-run`) |
+| `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`); intent drift in IDSD mode |
+| `solidspec ship [id]` | Run parallel fan-out review (4 concurrent AI lanes) → `SHIP` / `HOLD` decision (`--lane`, `--no-agent`, `--fail-on-hold`, `--dry-run`, `--timeout`, `--ignore-timeout`) |
+
+### Project management commands
+
+| Command | Description |
+|---------|-------------|
 | `solidspec change <cmd>` | Manage changes: `propose "Title"`, `list`, `archive <slug>` (`--feature-id`) |
 | `solidspec preset <cmd>` | Manage presets (`add`, `remove`, `list`, `search`, `info`) |
 | `solidspec extension <cmd>` | Manage extensions (`add`, `remove`, `enable`, `disable`, `list`) |
 | `solidspec upgrade` | Refresh templates + agent commands after update |
 | `solidspec completions <shell>` | Generate shell completions (bash, zsh, fish, powershell) |
 | `solidspec check` | Verify system prerequisites |
-
-### IDSD-only commands
-
-| Command | Description |
-|---------|-------------|
-| `solidspec intent <title>` | Capture intent using the ICE model (`intent.md`): Goal, Constraints, Evidence, Risks, Open Questions. IDSD phase 0. |
-| `solidspec evidence [id]` | Cross-reference evidence criteria from `intent.md` against implemented test scaffolds. Prints a per-criterion satisfaction table and writes `evidence-report.md`. Add `--update` to rewrite `intent.md` Status automatically (`active` / `satisfied` / `drifted`). IDSD phase 8. |
 
 Feature ID is auto-detected from git branch or latest spec if omitted.
 
@@ -1501,6 +1213,12 @@ auto_commit = true
 
 [context]
 description = "We use Rust edition 2024 with strict layering."
+
+[fan_out]
+security_agent    = "gemini"
+security_threshold = 80
+block_on_critical  = true
+timeout            = 300
 ```
 
 ### Environment Variables
@@ -1532,23 +1250,27 @@ solidspec completions fish > ~/.config/fish/completions/solidspec.fish
 
 ```
 src/
-  cli/          20 command handlers (clap derive) — includes intent, evidence, ship
-  core/         Spec parser, planner, task generator, test generator, pipeline,
-                analyzer, constitution, intent_parser, evidence, artifact_graph (trace),
-                fan_out (parallel review lanes, ship gate, score extraction)
+  cli/          Command handlers (clap derive) — one module per subcommand
+  core/         All business logic: spec parser, planner, task generator, test generator,
+                tdd (RED/REFACTOR scaffolding), pipeline, analyzer, constitution,
+                intent_parser, evidence, artifact_graph (DAG + trace), fan_out (ship gate)
   agents/       20-agent config table, detection, format translation, registration, CLI invoker
-  templates/    Tera rendering + 4-layer resolver (includes IDSD templates)
+  templates/    Tera rendering + 4-layer resolver (project-local → embedded default)
   presets/      Manifest validation, registry, manager
   extensions/   Manifest, registry, hooks, manager
-  config/       TOML configuration handling (includes FanOutConfig)
+  config/       TOML configuration handling (RootConfig, ProjectInternalConfig, FanOutConfig)
 schemas/
-  spec-driven/  Default 9-artifact SDD workflow (includes ship gate)
-  minimal/      4-artifact lightweight workflow
-  security-first/ 5-artifact workflow with mandatory security review
-  intent-driven/  11-artifact IDSD workflow (includes ship gate)
+  spec-driven/    Default 9-artifact SDD workflow
+  minimal/        4-artifact lightweight workflow
+  security-first/ 5-artifact workflow with mandatory OWASP security review
+  tdd-driven/     10-artifact AI-TDD workflow (RED-GREEN-REFACTOR)
+  intent-driven/  11-artifact IDSD workflow (intent + evidence + drift detection)
+  apex-driven/    9-artifact SDD + APEX implementation
+  intent-apex/    11-artifact IDSD + APEX (maximum rigor)
 docs/
   idsd-workflow-guide.md              Complete IDSD walkthrough with Task Manager example
   Parallel-Fan-out_orchestration-plan.md  Fan-out ship gate design spec
+  tdd/                                TDD skill documentation
 ```
 
 ---

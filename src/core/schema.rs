@@ -45,6 +45,7 @@ pub mod builtin {
     pub const INTENT_DRIVEN: &str = include_str!("../../schemas/intent-driven/schema.yaml");
     pub const APEX_DRIVEN: &str = include_str!("../../schemas/apex-driven/schema.yaml");
     pub const INTENT_APEX: &str = include_str!("../../schemas/intent-apex/schema.yaml");
+    pub const TDD_DRIVEN: &str = include_str!("../../schemas/tdd-driven/schema.yaml");
 
     #[allow(dead_code)]
     pub fn names() -> Vec<&'static str> {
@@ -55,6 +56,7 @@ pub mod builtin {
             "intent-driven",
             "apex-driven",
             "intent-apex",
+            "tdd-driven",
         ]
     }
 
@@ -66,6 +68,7 @@ pub mod builtin {
             "intent-driven" => Some(INTENT_DRIVEN),
             "apex-driven" => Some(APEX_DRIVEN),
             "intent-apex" => Some(INTENT_APEX),
+            "tdd-driven" => Some(TDD_DRIVEN),
             _ => None,
         }
     }

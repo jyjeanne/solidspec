@@ -46,6 +46,20 @@ pub const PHASES_APEX_IDSD: &[&str] = &[
     "review",
 ];
 
+/// Pipeline phase names for the `tdd-driven` schema.
+/// Identical to PHASES except `tests` → `tdd-tests` and `tdd-refactor` is added after `implement`.
+pub const PHASES_TDD: &[&str] = &[
+    "specify",
+    "clarify",
+    "plan",
+    "tasks",
+    "tdd-tests",
+    "implement",
+    "tdd-refactor",
+    "analyze",
+    "review",
+];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PhaseType {
     Auto,
@@ -146,6 +160,9 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
                 })
                 .unwrap_or(false)
         }
+        // TDD phases: skip based on report file existence
+        "tdd-tests" => feature_dir.join("tdd-red-report.md").exists(),
+        "tdd-refactor" => feature_dir.join("tdd-refactor-report.md").exists(),
         _ => false,
     }
 }
@@ -153,7 +170,7 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
 /// Get the phase type (auto or handoff).
 pub fn phase_type(phase: &str) -> PhaseType {
     match phase {
-        "implement" | "apex" => PhaseType::Handoff,
+        "implement" | "apex" | "tdd-tests" | "tdd-refactor" => PhaseType::Handoff,
         _ => PhaseType::Auto, // ship, evidence, analyze, review, etc. are all auto
     }
 }
@@ -168,6 +185,7 @@ pub fn filter_phases(
         "intent-driven" => PHASES_IDSD,
         "apex-driven" => PHASES_APEX,
         "intent-apex" => PHASES_APEX_IDSD,
+        "tdd-driven" => PHASES_TDD,
         _ => PHASES, // spec-driven, minimal, security-first, custom, unknown
     };
     let from_idx = if let Some(f) = from {

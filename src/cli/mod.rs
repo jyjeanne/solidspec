@@ -18,6 +18,8 @@ pub mod ship;
 pub mod specify;
 pub mod status;
 pub mod tasks;
+pub mod tdd_refactor;
+pub mod tdd_tests;
 pub mod tests_cmd;
 pub mod upgrade;
 pub mod ux;
@@ -122,6 +124,26 @@ pub enum Commands {
         /// Regenerate the .solidspec/apex-context.md file only, without printing instructions
         #[arg(long)]
         context_only: bool,
+
+        /// Preview without writing files
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Generate real failing tests for every acceptance criterion (TDD RED phase)
+    TddTests {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Preview without writing files
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)
+    TddRefactor {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
 
         /// Preview without writing files
         #[arg(long)]
@@ -334,6 +356,14 @@ pub fn run(cli: Cli) -> Result<()> {
             context_only,
             dry_run,
         } => apex::run(feature_id.as_deref(), sync, context_only, dry_run),
+        Commands::TddTests {
+            feature_id,
+            dry_run,
+        } => tdd_tests::run(feature_id.as_deref(), dry_run),
+        Commands::TddRefactor {
+            feature_id,
+            dry_run,
+        } => tdd_refactor::run(feature_id.as_deref(), dry_run),
         Commands::Tests {
             feature_id,
             framework,

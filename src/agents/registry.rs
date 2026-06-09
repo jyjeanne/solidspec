@@ -34,6 +34,14 @@ const COMMANDS: &[(&str, &str)] = &[
         "apex",
         "Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)",
     ),
+    (
+        "tdd-tests",
+        "Generate real failing tests for every acceptance criterion (TDD RED phase)",
+    ),
+    (
+        "tdd-refactor",
+        "Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)",
+    ),
 ];
 
 /// Detect all agents present in the repository.
@@ -197,6 +205,75 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
                      If the /apex skill is installed in this agent, invoke it directly:\n\
                      /apex -a -s implement feature: <feature-slug>\n\n\
                      When all tasks are done, run /solidspec-analyze to validate."
+                )
+            }
+            "tdd-tests" => {
+                format!(
+                    "Read the project context from .solidspec/AGENT.md, then execute the TDD RED phase \
+                     using VERTICAL SLICES — not horizontal batching.\n\n\
+                     The feature ID is: {arg}\n\
+                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\
+                     Read tdd-red-report.md — it contains your interface design template.\n\n\
+                     STEP 1 — INTERFACE DESIGN (before writing any test code):\n\
+                     Read spec.md and plan.md. For each public API that tests will call:\n\
+                     - Accept external dependencies as parameters (do not create them internally)\n\
+                     - Prefer functions that return results over functions that produce side effects\n\
+                     - Keep interfaces small: fewer public methods = fewer tests needed\n\
+                     Identify MOCK BOUNDARIES — mock ONLY:\n\
+                     - External APIs and HTTP clients\n\
+                     - Databases (prefer a real test DB over mocks when practical)\n\
+                     - Clocks, random sources, file I/O\n\
+                     DO NOT mock your own modules or internal collaborators — those are implementation details.\n\
+                     If framework auto-detection fails (no Cargo.toml / package.json / pyproject.toml / go.mod), \
+                     STOP and report the failure in tdd-red-report.md — do not guess.\n\n\
+                     STEP 2 — TRACER BULLET (first cycle):\n\
+                     Pick the single most critical acceptance criterion. Write ONE test for it.\n\
+                     Run it. The test must FAIL for the right reason — a missing implementation, \
+                     not a compile error or wrong assertion. Fix setup issues until the failure \
+                     reason is correct before writing more tests.\n\n\
+                     STEP 3 — REMAINING TESTS (one behavior at a time):\n\
+                     Each acceptance criterion may describe multiple behaviors. Decompose each \
+                     criterion into individual behaviors. For each behavior:\n\
+                     - Test name describes WHAT: 'user_can_log_in_with_email' not 'calls_verify_password'\n\
+                     - Calls public APIs only — no private methods, no direct DB queries to verify\n\
+                     - Write the test, confirm it compiles and fails, then move to the next\n\n\
+                     STEP 4 — QUALITY CHECK before filling the report:\n\
+                     Every test must: describe observable behavior (not HOW), use public interface only, \
+                     survive a complete internal refactor, have one logical assertion or coherent group.\n\
+                     If a test mocks an internal collaborator, rewrite it.\n\n\
+                     STEP 5 — Fill in tdd-red-report.md:\n\
+                     Record interface decisions, framework, cycle table (one row per behavior), \
+                     total tests written, total failing, and any unexpectedly passing tests \
+                     (those signal already-implemented behavior — list them by name, they will be \
+                     excluded from the implement phase).\n\n\
+                     FORBIDDEN: Writing any real implementation logic. Tests must fail because \
+                     the production code does not yet exist."
+                )
+            }
+            "tdd-refactor" => {
+                format!(
+                    "Read the project context from .solidspec/AGENT.md, then execute the TDD REFACTOR phase.\n\n\
+                     The feature ID is: {arg}\n\
+                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
+                     PRE-CONDITION: Run the full test suite. Every test must be GREEN before starting.\n\
+                     If any test is failing, STOP and return to the implement phase.\n\n\
+                     REFACTOR candidates — work through in this priority order:\n\
+                     1. Duplication → extract to a shared function or class\n\
+                     2. Long methods → extract private helpers \
+                     (keep tests targeting the public interface, not the extracted helpers)\n\
+                     3. Shallow modules → deepen: reduce public methods, hide more complexity inside\n\
+                     4. Feature envy → move logic to where the data lives\n\
+                     5. Primitive obsession → introduce value objects for domain concepts\n\
+                     6. Existing code that the new code reveals as problematic\n\n\
+                     INTERFACE RULE: the public surface area must stay the same size or shrink. \
+                     Do not add new public methods during refactor.\n\n\
+                     After EVERY individual change: run the full test suite. \
+                     Every test must remain GREEN. If any test goes RED, revert the change.\n\n\
+                     Fill in tdd-refactor-report.md: for each change, record the file, \
+                     the refactor type (from the list above), a before/after description, \
+                     and the test run result (must be GREEN).\n\n\
+                     FORBIDDEN: Changing test code. FORBIDDEN: Adding new behavior. \
+                     FORBIDDEN: Expanding the public interface."
                 )
             }
             _ => {

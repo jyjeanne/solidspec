@@ -270,8 +270,12 @@ fn check_agent_availability(
 
     for phase in phases {
         let agent_id = pipeline_config.agent_for_phase(phase, default_agent);
-        // implement and apex are always handoffs — AI agent does the actual coding
-        if *phase == "implement" || *phase == "apex" {
+        // implement, apex, tdd-tests, tdd-refactor are always handoffs
+        if *phase == "implement"
+            || *phase == "apex"
+            || *phase == "tdd-tests"
+            || *phase == "tdd-refactor"
+        {
             handoff.push(format!("{phase} ({agent_id})"));
             continue;
         }
@@ -394,6 +398,38 @@ fn execute_phase(
             }
             Ok("user-confirmed".into())
         }
+        "tdd-tests" => {
+            crate::cli::tdd_tests::run(Some(feature_dir_name), false)?;
+            println!(
+                "    → Open {} and run: /solidspec-tdd-tests {feature_dir_name}",
+                agent
+            );
+            if auto {
+                println!("    [auto] Skipping confirmation");
+            } else {
+                print!("    ⏳ Press Enter when RED phase is done (or Ctrl+C to abort)... ");
+                std::io::stdout().flush()?;
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+            }
+            Ok("user-confirmed".into())
+        }
+        "tdd-refactor" => {
+            crate::cli::tdd_refactor::run(Some(feature_dir_name), false)?;
+            println!(
+                "    → Open {} and run: /solidspec-tdd-refactor {feature_dir_name}",
+                agent
+            );
+            if auto {
+                println!("    [auto] Skipping confirmation");
+            } else {
+                print!("    ⏳ Press Enter when REFACTOR phase is done (or Ctrl+C to abort)... ");
+                std::io::stdout().flush()?;
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+            }
+            Ok("user-confirmed".into())
+        }
         "evidence" => {
             crate::cli::evidence::run(Some(feature_dir_name), false)?;
             Ok("evidence-report.md written".into())
@@ -480,6 +516,8 @@ fn skip_reason(phase: &str, _feature_dir: &std::path::Path) -> String {
         "tests" => "tests/ directory exists".into(),
         "implement" => "all tasks completed".into(),
         "apex" => "apex/*/09-finish.md exists".into(),
+        "tdd-tests" => "tdd-red-report.md already exists".into(),
+        "tdd-refactor" => "tdd-refactor-report.md already exists".into(),
         "evidence" => "evidence-report.md already exists".into(),
         "analyze" => "never skipped".into(),
         "review" => "review-report.md already exists".into(),

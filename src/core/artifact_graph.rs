@@ -163,9 +163,8 @@ impl ArtifactGraph {
         for (id, node) in &self.nodes {
             let all_present = node.generates.iter().all(|pattern| {
                 let path = feature_dir.join(pattern);
-                // Simple check: exact filename or non-empty directory
                 if pattern.contains('*') {
-                    // Glob: check if directory exists and is non-empty
+                    // Glob: check if the parent directory is non-empty
                     if let Some(parent) = path.parent() {
                         parent.exists()
                             && std::fs::read_dir(parent)
@@ -174,6 +173,13 @@ impl ArtifactGraph {
                     } else {
                         false
                     }
+                } else if pattern.ends_with('/') {
+                    // Directory pattern: require the directory to exist and be non-empty
+                    // (an empty directory means the agent hasn't written any test files yet)
+                    path.exists()
+                        && std::fs::read_dir(&path)
+                            .map(|mut d| d.next().is_some())
+                            .unwrap_or(false)
                 } else {
                     path.exists()
                 }
@@ -596,6 +602,37 @@ mod tests {
         assert!(completed.contains("spec"));
         assert!(completed.contains("plan"));
         assert!(!completed.contains("tasks"));
+    }
+
+    #[test]
+    fn detect_completion_empty_trailing_slash_dir_is_incomplete() {
+        // An empty `tests/` directory must NOT count as the artifact being complete.
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("spec.md"), "# Spec").unwrap();
+        std::fs::create_dir(dir.path().join("tests")).unwrap(); // empty dir
+
+        let graph = spec_driven_graph();
+        let completed = graph.detect_completion(dir.path());
+        assert!(
+            !completed.contains("tests"),
+            "tests artifact must not be complete when tests/ dir is empty"
+        );
+    }
+
+    #[test]
+    fn detect_completion_nonempty_trailing_slash_dir_is_complete() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("spec.md"), "# Spec").unwrap();
+        let tests_dir = dir.path().join("tests");
+        std::fs::create_dir(&tests_dir).unwrap();
+        std::fs::write(tests_dir.join("auth_test.rs"), "// test").unwrap();
+
+        let graph = spec_driven_graph();
+        let completed = graph.detect_completion(dir.path());
+        assert!(
+            completed.contains("tests"),
+            "tests artifact must be complete when tests/ dir has files"
+        );
     }
 
     #[test]
