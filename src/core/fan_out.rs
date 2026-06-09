@@ -1174,8 +1174,10 @@ mod tests {
         let feature = dir.path().join("specs/001-test");
         std::fs::create_dir_all(&feature).unwrap();
 
-        let mut config = FanOutConfig::default();
-        config.security_agent = Some("gemini".to_string());
+        let config = FanOutConfig {
+            security_agent: Some("gemini".to_string()),
+            ..FanOutConfig::default()
+        };
 
         let lanes = build_lanes(&config, &feature, "claude");
         let security = lanes.iter().find(|l| l.id == "security").unwrap();
@@ -1191,9 +1193,11 @@ mod tests {
         let feature = dir.path().join("specs/001-test");
         std::fs::create_dir_all(&feature).unwrap();
 
-        let mut config = FanOutConfig::default();
-        config.security_threshold = 90;
-        config.perf_threshold = 50;
+        let config = FanOutConfig {
+            security_threshold: 90,
+            perf_threshold: 50,
+            ..FanOutConfig::default()
+        };
 
         let lanes = build_lanes(&config, &feature, "claude");
         let sec = lanes.iter().find(|l| l.id == "security").unwrap();
