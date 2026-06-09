@@ -1,5 +1,5 @@
-pub mod apex;
 pub mod analyzer;
+pub mod apex;
 pub mod artifact_graph;
 pub mod change;
 pub mod constitution;

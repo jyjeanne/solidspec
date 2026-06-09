@@ -30,7 +30,10 @@ const COMMANDS: &[(&str, &str)] = &[
     ("analyze", "Validate cross-artifact consistency"),
     ("review", "Review spec quality with preflight heuristics"),
     ("checklist", "Generate a quality validation checklist"),
-    ("apex", "Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)"),
+    (
+        "apex",
+        "Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)",
+    ),
 ];
 
 /// Detect all agents present in the repository.
@@ -800,7 +803,10 @@ mod tests {
         register_all(dir.path(), Some("claude")).unwrap();
 
         let apex_dir = dir.path().join(".claude/commands/apex");
-        assert!(apex_dir.exists(), "APEX skill dir missing after register_all");
+        assert!(
+            apex_dir.exists(),
+            "APEX skill dir missing after register_all"
+        );
         assert!(apex_dir.join("SKILL.md").exists());
     }
 
@@ -815,7 +821,10 @@ mod tests {
         assert!(apex_dir.exists());
 
         unregister_commands(dir.path(), claude).unwrap();
-        assert!(!apex_dir.exists(), "APEX dir should be removed by unregister_commands");
+        assert!(
+            !apex_dir.exists(),
+            "APEX dir should be removed by unregister_commands"
+        );
     }
 
     #[test]
@@ -825,11 +834,13 @@ mod tests {
         register_commands(dir.path(), claude).unwrap();
 
         let content =
-            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-apex.md"))
-                .unwrap();
+            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-apex.md")).unwrap();
         assert!(content.contains("APEX"), "missing APEX keyword");
         assert!(content.contains("Analyze"), "missing Analyze step");
         assert!(content.contains("eXamine"), "missing eXamine step");
-        assert!(content.contains("apex-context.md"), "missing context file ref");
+        assert!(
+            content.contains("apex-context.md"),
+            "missing context file ref"
+        );
     }
 }

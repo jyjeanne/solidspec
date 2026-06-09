@@ -142,8 +142,7 @@ fn apex_context_file_contains_feature_id() {
         .assert()
         .success();
 
-    let context =
-        std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
+    let context = std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
     assert!(
         context.contains("001-auth-system"),
         "context file must contain the feature ID"
@@ -161,8 +160,7 @@ fn apex_context_file_contains_pending_tasks() {
         .assert()
         .success();
 
-    let context =
-        std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
+    let context = std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
     assert!(
         context.contains("T001") || context.contains("pending"),
         "context file must reference pending tasks"
@@ -565,10 +563,7 @@ fn init_registers_apex_skill_subdirectories() {
         apex_dir.join("templates").is_dir(),
         "templates/ subdir missing"
     );
-    assert!(
-        apex_dir.join("scripts").is_dir(),
-        "scripts/ subdir missing"
-    );
+    assert!(apex_dir.join("scripts").is_dir(), "scripts/ subdir missing");
 }
 
 // ── B2 (AC18): init registers APEX skill for Kimi ────────────────────────────
@@ -604,7 +599,10 @@ fn init_registers_apex_slash_command_for_claude() {
         .success();
 
     let cmd_file = dir.path().join(".claude/commands/solidspec-apex.md");
-    assert!(cmd_file.exists(), "solidspec-apex.md slash command must be registered");
+    assert!(
+        cmd_file.exists(),
+        "solidspec-apex.md slash command must be registered"
+    );
 
     let content = std::fs::read_to_string(&cmd_file).unwrap();
     assert!(content.contains("APEX"), "slash command must describe APEX");
@@ -720,8 +718,7 @@ fn apex_context_includes_fr_requirements_from_spec() {
         .assert()
         .success();
 
-    let context =
-        std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
+    let context = std::fs::read_to_string(dir.path().join(".solidspec/apex-context.md")).unwrap();
     assert!(
         context.contains("FR-001"),
         "context must contain FR-001 from spec.md"

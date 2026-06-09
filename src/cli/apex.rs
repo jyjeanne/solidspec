@@ -3,12 +3,7 @@ use anyhow::{Context, Result};
 use crate::config;
 use crate::core::{apex, feature};
 
-pub fn run(
-    feature_id: Option<&str>,
-    sync: bool,
-    context_only: bool,
-    dry_run: bool,
-) -> Result<()> {
+pub fn run(feature_id: Option<&str>, sync: bool, context_only: bool, dry_run: bool) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
         .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
@@ -56,11 +51,7 @@ pub fn run(
         return Ok(());
     }
 
-    std::fs::create_dir_all(
-        context_path
-            .parent()
-            .expect("context path has parent dir"),
-    )?;
+    std::fs::create_dir_all(context_path.parent().expect("context path has parent dir"))?;
     std::fs::write(&context_path, &context)?;
 
     if context_only {
@@ -71,8 +62,7 @@ pub fn run(
     // Task summary
     let tasks_content = std::fs::read_to_string(&tasks_path)?;
     let pending = tasks_content.matches("- [ ] T").count();
-    let done = tasks_content.matches("- [x] T").count()
-        + tasks_content.matches("- [X] T").count();
+    let done = tasks_content.matches("- [x] T").count() + tasks_content.matches("- [X] T").count();
 
     println!("APEX: {feature_dir_name}");
     println!("  Tasks: {pending} pending, {done} done");

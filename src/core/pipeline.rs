@@ -36,28 +36,13 @@ pub const PHASES_IDSD: &[&str] = &[
 /// Pipeline phase names for the `apex-driven` schema.
 /// Identical to PHASES except `apex` replaces `implement`.
 pub const PHASES_APEX: &[&str] = &[
-    "specify",
-    "clarify",
-    "plan",
-    "tasks",
-    "tests",
-    "apex",
-    "analyze",
-    "review",
+    "specify", "clarify", "plan", "tasks", "tests", "apex", "analyze", "review",
 ];
 
 /// Pipeline phase names for the `intent-apex` schema.
 /// Identical to PHASES_IDSD except `apex` replaces `implement`.
 pub const PHASES_APEX_IDSD: &[&str] = &[
-    "intent",
-    "specify",
-    "clarify",
-    "plan",
-    "tasks",
-    "tests",
-    "apex",
-    "evidence",
-    "analyze",
+    "intent", "specify", "clarify", "plan", "tasks", "tests", "apex", "evidence", "analyze",
     "review",
 ];
 
@@ -181,9 +166,9 @@ pub fn filter_phases(
 ) -> Result<Vec<&'static str>> {
     let all: &[&str] = match schema {
         "intent-driven" => PHASES_IDSD,
-        "apex-driven"   => PHASES_APEX,
-        "intent-apex"   => PHASES_APEX_IDSD,
-        _               => PHASES, // spec-driven, minimal, security-first, custom, unknown
+        "apex-driven" => PHASES_APEX,
+        "intent-apex" => PHASES_APEX_IDSD,
+        _ => PHASES, // spec-driven, minimal, security-first, custom, unknown
     };
     let from_idx = if let Some(f) = from {
         all.iter().position(|p| *p == f).ok_or_else(|| {
@@ -495,7 +480,10 @@ mod tests {
     fn filter_apex_driven_has_apex_not_implement() {
         let phases = filter_phases("apex-driven", None, None).unwrap();
         assert_eq!(phases.len(), 8);
-        assert!(phases.contains(&"apex"), "apex-driven must include apex phase");
+        assert!(
+            phases.contains(&"apex"),
+            "apex-driven must include apex phase"
+        );
         assert!(
             !phases.contains(&"implement"),
             "apex-driven must not include implement phase"

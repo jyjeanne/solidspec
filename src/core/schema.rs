@@ -60,13 +60,13 @@ pub mod builtin {
 
     pub fn by_name(name: &str) -> Option<&'static str> {
         match name {
-            "spec-driven"    => Some(SPEC_DRIVEN),
-            "minimal"        => Some(MINIMAL),
+            "spec-driven" => Some(SPEC_DRIVEN),
+            "minimal" => Some(MINIMAL),
             "security-first" => Some(SECURITY_FIRST),
-            "intent-driven"  => Some(INTENT_DRIVEN),
-            "apex-driven"    => Some(APEX_DRIVEN),
-            "intent-apex"    => Some(INTENT_APEX),
-            _                => None,
+            "intent-driven" => Some(INTENT_DRIVEN),
+            "apex-driven" => Some(APEX_DRIVEN),
+            "intent-apex" => Some(INTENT_APEX),
+            _ => None,
         }
     }
 }
@@ -420,7 +420,11 @@ artifacts:
     #[test]
     fn intent_apex_evidence_requires_apex_not_implement() {
         let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
-        let evidence = schema.artifacts.iter().find(|a| a.id == "evidence").unwrap();
+        let evidence = schema
+            .artifacts
+            .iter()
+            .find(|a| a.id == "evidence")
+            .unwrap();
         assert!(
             evidence.requires.contains(&"apex".to_string()),
             "evidence must require apex in intent-apex schema"
