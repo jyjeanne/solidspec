@@ -1,3 +1,4 @@
+pub mod apex;
 pub mod analyzer;
 pub mod artifact_graph;
 pub mod change;

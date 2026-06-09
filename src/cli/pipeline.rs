@@ -270,8 +270,8 @@ fn check_agent_availability(
 
     for phase in phases {
         let agent_id = pipeline_config.agent_for_phase(phase, default_agent);
-        // implement is always a handoff
-        if *phase == "implement" {
+        // implement and apex are always handoffs — AI agent does the actual coding
+        if *phase == "implement" || *phase == "apex" {
             handoff.push(format!("{phase} ({agent_id})"));
             continue;
         }
@@ -377,6 +377,23 @@ fn execute_phase(
             }
             Ok("user-confirmed".into())
         }
+        "apex" => {
+            // APEX is always a handoff — write context then hand off to AI agent
+            crate::cli::apex::run(Some(feature_dir_name), false, true, false)?;
+            println!(
+                "    → Open {} and run: /solidspec-apex {feature_dir_name}",
+                agent
+            );
+            if auto {
+                println!("    [auto] Skipping confirmation");
+            } else {
+                print!("    ⏳ Press Enter when done (or Ctrl+C to abort)... ");
+                std::io::stdout().flush()?;
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)?;
+            }
+            Ok("user-confirmed".into())
+        }
         "evidence" => {
             crate::cli::evidence::run(Some(feature_dir_name), false)?;
             Ok("evidence-report.md written".into())
@@ -462,6 +479,7 @@ fn skip_reason(phase: &str, _feature_dir: &std::path::Path) -> String {
         "tasks" => "tasks.md already exists".into(),
         "tests" => "tests/ directory exists".into(),
         "implement" => "all tasks completed".into(),
+        "apex" => "apex/*/09-finish.md exists".into(),
         "evidence" => "evidence-report.md already exists".into(),
         "analyze" => "never skipped".into(),
         "review" => "review-report.md already exists".into(),

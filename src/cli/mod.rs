@@ -1,4 +1,5 @@
 pub mod analyze;
+pub mod apex;
 pub mod change;
 pub mod check;
 pub mod checklist;
@@ -107,6 +108,24 @@ pub enum Commands {
         /// Multi-pass implementation (for iterative refinement)
         #[arg(long)]
         pass: Option<u32>,
+    },
+
+    /// Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)
+    Apex {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Sync completed tasks from the latest APEX execute log back into tasks.md
+        #[arg(long)]
+        sync: bool,
+
+        /// Regenerate the .solidspec/apex-context.md file only, without printing instructions
+        #[arg(long)]
+        context_only: bool,
+
+        /// Preview without writing files
+        #[arg(long)]
+        dry_run: bool,
     },
 
     /// Generate test scaffolds from acceptance scenarios
@@ -309,6 +328,12 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Plan { feature_id } => plan::run(feature_id.as_deref(), None),
         Commands::Tasks { feature_id } => tasks::run(feature_id.as_deref()),
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
+        Commands::Apex {
+            feature_id,
+            sync,
+            context_only,
+            dry_run,
+        } => apex::run(feature_id.as_deref(), sync, context_only, dry_run),
         Commands::Tests {
             feature_id,
             framework,

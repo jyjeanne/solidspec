@@ -43,19 +43,30 @@ pub mod builtin {
     pub const MINIMAL: &str = include_str!("../../schemas/minimal/schema.yaml");
     pub const SECURITY_FIRST: &str = include_str!("../../schemas/security-first/schema.yaml");
     pub const INTENT_DRIVEN: &str = include_str!("../../schemas/intent-driven/schema.yaml");
+    pub const APEX_DRIVEN: &str = include_str!("../../schemas/apex-driven/schema.yaml");
+    pub const INTENT_APEX: &str = include_str!("../../schemas/intent-apex/schema.yaml");
 
     #[allow(dead_code)]
     pub fn names() -> Vec<&'static str> {
-        vec!["spec-driven", "minimal", "security-first", "intent-driven"]
+        vec![
+            "spec-driven",
+            "minimal",
+            "security-first",
+            "intent-driven",
+            "apex-driven",
+            "intent-apex",
+        ]
     }
 
     pub fn by_name(name: &str) -> Option<&'static str> {
         match name {
-            "spec-driven" => Some(SPEC_DRIVEN),
-            "minimal" => Some(MINIMAL),
+            "spec-driven"    => Some(SPEC_DRIVEN),
+            "minimal"        => Some(MINIMAL),
             "security-first" => Some(SECURITY_FIRST),
-            "intent-driven" => Some(INTENT_DRIVEN),
-            _ => None,
+            "intent-driven"  => Some(INTENT_DRIVEN),
+            "apex-driven"    => Some(APEX_DRIVEN),
+            "intent-apex"    => Some(INTENT_APEX),
+            _                => None,
         }
     }
 }
@@ -334,6 +345,133 @@ artifacts:
         for s in &schemas {
             assert!(s.artifact_count >= 2, "{} has too few artifacts", s.name);
         }
+    }
+
+    // ── APEX schemas ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn parse_apex_driven_schema() {
+        let schema = WorkflowSchema::parse(builtin::APEX_DRIVEN).unwrap();
+        assert_eq!(schema.name, "apex-driven");
+        assert_eq!(schema.version, "1.0");
+        assert_eq!(schema.artifacts.len(), 9);
+    }
+
+    #[test]
+    fn apex_driven_has_apex_not_implement() {
+        let schema = WorkflowSchema::parse(builtin::APEX_DRIVEN).unwrap();
+        assert!(
+            schema.artifacts.iter().any(|a| a.id == "apex"),
+            "apex-driven must contain an 'apex' artifact"
+        );
+        assert!(
+            !schema.artifacts.iter().any(|a| a.id == "implement"),
+            "apex-driven must not contain an 'implement' artifact"
+        );
+    }
+
+    #[test]
+    fn apex_driven_apex_requires_tasks() {
+        let schema = WorkflowSchema::parse(builtin::APEX_DRIVEN).unwrap();
+        let apex = schema.artifacts.iter().find(|a| a.id == "apex").unwrap();
+        assert!(
+            apex.requires.contains(&"tasks".to_string()),
+            "apex artifact must require tasks"
+        );
+    }
+
+    #[test]
+    fn apex_driven_schema_has_ship_artifact() {
+        let schema = WorkflowSchema::parse(builtin::APEX_DRIVEN).unwrap();
+        let ship = schema.artifacts.iter().find(|a| a.id == "ship").unwrap();
+        assert!(ship.requires.contains(&"analyze".to_string()));
+        assert!(ship.requires.contains(&"review".to_string()));
+    }
+
+    #[test]
+    fn apex_driven_converts_to_valid_graph() {
+        let schema = WorkflowSchema::parse(builtin::APEX_DRIVEN).unwrap();
+        let graph = schema.into_graph().unwrap();
+        let order = graph.topological_order().unwrap();
+        assert_eq!(order.len(), 9);
+    }
+
+    #[test]
+    fn parse_intent_apex_schema() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
+        assert_eq!(schema.name, "intent-apex");
+        assert_eq!(schema.version, "1.0");
+        assert_eq!(schema.artifacts.len(), 11);
+    }
+
+    #[test]
+    fn intent_apex_has_apex_not_implement() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
+        assert!(
+            schema.artifacts.iter().any(|a| a.id == "apex"),
+            "intent-apex must contain an 'apex' artifact"
+        );
+        assert!(
+            !schema.artifacts.iter().any(|a| a.id == "implement"),
+            "intent-apex must not contain an 'implement' artifact"
+        );
+    }
+
+    #[test]
+    fn intent_apex_evidence_requires_apex_not_implement() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
+        let evidence = schema.artifacts.iter().find(|a| a.id == "evidence").unwrap();
+        assert!(
+            evidence.requires.contains(&"apex".to_string()),
+            "evidence must require apex in intent-apex schema"
+        );
+        assert!(
+            !evidence.requires.contains(&"implement".to_string()),
+            "evidence must not require implement in intent-apex schema"
+        );
+        assert!(
+            evidence.requires.contains(&"tests".to_string()),
+            "evidence must still require tests"
+        );
+    }
+
+    #[test]
+    fn intent_apex_has_intent_and_evidence() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
+        assert!(schema.artifacts.iter().any(|a| a.id == "intent"));
+        assert!(schema.artifacts.iter().any(|a| a.id == "evidence"));
+    }
+
+    #[test]
+    fn intent_apex_converts_to_valid_graph() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_APEX).unwrap();
+        let graph = schema.into_graph().unwrap();
+        let order = graph.topological_order().unwrap();
+        assert_eq!(order.len(), 11);
+    }
+
+    #[test]
+    fn resolve_apex_driven_builtin() {
+        let dir = TempDir::new().unwrap();
+        let (schema, source) = resolve_schema("apex-driven", dir.path()).unwrap();
+        assert_eq!(schema.name, "apex-driven");
+        assert_eq!(source, SchemaSource::Builtin);
+    }
+
+    #[test]
+    fn resolve_intent_apex_builtin() {
+        let dir = TempDir::new().unwrap();
+        let (schema, source) = resolve_schema("intent-apex", dir.path()).unwrap();
+        assert_eq!(schema.name, "intent-apex");
+        assert_eq!(source, SchemaSource::Builtin);
+    }
+
+    #[test]
+    fn list_available_schemas_includes_apex_schemas() {
+        let dir = TempDir::new().unwrap();
+        let schemas = list_available_schemas(dir.path());
+        assert!(schemas.iter().any(|s| s.name == "apex-driven"));
+        assert!(schemas.iter().any(|s| s.name == "intent-apex"));
     }
 
     #[test]

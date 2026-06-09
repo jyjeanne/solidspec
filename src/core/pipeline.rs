@@ -33,6 +33,34 @@ pub const PHASES_IDSD: &[&str] = &[
     "review",
 ];
 
+/// Pipeline phase names for the `apex-driven` schema.
+/// Identical to PHASES except `apex` replaces `implement`.
+pub const PHASES_APEX: &[&str] = &[
+    "specify",
+    "clarify",
+    "plan",
+    "tasks",
+    "tests",
+    "apex",
+    "analyze",
+    "review",
+];
+
+/// Pipeline phase names for the `intent-apex` schema.
+/// Identical to PHASES_IDSD except `apex` replaces `implement`.
+pub const PHASES_APEX_IDSD: &[&str] = &[
+    "intent",
+    "specify",
+    "clarify",
+    "plan",
+    "tasks",
+    "tests",
+    "apex",
+    "evidence",
+    "analyze",
+    "review",
+];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PhaseType {
     Auto,
@@ -114,6 +142,25 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
         "analyze" => false, // never skipped
         "review" => feature_dir.join("review-report.md").exists(),
         "ship" => feature_dir.join("ship-report.md").exists(),
+        "apex" => {
+            // Skip only when APEX fully completed: 09-finish.md must exist inside
+            // a run subdirectory of feature_dir/apex/. Merely having the directory
+            // present (an in-progress run) does NOT count as done.
+            // This path is populated when APEX is run with --save and --output-dir
+            // pointing to the feature directory; without --save it never auto-skips.
+            let apex_dir = feature_dir.join("apex");
+            if !apex_dir.exists() {
+                return false;
+            }
+            std::fs::read_dir(&apex_dir)
+                .ok()
+                .map(|d| {
+                    d.filter_map(|e| e.ok())
+                        .filter(|e| e.path().is_dir())
+                        .any(|run_dir| run_dir.path().join("09-finish.md").exists())
+                })
+                .unwrap_or(false)
+        }
         _ => false,
     }
 }
@@ -121,22 +168,22 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
 /// Get the phase type (auto or handoff).
 pub fn phase_type(phase: &str) -> PhaseType {
     match phase {
-        "implement" => PhaseType::Handoff,
+        "implement" | "apex" => PhaseType::Handoff,
         _ => PhaseType::Auto, // ship, evidence, analyze, review, etc. are all auto
     }
 }
 
 /// Filter phases by --from and --to range for the given schema.
-/// Pass `schema = "intent-driven"` to include the `intent` phase 0.
 pub fn filter_phases(
     schema: &str,
     from: Option<&str>,
     to: Option<&str>,
 ) -> Result<Vec<&'static str>> {
-    let all = if schema == "intent-driven" {
-        PHASES_IDSD
-    } else {
-        PHASES
+    let all: &[&str] = match schema {
+        "intent-driven" => PHASES_IDSD,
+        "apex-driven"   => PHASES_APEX,
+        "intent-apex"   => PHASES_APEX_IDSD,
+        _               => PHASES, // spec-driven, minimal, security-first, custom, unknown
     };
     let from_idx = if let Some(f) = from {
         all.iter().position(|p| *p == f).ok_or_else(|| {
@@ -332,6 +379,7 @@ mod tests {
         assert_eq!(phase_type("specify"), PhaseType::Auto);
         assert_eq!(phase_type("plan"), PhaseType::Auto);
         assert_eq!(phase_type("implement"), PhaseType::Handoff);
+        assert_eq!(phase_type("apex"), PhaseType::Handoff);
         assert_eq!(phase_type("evidence"), PhaseType::Auto);
         assert_eq!(phase_type("analyze"), PhaseType::Auto);
         assert_eq!(phase_type("ship"), PhaseType::Auto);
@@ -439,5 +487,123 @@ mod tests {
         let content = std::fs::read_to_string(dir.path().join("pipeline-log.md")).unwrap();
         assert!(content.contains("old content"));
         assert!(content.contains("| analyze | vibe | done |"));
+    }
+
+    // ── APEX phase tests ──────────────────────────────────────────────────────
+
+    #[test]
+    fn filter_apex_driven_has_apex_not_implement() {
+        let phases = filter_phases("apex-driven", None, None).unwrap();
+        assert_eq!(phases.len(), 8);
+        assert!(phases.contains(&"apex"), "apex-driven must include apex phase");
+        assert!(
+            !phases.contains(&"implement"),
+            "apex-driven must not include implement phase"
+        );
+    }
+
+    #[test]
+    fn filter_apex_driven_apex_at_correct_position() {
+        let phases = filter_phases("apex-driven", None, None).unwrap();
+        // apex follows tests (index 4) and precedes analyze (index 6)
+        let apex_idx = phases.iter().position(|p| *p == "apex").unwrap();
+        let tests_idx = phases.iter().position(|p| *p == "tests").unwrap();
+        let analyze_idx = phases.iter().position(|p| *p == "analyze").unwrap();
+        assert!(tests_idx < apex_idx);
+        assert!(apex_idx < analyze_idx);
+    }
+
+    #[test]
+    fn filter_intent_apex_has_all_idsd_phases_with_apex() {
+        let phases = filter_phases("intent-apex", None, None).unwrap();
+        assert_eq!(phases.len(), 10);
+        assert_eq!(phases[0], "intent");
+        assert!(phases.contains(&"apex"));
+        assert!(phases.contains(&"evidence"));
+        assert!(!phases.contains(&"implement"));
+    }
+
+    #[test]
+    fn filter_intent_apex_apex_before_evidence() {
+        let phases = filter_phases("intent-apex", None, None).unwrap();
+        let apex_idx = phases.iter().position(|p| *p == "apex").unwrap();
+        let evidence_idx = phases.iter().position(|p| *p == "evidence").unwrap();
+        assert!(apex_idx < evidence_idx);
+    }
+
+    #[test]
+    fn filter_apex_driven_from_tasks_to_analyze() {
+        let phases = filter_phases("apex-driven", Some("tasks"), Some("analyze")).unwrap();
+        assert_eq!(phases, vec!["tasks", "tests", "apex", "analyze"]);
+    }
+
+    #[test]
+    fn filter_apex_driven_only_apex() {
+        let phases = filter_phases("apex-driven", Some("apex"), Some("apex")).unwrap();
+        assert_eq!(phases, vec!["apex"]);
+    }
+
+    #[test]
+    fn filter_existing_schemas_unchanged_by_apex_addition() {
+        // spec-driven and intent-driven must be unaffected
+        let sdd = filter_phases("spec-driven", None, None).unwrap();
+        assert_eq!(sdd.len(), 8);
+        assert!(sdd.contains(&"implement"));
+        assert!(!sdd.contains(&"apex"));
+
+        let idsd = filter_phases("intent-driven", None, None).unwrap();
+        assert_eq!(idsd.len(), 10);
+        assert!(idsd.contains(&"implement"));
+        assert!(!idsd.contains(&"apex"));
+    }
+
+    #[test]
+    fn should_skip_apex_false_when_no_apex_dir() {
+        let dir = TempDir::new().unwrap();
+        assert!(!should_skip("apex", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_apex_false_when_apex_dir_empty() {
+        let dir = TempDir::new().unwrap();
+        std::fs::create_dir(dir.path().join("apex")).unwrap();
+        assert!(!should_skip("apex", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_apex_false_when_run_dir_has_no_finish() {
+        let dir = TempDir::new().unwrap();
+        let run = dir.path().join("apex").join("auth-system");
+        std::fs::create_dir_all(&run).unwrap();
+        std::fs::write(run.join("03-execute.md"), "in progress").unwrap();
+        assert!(!should_skip("apex", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_apex_true_when_finish_exists() {
+        let dir = TempDir::new().unwrap();
+        let run = dir.path().join("apex").join("auth-system");
+        std::fs::create_dir_all(&run).unwrap();
+        std::fs::write(run.join("09-finish.md"), "done").unwrap();
+        assert!(should_skip("apex", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_apex_false_when_force() {
+        let dir = TempDir::new().unwrap();
+        let run = dir.path().join("apex").join("auth-system");
+        std::fs::create_dir_all(&run).unwrap();
+        std::fs::write(run.join("09-finish.md"), "done").unwrap();
+        assert!(!should_skip("apex", dir.path(), true)); // force overrides
+    }
+
+    #[test]
+    fn should_skip_apex_ignores_file_entries_in_apex_dir() {
+        // Files directly in apex/ (not subdirectories) must not trigger skip
+        let dir = TempDir::new().unwrap();
+        let apex_dir = dir.path().join("apex");
+        std::fs::create_dir_all(&apex_dir).unwrap();
+        std::fs::write(apex_dir.join("09-finish.md"), "stray file").unwrap();
+        assert!(!should_skip("apex", dir.path(), false));
     }
 }

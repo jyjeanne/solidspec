@@ -6,6 +6,7 @@ use anyhow::Result;
 use super::config::{AGENTS, AgentConfig, find_agent};
 use super::formats;
 use super::guardrails;
+use crate::core::apex;
 
 /// Detected agent in a repository.
 #[derive(Debug, Clone)]
@@ -29,6 +30,7 @@ const COMMANDS: &[(&str, &str)] = &[
     ("analyze", "Validate cross-artifact consistency"),
     ("review", "Review spec quality with preflight heuristics"),
     ("checklist", "Generate a quality validation checklist"),
+    ("apex", "Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)"),
 ];
 
 /// Detect all agents present in the repository.
@@ -173,6 +175,27 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
                      5. Write findings to {arg}/review-report.md"
                 )
             }
+            "apex" => {
+                format!(
+                    "Read the project context from .solidspec/AGENT.md, then launch the APEX \
+                     implementation workflow for the feature.\n\n\
+                     The feature ID is: {arg}\n\
+                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
+                     SolidSpec context is in: .solidspec/apex-context.md\n\
+                     (Pre-loaded requirements, architecture plan, and pending tasks.)\n\n\
+                     APEX workflow (Analyze-Plan-Execute-eXamine):\n\
+                     1. Analyze: Read spec.md, plan.md, and tasks.md — context file has summaries\n\
+                     2. Plan: Create a file-by-file implementation strategy\n\
+                     3. Execute: Implement each task from tasks.md one at a time\n\
+                        - After each task, update tasks.md: change `- [ ]` to `- [x]`\n\
+                        - Tasks marked [P] can be done in parallel\n\
+                     4. Validate: Run type checking and tests; verify acceptance criteria\n\
+                     5. eXamine (optional): Adversarial review for security and quality\n\n\
+                     If the /apex skill is installed in this agent, invoke it directly:\n\
+                     /apex -a -s implement feature: <feature-slug>\n\n\
+                     When all tasks are done, run /solidspec-analyze to validate."
+                )
+            }
             _ => {
                 format!(
                     "Read the project context from .solidspec/AGENT.md, then execute the '{}' workflow for the feature specified by {arg}.",
@@ -259,6 +282,39 @@ fn write_command_file(
     Ok(())
 }
 
+/// Return the directory where APEX skill files should be written for a given agent.
+fn apex_skill_dir(agent_id: &str, project_root: &Path) -> Option<PathBuf> {
+    match agent_id {
+        "claude" => Some(project_root.join(".claude/commands/apex")),
+        "kimi" => Some(project_root.join(".kimi/skills/apex")),
+        "vibe" => Some(project_root.join(".vibe/skills/apex")),
+        "opencode" => Some(project_root.join(".opencode/skills/apex")),
+        _ => None,
+    }
+}
+
+/// Extract the APEX skill files into the agent's skill directory.
+/// Returns `Ok(true)` when the agent supports APEX, `Ok(false)` otherwise.
+pub fn register_apex_skill(agent_id: &str, project_root: &Path) -> Result<bool> {
+    match apex_skill_dir(agent_id, project_root) {
+        Some(dir) => {
+            apex::extract_skill(&dir)?;
+            Ok(true)
+        }
+        None => Ok(false),
+    }
+}
+
+/// Remove the APEX skill directory for the given agent (if supported).
+pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> {
+    if let Some(dir) = apex_skill_dir(agent_id, project_root)
+        && dir.exists()
+    {
+        std::fs::remove_dir_all(&dir)?;
+    }
+    Ok(())
+}
+
 /// Unregister all SolidSpec commands for a specific agent.
 pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
@@ -309,6 +365,8 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
         }
     }
 
+    unregister_apex_skill(agent.id, project_root)?;
+
     Ok(())
 }
 
@@ -329,6 +387,7 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
         let cmd_dir = project_root.join(agent.command_dir);
         std::fs::create_dir_all(cmd_dir.join(agent.commands_subdir))?;
         register_commands(project_root, agent)?;
+        register_apex_skill(agent_id, project_root)?;
         registered.push(agent.id.to_string());
     } else {
         // Auto-detect: register for agents whose dir exists OR whose CLI is available
@@ -336,6 +395,7 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
         for det in &detected {
             if det.dir_exists || det.cli_available {
                 register_commands(project_root, det.config)?;
+                register_apex_skill(det.config.id, project_root)?;
                 registered.push(det.config.id.to_string());
             }
         }
@@ -663,5 +723,113 @@ mod tests {
         assert!(content.contains("Before You Skip Any Step"));
         assert!(content.contains("Mandatory Verification Checklist"));
         assert!(content.contains("[NEEDS CLARIFICATION]"));
+    }
+
+    // ── APEX skill registration tests ──────────────────────────────────────
+
+    #[test]
+    fn apex_skill_dir_returns_correct_paths() {
+        let dir = TempDir::new().unwrap();
+        assert_eq!(
+            apex_skill_dir("claude", dir.path()),
+            Some(dir.path().join(".claude/commands/apex"))
+        );
+        assert_eq!(
+            apex_skill_dir("kimi", dir.path()),
+            Some(dir.path().join(".kimi/skills/apex"))
+        );
+        assert_eq!(
+            apex_skill_dir("vibe", dir.path()),
+            Some(dir.path().join(".vibe/skills/apex"))
+        );
+        assert_eq!(
+            apex_skill_dir("opencode", dir.path()),
+            Some(dir.path().join(".opencode/skills/apex"))
+        );
+        assert_eq!(apex_skill_dir("cursor", dir.path()), None);
+        assert_eq!(apex_skill_dir("gemini", dir.path()), None);
+    }
+
+    #[test]
+    fn register_apex_skill_creates_files_for_claude() {
+        let dir = TempDir::new().unwrap();
+        let did_register = register_apex_skill("claude", dir.path()).unwrap();
+        assert!(did_register);
+
+        let skill_dir = dir.path().join(".claude/commands/apex");
+        assert!(skill_dir.exists(), "apex skill dir not created");
+        assert!(skill_dir.join("SKILL.md").exists(), "SKILL.md missing");
+        assert!(skill_dir.join("steps").is_dir(), "steps/ subdir missing");
+        assert!(
+            skill_dir.join("templates").is_dir(),
+            "templates/ subdir missing"
+        );
+    }
+
+    #[test]
+    fn register_apex_skill_returns_false_for_unsupported_agent() {
+        let dir = TempDir::new().unwrap();
+        let did_register = register_apex_skill("cursor", dir.path()).unwrap();
+        assert!(!did_register);
+        assert!(!dir.path().join(".cursor/commands/apex").exists());
+    }
+
+    #[test]
+    fn unregister_apex_skill_removes_directory() {
+        let dir = TempDir::new().unwrap();
+        register_apex_skill("claude", dir.path()).unwrap();
+
+        let skill_dir = dir.path().join(".claude/commands/apex");
+        assert!(skill_dir.exists());
+
+        unregister_apex_skill("claude", dir.path()).unwrap();
+        assert!(!skill_dir.exists());
+    }
+
+    #[test]
+    fn unregister_apex_skill_is_idempotent() {
+        let dir = TempDir::new().unwrap();
+        // No prior registration — must not error
+        unregister_apex_skill("claude", dir.path()).unwrap();
+        unregister_apex_skill("cursor", dir.path()).unwrap();
+    }
+
+    #[test]
+    fn register_all_also_registers_apex_skill_for_claude() {
+        let dir = TempDir::new().unwrap();
+        register_all(dir.path(), Some("claude")).unwrap();
+
+        let apex_dir = dir.path().join(".claude/commands/apex");
+        assert!(apex_dir.exists(), "APEX skill dir missing after register_all");
+        assert!(apex_dir.join("SKILL.md").exists());
+    }
+
+    #[test]
+    fn unregister_removes_apex_skill_directory() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+        register_apex_skill("claude", dir.path()).unwrap();
+
+        let apex_dir = dir.path().join(".claude/commands/apex");
+        assert!(apex_dir.exists());
+
+        unregister_commands(dir.path(), claude).unwrap();
+        assert!(!apex_dir.exists(), "APEX dir should be removed by unregister_commands");
+    }
+
+    #[test]
+    fn apex_command_file_contains_apex_workflow_text() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let content =
+            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-apex.md"))
+                .unwrap();
+        assert!(content.contains("APEX"), "missing APEX keyword");
+        assert!(content.contains("Analyze"), "missing Analyze step");
+        assert!(content.contains("eXamine"), "missing eXamine step");
+        assert!(content.contains("apex-context.md"), "missing context file ref");
     }
 }
