@@ -10,6 +10,9 @@ fn solidspec() -> Command {
 
 fn init_project() -> TempDir {
     let dir = TempDir::new().unwrap();
+    // Create .claude/ so the agent is always detected regardless of whether
+    // the `claude` CLI binary is present in PATH (required for Linux CI).
+    std::fs::create_dir_all(dir.path().join(".claude")).unwrap();
     solidspec()
         .args(["init", "--here", "--no-git"])
         .current_dir(dir.path())
