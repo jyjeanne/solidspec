@@ -2,8 +2,11 @@
 name = "solidspec"
 version = "0.3.0"
 edition = "2024"
-description = "A CLI tool for Specification-Driven Development (SDD)"
+description = "AI-powered multi-methodology development CLI — SDD, TDD, IDSD, APEX, and more"
 license = "MIT"
+repository = "https://github.com/jyjeanne/solidspec"
+homepage = "https://github.com/jyjeanne/solidspec"
+documentation = "https://github.com/jyjeanne/solidspec#readme"
 
 [dependencies]
 # CLI
