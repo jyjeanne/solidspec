@@ -2,8 +2,8 @@ use anyhow::Result;
 
 use crate::config;
 use crate::core::artifact_graph::ArtifactState;
-use crate::core::feature;
 use crate::core::schema;
+use crate::core::{analyzer, feature};
 
 pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     let project_root = config::find_project_root(&std::env::current_dir()?)
@@ -82,6 +82,25 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
         "Run 'solidspec pipeline {} --from <phase>' to execute a phase.",
         feature_dir_name
     );
+
+    // IDSD: show intent drift score when schema is intent-driven and intent.md exists
+    if schema_name == "intent-driven"
+        && let Some(drift) = analyzer::compute_drift(&feature_dir)
+    {
+        println!();
+        if drift.score > 0.0 {
+            println!(
+                "Intent Drift: {:.0}%  ({} evidence criteria unsatisfied)",
+                drift.score,
+                drift.unsatisfied.len()
+            );
+            for item in &drift.unsatisfied {
+                println!("  ✗ {item}");
+            }
+        } else {
+            println!("Intent Drift: 0%  (baseline or all criteria satisfied)");
+        }
+    }
 
     Ok(())
 }

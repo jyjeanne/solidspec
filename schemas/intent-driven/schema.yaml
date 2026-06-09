@@ -1,0 +1,73 @@
+# Schema: intent-driven (opt-in IDSD workflow)
+# Full IDSD workflow with 9 artifacts. Intent is the root artifact.
+# The SDD spec-driven schema is unchanged and remains the default.
+name: intent-driven
+version: "1.0"
+description: "Intent-Driven Development workflow (IDSD) — intent-first with drift detection"
+
+artifacts:
+  - id: intent
+    generates: ["intent.md"]
+    requires: []
+    instruction: "Capture the intent using the ICE model. Write intent.md with Goal (one sentence, no implementation detail), Constraints (boundaries that must stay true), Evidence (measurable success criteria), Risks, and Open Questions. Set Status to 'active' when ready."
+    template: "intent-template.md"
+
+  - id: spec
+    generates: ["spec.md"]
+    requires: ["intent"]
+    instruction: "Read intent.md first. Confirm the Goal before proceeding. Create a feature specification aligned with the intent: user stories, functional requirements (FR-### format), key entities, success criteria, and edge cases. Every FR-### must trace back to an evidence criterion in intent.md."
+    template: "idsd/spec-template.md"
+
+  - id: clarify
+    generates: ["spec.md"]
+    requires: ["spec"]
+    instruction: "Find and resolve all [NEEDS CLARIFICATION] markers in spec.md and intent.md. Propose concrete resolutions. Update spec.md (and intent.md if constraints or evidence need refinement) with resolved content."
+    template: null
+
+  - id: plan
+    generates: ["plan.md"]
+    requires: ["spec"]
+    instruction: "Read intent.md and spec.md. Create an architecture plan: decisions with rationale, project structure, data model, technology stack, contracts, and constitution compliance check. Include an '## Intent Reference' section quoting the goal and confirming constraints are respected."
+    template: "idsd/plan-template.md"
+
+  - id: tasks
+    generates: ["tasks.md"]
+    requires: ["spec", "plan"]
+    instruction: "Generate a phased task breakdown (Setup -> Foundational -> User Stories -> Polish). Mark parallel-safe tasks with [P]. Link to user stories with [US#] and requirements with [FR-###]. Each task independently completable."
+    template: "tasks-template.md"
+
+  - id: tests
+    generates: ["tests/"]
+    requires: ["spec"]
+    instruction: "Generate test scaffolds from acceptance scenarios. One test file per user story. Auto-detect framework. Cover edge cases from spec. Each test file must include a header comment referencing the intent ID (e.g., '// Intent: INT-001')."
+    template: null
+
+  - id: implement
+    generates: ["tasks.md"]
+    requires: ["tasks"]
+    instruction: "Execute each task in order. Update checkboxes from '- [ ]' to '- [x]'. Respect phase dependencies. Do not create files outside the feature directory. After implementation, report which evidence criteria from intent.md are now satisfied."
+    template: null
+
+  - id: evidence
+    generates: ["evidence-report.md"]
+    requires: ["tests", "implement"]
+    instruction: "Run 'solidspec evidence' to collect satisfaction status for each evidence criterion in intent.md. Cross-reference criteria against implemented test scaffolds (STATUS: IMPLEMENTED). Report per-criterion satisfaction. Run with '--update' to auto-update intent Status."
+    template: null
+
+  - id: analyze
+    generates: ["analysis-report.md"]
+    requires: ["spec"]
+    instruction: "Validate cross-artifact consistency. Check requirement traceability (FR-### -> plan -> tasks). Entity coverage. Constitution compliance. Output findings by severity. Include Intent Drift section: compare evidence criteria from intent.md against implemented artifacts."
+    template: null
+
+  - id: review
+    generates: ["review-report.md"]
+    requires: ["spec"]
+    instruction: "Perform comprehensive quality review across 8 dimensions: Completeness, Clarity, Testability, Consistency, Security, Performance, Maintainability, IntentAlignment. For IntentAlignment: verify every FR-### traces to an evidence criterion, intent Status is not 'draft', and drift score is below threshold. Score each dimension 0-10."
+    template: null
+
+  - id: ship
+    generates: ["ship-report.md"]
+    requires: ["analyze", "review"]
+    instruction: "Run 'solidspec ship' to execute parallel fan-out review (code, security, tests, performance) and produce a SHIP/HOLD decision. ship-report.md contains per-lane scores and blocking findings."
+    template: null

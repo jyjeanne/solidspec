@@ -18,9 +18,14 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
 
     println!("{output}");
 
+    let coverage_str = report
+        .intent_coverage
+        .map(|c| format!(" | intent coverage: {c:.0}%"))
+        .unwrap_or_default();
+
     if report.findings.is_empty() {
         println!(
-            "All clear — traceability score: {:.0}%",
+            "All clear — traceability score: {:.0}%{coverage_str}",
             report.traceability_score
         );
     } else {
@@ -35,7 +40,7 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
             .filter(|f| f.severity == analyzer::Severity::High)
             .count();
         println!(
-            "Found {} issues ({} critical, {} high) — traceability: {:.0}%",
+            "Found {} issues ({} critical, {} high) — traceability: {:.0}%{coverage_str}",
             report.findings.len(),
             critical,
             high,

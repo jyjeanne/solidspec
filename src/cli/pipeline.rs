@@ -18,6 +18,7 @@ pub fn run(
     dry_run: bool,
     auto: bool,
     no_agent: bool,
+    schema: &str,
 ) -> Result<()> {
     // Validate mutual exclusivity
     if new_desc.is_some() && feature_id.is_some() {
@@ -48,8 +49,8 @@ pub fn run(
         (from, to)
     };
 
-    // Filter phases
-    let phases = pipeline::filter_phases(from, to)?;
+    // Filter phases (schema selects SDD vs IDSD phase set)
+    let phases = pipeline::filter_phases(schema, from, to)?;
 
     // Resolve or create feature
     let is_new = new_desc.is_some();
@@ -173,6 +174,7 @@ pub fn run(
             new_desc,
             auto,
             &agent_mode,
+            schema,
         );
         let elapsed_ms = start.elapsed().as_millis() as u64;
 
@@ -197,9 +199,9 @@ pub fn run(
                     output,
                 });
 
-                // After specify with --new, re-detect the actual feature dir
-                // (specify creates its own numbering which may differ)
-                if *phase == "specify" && is_new {
+                // After intent or specify with --new, re-detect the actual feature dir
+                // (both commands create the dir with their own numbering)
+                if (*phase == "intent" || *phase == "specify") && is_new {
                     feature_dir_name = feature::resolve_feature(None, &project_root)?;
                     feature_dir = project_root.join("specs").join(&feature_dir_name);
                 }
@@ -291,19 +293,30 @@ fn check_agent_availability(
 fn execute_phase(
     phase: &str,
     feature_dir_name: &str,
-    _feature_dir: &std::path::Path,
+    feature_dir: &std::path::Path,
     project_root: &std::path::Path,
     agent: &str,
     new_desc: Option<&str>,
     auto: bool,
     agent_mode: &AgentMode,
+    schema: &str,
 ) -> Result<String> {
     match phase {
+        "intent" => {
+            let desc = new_desc.unwrap_or(feature_dir_name);
+            crate::cli::intent::run(desc, None)?;
+            Ok("intent.md created".into())
+        }
         "specify" => {
             let desc = new_desc.unwrap_or(feature_dir_name);
-            crate::cli::specify::run(desc)?;
+            // In IDSD mode the intent phase already created the feature dir.
+            // Use run_for_existing so specify doesn't allocate a new feature number.
+            if schema == "intent-driven" && feature_dir.exists() {
+                crate::cli::specify::run_for_existing(feature_dir_name, desc, schema)?;
+            } else {
+                crate::cli::specify::run(desc)?;
+            }
 
-            // After scaffold creation, invoke AI agent to fill content
             if *agent_mode != AgentMode::Disabled {
                 invoke_or_handoff(
                     agent,
@@ -325,7 +338,7 @@ fn execute_phase(
             Ok("clarification complete".into())
         }
         "plan" => {
-            crate::cli::plan::run(Some(feature_dir_name))?;
+            crate::cli::plan::run(Some(feature_dir_name), Some(schema))?;
 
             if *agent_mode != AgentMode::Disabled {
                 invoke_or_handoff(agent, phase, feature_dir_name, project_root, None, auto)?;
@@ -363,6 +376,10 @@ fn execute_phase(
                 std::io::stdin().read_line(&mut input)?;
             }
             Ok("user-confirmed".into())
+        }
+        "evidence" => {
+            crate::cli::evidence::run(Some(feature_dir_name), false)?;
+            Ok("evidence-report.md written".into())
         }
         "analyze" => {
             crate::cli::analyze::run(Some(feature_dir_name))?;
@@ -438,12 +455,14 @@ fn invoke_or_handoff(
 
 fn skip_reason(phase: &str, _feature_dir: &std::path::Path) -> String {
     match phase {
+        "intent" => "intent.md already exists".into(),
         "specify" => "spec.md already exists".into(),
         "clarify" => "no [NEEDS CLARIFICATION] markers".into(),
         "plan" => "plan.md already exists".into(),
         "tasks" => "tasks.md already exists".into(),
         "tests" => "tests/ directory exists".into(),
         "implement" => "all tasks completed".into(),
+        "evidence" => "evidence-report.md already exists".into(),
         "analyze" => "never skipped".into(),
         "review" => "review-report.md already exists".into(),
         _ => "condition met".into(),

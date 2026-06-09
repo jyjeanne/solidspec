@@ -52,3 +52,9 @@ artifacts:
     requires: ["spec"]
     instruction: "Perform comprehensive spec quality review. Check placeholders, ambiguous language, requirement quality, acceptance scenario coverage, and security heuristics. Score dimensions 0-10."
     template: null
+
+  - id: ship
+    generates: ["ship-report.md"]
+    requires: ["analyze", "review"]
+    instruction: "Run 'solidspec ship' to execute parallel fan-out review (code, security, tests, performance) and produce a SHIP/HOLD decision. ship-report.md contains per-lane scores and blocking findings."
+    template: null

@@ -42,10 +42,11 @@ pub mod builtin {
     pub const SPEC_DRIVEN: &str = include_str!("../../schemas/spec-driven/schema.yaml");
     pub const MINIMAL: &str = include_str!("../../schemas/minimal/schema.yaml");
     pub const SECURITY_FIRST: &str = include_str!("../../schemas/security-first/schema.yaml");
+    pub const INTENT_DRIVEN: &str = include_str!("../../schemas/intent-driven/schema.yaml");
 
     #[allow(dead_code)]
     pub fn names() -> Vec<&'static str> {
-        vec!["spec-driven", "minimal", "security-first"]
+        vec!["spec-driven", "minimal", "security-first", "intent-driven"]
     }
 
     pub fn by_name(name: &str) -> Option<&'static str> {
@@ -53,6 +54,7 @@ pub mod builtin {
             "spec-driven" => Some(SPEC_DRIVEN),
             "minimal" => Some(MINIMAL),
             "security-first" => Some(SECURITY_FIRST),
+            "intent-driven" => Some(INTENT_DRIVEN),
             _ => None,
         }
     }
@@ -200,7 +202,7 @@ mod tests {
         let schema = WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap();
         assert_eq!(schema.name, "spec-driven");
         assert_eq!(schema.version, "1.0");
-        assert_eq!(schema.artifacts.len(), 8);
+        assert_eq!(schema.artifacts.len(), 9);
     }
 
     #[test]
@@ -224,7 +226,7 @@ mod tests {
         let schema = WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap();
         let graph = schema.into_graph().unwrap();
         let order = graph.topological_order().unwrap();
-        assert_eq!(order.len(), 8);
+        assert_eq!(order.len(), 9);
     }
 
     #[test]
@@ -265,6 +267,60 @@ artifacts:
         let (schema, source) = resolve_schema("custom", dir.path()).unwrap();
         assert_eq!(schema.name, "custom");
         matches!(source, SchemaSource::ProjectLocal(_));
+    }
+
+    #[test]
+    fn spec_driven_schema_has_ship_artifact() {
+        let schema = WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap();
+        let ship = schema.artifacts.iter().find(|a| a.id == "ship");
+        assert!(
+            ship.is_some(),
+            "spec-driven schema must contain a 'ship' artifact"
+        );
+        let ship = ship.unwrap();
+        assert!(
+            ship.requires.contains(&"analyze".to_string()),
+            "ship must require analyze"
+        );
+        assert!(
+            ship.requires.contains(&"review".to_string()),
+            "ship must require review"
+        );
+    }
+
+    #[test]
+    fn intent_driven_schema_has_ship_artifact() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_DRIVEN).unwrap();
+        assert_eq!(
+            schema.artifacts.len(),
+            11,
+            "intent-driven schema must have 11 artifacts"
+        );
+        let ship = schema.artifacts.iter().find(|a| a.id == "ship");
+        assert!(
+            ship.is_some(),
+            "intent-driven schema must contain a 'ship' artifact"
+        );
+    }
+
+    #[test]
+    fn intent_driven_schema_has_evidence_artifact() {
+        let schema = WorkflowSchema::parse(builtin::INTENT_DRIVEN).unwrap();
+        assert_eq!(schema.name, "intent-driven");
+        let evidence = schema.artifacts.iter().find(|a| a.id == "evidence");
+        assert!(
+            evidence.is_some(),
+            "intent-driven schema must contain an 'evidence' artifact"
+        );
+        let ev = evidence.unwrap();
+        assert!(
+            ev.requires.contains(&"implement".to_string()),
+            "evidence must require implement"
+        );
+        assert!(
+            ev.requires.contains(&"tests".to_string()),
+            "evidence must require tests"
+        );
     }
 
     #[test]

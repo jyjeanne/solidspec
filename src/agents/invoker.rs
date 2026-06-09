@@ -286,6 +286,137 @@ fn run_agent_cli(
     }
 }
 
+/// Execute the agent CLI with stdout captured and returned as a `String`.
+///
+/// Used by fan-out review lanes that need to parse the agent's score and
+/// findings from its stdout. Stdout is drained by a reader thread to prevent
+/// pipe-buffer deadlocks when the agent produces large output.
+fn run_agent_cli_capture(
+    agent: &AgentConfig,
+    binary_path: &Path,
+    prompt: &str,
+    working_dir: &Path,
+    timeout_secs: u64,
+) -> Result<String> {
+    use std::io::Read;
+    use std::process::Stdio;
+
+    let mut cmd = Command::new(binary_path);
+    cmd.current_dir(working_dir);
+    cmd.stdout(Stdio::piped());
+
+    match agent.id {
+        "codex" => {
+            cmd.arg("exec").arg(prompt);
+        }
+        "kimi" => {
+            cmd.arg("--yolo").arg(prompt);
+        }
+        _ => {
+            cmd.arg(agent.cli_prompt_flag).arg(prompt);
+        }
+    }
+    for flag in agent.cli_extra_flags {
+        cmd.arg(flag);
+    }
+
+    let mut child = cmd
+        .spawn()
+        .with_context(|| format!("Failed to spawn '{}' CLI", agent.cli_binary))?;
+
+    // Drain stdout in a dedicated thread to prevent pipe-buffer deadlock.
+    let stdout_reader = child.stdout.take().map(|mut pipe| {
+        thread::spawn(move || {
+            let mut buf = String::new();
+            let _ = pipe.read_to_string(&mut buf);
+            buf
+        })
+    });
+
+    let poll = Duration::from_millis(AGENT_POLL_INTERVAL_MS);
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
+
+    let exit_status = loop {
+        match child.try_wait()? {
+            Some(status) => break status,
+            None if Instant::now() >= deadline => {
+                child.kill()?;
+                child.wait()?;
+                anyhow::bail!(
+                    "{} CLI timed out after {} seconds",
+                    agent.name,
+                    timeout_secs
+                );
+            }
+            None => thread::sleep(poll),
+        }
+    };
+
+    let output = stdout_reader
+        .and_then(|h| h.join().ok())
+        .unwrap_or_default();
+
+    if exit_status.success() {
+        log::info!(
+            "{} CLI completed (captured {} chars)",
+            agent.name,
+            output.len()
+        );
+        Ok(output)
+    } else {
+        let code = exit_status.code().unwrap_or(-1);
+        anyhow::bail!("{} CLI exited with code {code}", agent.name)
+    }
+}
+
+/// Invoke an AI agent's CLI with a fully pre-built prompt string.
+///
+/// Unlike [`invoke_agent`], this captures the agent's stdout so the fan-out
+/// engine can extract scores and findings from it. Uses the same
+/// binary-discovery and error paths as [`invoke_agent`].
+// Allow dead_code until fan_out is wired into the binary (Phase 5+).
+#[allow(dead_code)]
+pub fn invoke_agent_with_prompt(
+    agent_id: &str,
+    prompt: &str,
+    project_root: &Path,
+    timeout_secs: u64,
+) -> InvokeResult {
+    let agent = match find_agent(agent_id) {
+        Some(a) => a,
+        None => {
+            return InvokeResult::NotAvailable {
+                reason: format!("Unknown agent '{agent_id}'"),
+            };
+        }
+    };
+
+    if agent.cli_binary.is_empty() {
+        return InvokeResult::NotAvailable {
+            reason: format!("{} does not support CLI invocation", agent.name),
+        };
+    }
+
+    let binary_path = match find_binary(agent.cli_binary) {
+        Some(p) => p,
+        None => {
+            return InvokeResult::NotAvailable {
+                reason: format!(
+                    "'{}' CLI not found. Install {} or add it to PATH.",
+                    agent.cli_binary, agent.name
+                ),
+            };
+        }
+    };
+
+    match run_agent_cli_capture(agent, &binary_path, prompt, project_root, timeout_secs) {
+        Ok(output) => InvokeResult::Success { output },
+        Err(e) => InvokeResult::Failed {
+            error: format!("{e}"),
+        },
+    }
+}
+
 /// Check if an agent supports CLI invocation.
 pub fn supports_cli(agent_id: &str) -> bool {
     find_agent(agent_id)
@@ -359,6 +490,26 @@ mod tests {
         // windsurf has empty cli_binary
         let result = invoke_agent("windsurf", "specify", "001", Path::new("."), None, None);
         matches!(result, InvokeResult::NotAvailable { .. });
+    }
+
+    #[test]
+    fn invoke_agent_with_prompt_unknown_agent_returns_not_available() {
+        let result =
+            invoke_agent_with_prompt("nonexistent-agent", "custom prompt", Path::new("."), 300);
+        assert!(
+            matches!(result, InvokeResult::NotAvailable { .. }),
+            "expected NotAvailable for unknown agent"
+        );
+    }
+
+    #[test]
+    fn invoke_agent_with_prompt_no_cli_agent_returns_not_available() {
+        // windsurf has an empty cli_binary — must not attempt to spawn
+        let result = invoke_agent_with_prompt("windsurf", "custom prompt", Path::new("."), 300);
+        assert!(
+            matches!(result, InvokeResult::NotAvailable { .. }),
+            "expected NotAvailable for agent with no CLI binary"
+        );
     }
 
     #[test]

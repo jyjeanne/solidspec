@@ -4,13 +4,16 @@ pub mod check;
 pub mod checklist;
 pub mod clarify;
 pub mod completions;
+pub mod evidence;
 pub mod extension;
 pub mod implement;
 pub mod init;
+pub mod intent;
 pub mod pipeline;
 pub mod plan;
 pub mod preset;
 pub mod review;
+pub mod ship;
 pub mod specify;
 pub mod status;
 pub mod tasks;
@@ -58,6 +61,17 @@ pub enum Commands {
         /// Target AI agent (e.g., copilot, claude, cursor). Auto-detected if omitted.
         #[arg(long)]
         agent: Option<String>,
+    },
+
+    /// Capture the intent for a new or existing feature (IDSD workflow)
+    Intent {
+        /// Intent title — describes why this capability should exist
+        #[arg(name = "title")]
+        title: String,
+
+        /// Add intent to an existing feature by ID (e.g., 001) instead of creating a new feature
+        #[arg(long)]
+        feature: Option<String>,
     },
 
     /// Create a new feature specification
@@ -111,6 +125,16 @@ pub enum Commands {
         /// Preview without writing files
         #[arg(long)]
         dry_run: bool,
+    },
+
+    /// Collect evidence satisfaction from implemented test scaffolds (IDSD workflow)
+    Evidence {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Update intent.md Status based on satisfaction rate
+        #[arg(long)]
+        update: bool,
     },
 
     /// Validate cross-artifact consistency (read-only)
@@ -171,6 +195,10 @@ pub enum Commands {
         /// Scaffold only — skip AI agent invocation (generate templates without filling)
         #[arg(long)]
         no_agent: bool,
+
+        /// Workflow schema to use (default: spec-driven; use intent-driven for IDSD)
+        #[arg(long, default_value = "spec-driven")]
+        schema: String,
     },
 
     /// Manage workflow presets
@@ -216,6 +244,52 @@ pub enum Commands {
         #[arg(long, default_value = "spec-driven")]
         schema: String,
     },
+
+    /// Run concurrent parallel fan-out review and produce a SHIP / HOLD decision
+    Ship {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Run only these lanes: comma-separated subset of code,security,tests,perf
+        #[arg(long, value_delimiter = ',')]
+        lane: Vec<String>,
+
+        /// Exit with code 1 when decision is HOLD (for CI gates)
+        #[arg(long)]
+        fail_on_hold: bool,
+
+        /// Override agent for the code review lane
+        #[arg(long)]
+        code_agent: Option<String>,
+
+        /// Override agent for the security audit lane
+        #[arg(long)]
+        security_agent: Option<String>,
+
+        /// Override agent for the test coverage lane
+        #[arg(long)]
+        tests_agent: Option<String>,
+
+        /// Override agent for the performance lane
+        #[arg(long)]
+        perf_agent: Option<String>,
+
+        /// Use heuristic checks only (no AI agents)
+        #[arg(long)]
+        no_agent: bool,
+
+        /// Preview planned lanes without executing
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Per-lane timeout in seconds (default: 300)
+        #[arg(long, default_value = "300")]
+        timeout: u64,
+
+        /// Treat timed-out lanes as non-blocking
+        #[arg(long)]
+        ignore_timeout: bool,
+    },
 }
 
 pub fn run(cli: Cli) -> Result<()> {
@@ -229,9 +303,10 @@ pub fn run(cli: Cli) -> Result<()> {
             force,
             agent,
         } => init::run(name, here, no_git, force, agent),
+        Commands::Intent { title, feature } => intent::run(&title, feature.as_deref()),
         Commands::Specify { feature_name } => specify::run(&feature_name),
         Commands::Clarify { feature_id } => clarify::run(feature_id.as_deref()),
-        Commands::Plan { feature_id } => plan::run(feature_id.as_deref()),
+        Commands::Plan { feature_id } => plan::run(feature_id.as_deref(), None),
         Commands::Tasks { feature_id } => tasks::run(feature_id.as_deref()),
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
         Commands::Tests {
@@ -245,6 +320,7 @@ pub fn run(cli: Cli) -> Result<()> {
             output.as_deref(),
             dry_run,
         ),
+        Commands::Evidence { feature_id, update } => evidence::run(feature_id.as_deref(), update),
         Commands::Analyze { feature_id } => analyze::run(feature_id.as_deref()),
         Commands::Review { feature_id } => review::run(feature_id.as_deref()),
         Commands::Checklist { feature_id, append } => checklist::run(feature_id.as_deref(), append),
@@ -258,6 +334,7 @@ pub fn run(cli: Cli) -> Result<()> {
             dry_run,
             auto,
             no_agent,
+            schema,
         } => pipeline::run(
             feature_id.as_deref(),
             new.as_deref(),
@@ -268,6 +345,7 @@ pub fn run(cli: Cli) -> Result<()> {
             dry_run,
             auto,
             no_agent,
+            &schema,
         ),
         Commands::Preset { command } => preset::run(command),
         Commands::Change { command } => change::run(command),
@@ -276,5 +354,30 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
         Commands::Status { feature_id, schema } => status::run(feature_id.as_deref(), &schema),
+        Commands::Ship {
+            feature_id,
+            lane,
+            fail_on_hold,
+            code_agent,
+            security_agent,
+            tests_agent,
+            perf_agent,
+            no_agent,
+            dry_run,
+            timeout,
+            ignore_timeout,
+        } => ship::run(
+            feature_id.as_deref(),
+            lane,
+            fail_on_hold,
+            code_agent,
+            tests_agent,
+            security_agent,
+            perf_agent,
+            no_agent,
+            dry_run,
+            timeout,
+            ignore_timeout,
+        ),
     }
 }

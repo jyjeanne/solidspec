@@ -17,6 +17,9 @@ pub mod embedded {
     pub const CONSTITUTION_TEMPLATE: &str =
         include_str!("../../templates/constitution-template.md");
     pub const AGENT_FILE_TEMPLATE: &str = include_str!("../../templates/agent-file-template.md");
+    pub const INTENT_TEMPLATE: &str = include_str!("../../templates/intent-template.md");
+    pub const IDSD_SPEC_TEMPLATE: &str = include_str!("../../templates/idsd/spec-template.md");
+    pub const IDSD_PLAN_TEMPLATE: &str = include_str!("../../templates/idsd/plan-template.md");
 
     pub fn all() -> Vec<(&'static str, &'static str)> {
         vec![
@@ -26,6 +29,9 @@ pub mod embedded {
             ("checklist-template.md", CHECKLIST_TEMPLATE),
             ("constitution-template.md", CONSTITUTION_TEMPLATE),
             ("agent-file-template.md", AGENT_FILE_TEMPLATE),
+            ("intent-template.md", INTENT_TEMPLATE),
+            ("idsd/spec-template.md", IDSD_SPEC_TEMPLATE),
+            ("idsd/plan-template.md", IDSD_PLAN_TEMPLATE),
         ]
     }
 }
@@ -98,6 +104,9 @@ pub fn copy_embedded_templates(target_dir: &Path) -> Result<()> {
     for (name, content) in embedded::all() {
         let path = target_dir.join(name);
         if !path.exists() {
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
             std::fs::write(&path, content)?;
         }
     }

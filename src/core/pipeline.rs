@@ -5,7 +5,7 @@ use anyhow::Result;
 
 use super::spec_parser;
 
-/// Pipeline phase names in execution order.
+/// Pipeline phase names for the default SDD workflow.
 pub const PHASES: &[&str] = &[
     "specify",
     "clarify",
@@ -13,6 +13,22 @@ pub const PHASES: &[&str] = &[
     "tasks",
     "tests",
     "implement",
+    "analyze",
+    "review",
+];
+
+/// Pipeline phase names for the IDSD workflow (`intent-driven` schema).
+/// Intent is phase 0 — it runs before spec creation.
+/// Evidence runs after implement to measure criterion satisfaction.
+pub const PHASES_IDSD: &[&str] = &[
+    "intent",
+    "specify",
+    "clarify",
+    "plan",
+    "tasks",
+    "tests",
+    "implement",
+    "evidence",
     "analyze",
     "review",
 ];
@@ -61,6 +77,7 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
         return false;
     }
     match phase {
+        "intent" => feature_dir.join("intent.md").exists(),
         "specify" => feature_dir.join("spec.md").exists(),
         "clarify" => {
             let spec_path = feature_dir.join("spec.md");
@@ -93,8 +110,10 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
                 true
             }
         }
+        "evidence" => feature_dir.join("evidence-report.md").exists(),
         "analyze" => false, // never skipped
         "review" => feature_dir.join("review-report.md").exists(),
+        "ship" => feature_dir.join("ship-report.md").exists(),
         _ => false,
     }
 }
@@ -103,38 +122,48 @@ pub fn should_skip(phase: &str, feature_dir: &Path, force: bool) -> bool {
 pub fn phase_type(phase: &str) -> PhaseType {
     match phase {
         "implement" => PhaseType::Handoff,
-        _ => PhaseType::Auto,
+        _ => PhaseType::Auto, // ship, evidence, analyze, review, etc. are all auto
     }
 }
 
-/// Filter phases by --from and --to range.
-pub fn filter_phases(from: Option<&str>, to: Option<&str>) -> Result<Vec<&'static str>> {
+/// Filter phases by --from and --to range for the given schema.
+/// Pass `schema = "intent-driven"` to include the `intent` phase 0.
+pub fn filter_phases(
+    schema: &str,
+    from: Option<&str>,
+    to: Option<&str>,
+) -> Result<Vec<&'static str>> {
+    let all = if schema == "intent-driven" {
+        PHASES_IDSD
+    } else {
+        PHASES
+    };
     let from_idx = if let Some(f) = from {
-        PHASES.iter().position(|p| *p == f).ok_or_else(|| {
-            anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", f, PHASES.join(", "))
+        all.iter().position(|p| *p == f).ok_or_else(|| {
+            anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", f, all.join(", "))
         })?
     } else {
         0
     };
 
     let to_idx = if let Some(t) = to {
-        PHASES.iter().position(|p| *p == t).ok_or_else(|| {
-            anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", t, PHASES.join(", "))
+        all.iter().position(|p| *p == t).ok_or_else(|| {
+            anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", t, all.join(", "))
         })?
     } else {
-        PHASES.len() - 1
+        all.len() - 1
     };
 
     if from_idx > to_idx {
         anyhow::bail!(
             "--from '{}' comes after --to '{}'. Phases run in order: {}",
-            PHASES[from_idx],
-            PHASES[to_idx],
-            PHASES.join(" → ")
+            all[from_idx],
+            all[to_idx],
+            all.join(" → ")
         );
     }
 
-    Ok(PHASES[from_idx..=to_idx].to_vec())
+    Ok(all[from_idx..=to_idx].to_vec())
 }
 
 /// Generate the pipeline log entry for a run.
@@ -201,34 +230,44 @@ mod tests {
 
     #[test]
     fn filter_all_phases() {
-        let phases = filter_phases(None, None).unwrap();
+        let phases = filter_phases("spec-driven", None, None).unwrap();
         assert_eq!(phases.len(), 8);
         assert_eq!(phases[0], "specify");
         assert_eq!(phases[7], "review");
     }
 
     #[test]
+    fn filter_idsd_phases_includes_intent_and_evidence() {
+        let phases = filter_phases("intent-driven", None, None).unwrap();
+        assert_eq!(phases.len(), 10);
+        assert_eq!(phases[0], "intent");
+        assert_eq!(phases[1], "specify");
+        assert_eq!(phases[7], "evidence");
+        assert_eq!(phases[9], "review");
+    }
+
+    #[test]
     fn filter_from_plan_to_tasks() {
-        let phases = filter_phases(Some("plan"), Some("tasks")).unwrap();
+        let phases = filter_phases("spec-driven", Some("plan"), Some("tasks")).unwrap();
         assert_eq!(phases, vec!["plan", "tasks"]);
     }
 
     #[test]
     fn filter_only_one_phase() {
-        let phases = filter_phases(Some("plan"), Some("plan")).unwrap();
+        let phases = filter_phases("spec-driven", Some("plan"), Some("plan")).unwrap();
         assert_eq!(phases, vec!["plan"]);
     }
 
     #[test]
     fn filter_from_after_to_errors() {
-        let result = filter_phases(Some("analyze"), Some("plan"));
+        let result = filter_phases("spec-driven", Some("analyze"), Some("plan"));
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("comes after"));
     }
 
     #[test]
     fn filter_invalid_phase_errors() {
-        let result = filter_phases(Some("nonexistent"), None);
+        let result = filter_phases("spec-driven", Some("nonexistent"), None);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Unknown phase"));
     }
@@ -289,10 +328,55 @@ mod tests {
 
     #[test]
     fn phase_types_correct() {
+        assert_eq!(phase_type("intent"), PhaseType::Auto);
         assert_eq!(phase_type("specify"), PhaseType::Auto);
         assert_eq!(phase_type("plan"), PhaseType::Auto);
         assert_eq!(phase_type("implement"), PhaseType::Handoff);
+        assert_eq!(phase_type("evidence"), PhaseType::Auto);
         assert_eq!(phase_type("analyze"), PhaseType::Auto);
+        assert_eq!(phase_type("ship"), PhaseType::Auto);
+    }
+
+    #[test]
+    fn should_skip_ship_when_report_exists() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("ship-report.md"), "<!-- ship: true -->").unwrap();
+        assert!(should_skip("ship", dir.path(), false));
+        assert!(!should_skip("ship", dir.path(), true)); // force overrides
+    }
+
+    #[test]
+    fn should_not_skip_ship_when_report_absent() {
+        let dir = TempDir::new().unwrap();
+        assert!(!should_skip("ship", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_evidence_when_report_exists() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("evidence-report.md"), "# Evidence").unwrap();
+        assert!(should_skip("evidence", dir.path(), false));
+        assert!(!should_skip("evidence", dir.path(), true));
+    }
+
+    #[test]
+    fn should_not_skip_evidence_when_absent() {
+        let dir = TempDir::new().unwrap();
+        assert!(!should_skip("evidence", dir.path(), false));
+    }
+
+    #[test]
+    fn should_skip_intent_when_intent_exists() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("intent.md"), "# Intent: Test").unwrap();
+        assert!(should_skip("intent", dir.path(), false));
+        assert!(!should_skip("intent", dir.path(), true)); // force overrides
+    }
+
+    #[test]
+    fn should_not_skip_intent_when_absent() {
+        let dir = TempDir::new().unwrap();
+        assert!(!should_skip("intent", dir.path(), false));
     }
 
     #[test]

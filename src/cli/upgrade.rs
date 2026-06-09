@@ -90,7 +90,11 @@ mod tests {
 
         // Write templates with old content
         for (name, _) in templates::embedded::all() {
-            std::fs::write(dir.join(".solidspec/templates").join(name), "OLD CONTENT").unwrap();
+            let path = dir.join(".solidspec/templates").join(name);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).unwrap();
+            }
+            std::fs::write(&path, "OLD CONTENT").unwrap();
         }
 
         // Write a custom override

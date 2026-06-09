@@ -4,6 +4,11 @@
 
 SolidSpec is a Rust CLI built with a layered architecture that separates concerns into distinct module trees. The CLI layer handles user interaction, the core layer contains domain logic, and specialized modules handle agent integration, templates, presets, and extensions.
 
+Two workflow modes share the same infrastructure:
+
+- **SDD** (Specification-Driven Development) — 8-phase pipeline, default schema
+- **IDSD** (Intent-Driven Specification Development) — 10-phase pipeline, opt-in via `--schema intent-driven`. Adds intent capture (phase 0), evidence collection (phase 8), drift detection, and a full traceability graph (INT-XXX → FR-XXX → T-XXX → test file)
+
 ```
                         ┌──────────────┐
                         │    main.rs   │
@@ -11,7 +16,7 @@ SolidSpec is a Rust CLI built with a layered architecture that separates concern
                         └──────┬───────┘
                                │
                         ┌──────▼───────┐
-                        │   cli/mod    │  15 subcommands
+                        │   cli/mod    │  19 subcommands
                         │   (clap)     │
                         └──┬───┬───┬───┘
                            │   │   │
@@ -44,18 +49,20 @@ Thin handlers for each CLI subcommand. Each file maps to one command. No busines
 |------|---------|---------------|
 | `mod.rs` | — | Clap `Cli` struct, `Commands` enum, dispatch |
 | `init.rs` | `init` | Bootstrap project, register agents, create git repo |
-| `specify.rs` | `specify` | Create feature branch + spec from template |
+| `intent.rs` | `intent` | **[IDSD]** Capture ICE model into `intent.md`; creates feature dir, writes intent template |
+| `specify.rs` | `specify` | Create feature branch + spec from template; selects IDSD spec template when schema is `intent-driven` |
 | `clarify.rs` | `clarify` | Identify markers, generate questions |
-| `plan.rs` | `plan` | Generate plan + supporting docs, constitution checks |
+| `plan.rs` | `plan` | Generate plan + supporting docs, constitution checks; injects `intent_goal/constraints/evidence` vars in IDSD mode |
 | `tasks.rs` | `tasks` | Generate phased task breakdown |
 | `implement.rs` | `implement` | Parse tasks, fire hooks, list pending work |
 | `tests_cmd.rs` | `tests` | Generate test scaffolds from acceptance scenarios |
-| `analyze.rs` | `analyze` | Run consistency analysis, print report |
+| `evidence.rs` | `evidence` | **[IDSD]** Cross-reference evidence criteria against implemented test scaffolds; write `evidence-report.md`; optionally rewrite `intent.md` Status |
+| `analyze.rs` | `analyze` | Run consistency analysis, print report; shows trace tree and intent coverage in IDSD mode |
 | `checklist.rs` | `checklist` | Generate/append quality checklists |
-| `review.rs` | `review` | Preflight spec quality review with dimension scoring |
-| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (7 phases) with agent CLI invocation |
+| `review.rs` | `review` | Preflight spec quality review with dimension scoring (8 dimensions in IDSD mode) |
+| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (8 SDD / 10 IDSD phases) with agent CLI invocation |
 | `change.rs` | `change` | Change-based workflow: propose, list, archive (delta specs) |
-| `status.rs` | `status` | DAG-based artifact completion status (schema-driven) |
+| `status.rs` | `status` | DAG-based artifact completion status; shows intent drift in IDSD mode |
 | `check.rs` | `check` | Verify prerequisites |
 | `preset.rs` | `preset` | Preset CRUD subcommands |
 | `extension.rs` | `extension` | Extension CRUD subcommands |
@@ -70,16 +77,17 @@ Pure business logic with no CLI dependency. Can be used as a library.
 | File | Responsibility |
 |------|---------------|
 | `spec_parser.rs` | Parse `spec.md` into `ParsedSpec` (stories, requirements, markers, entities) |
-| `artifact_graph.rs` | DAG engine: artifact nodes, Kahn's algorithm topological sort, completion detection, state computation |
-| `schema.rs` | Workflow schema loading (YAML), 3-level resolution (project-local → built-in → default), 3 built-in schemas |
-| `review.rs` | Preflight spec quality review, dimension scoring, placeholder detection |
-| `review.rs` | Preflight spec quality review, dimension scoring, placeholder detection |
+| `intent_parser.rs` | **[IDSD]** Parse `intent.md` into `IntentSpec` (ICE model: goal, constraints, evidence, risks, open questions). `IntentStatus` enum (Draft/Active/Satisfied/Drifted). `EvidenceCriterion` and `IntentDrift` types |
+| `artifact_graph.rs` | DAG engine: Kahn's topological sort, completion detection, state computation. **[IDSD]** `TraceGraph` / `TraceLink` / `TraceLinkType` — builds full `INT-XXX → FR-XXX → T-XXX → test_file` chain via `build_trace_graph()`; renders as ASCII tree via `format_tree()` |
+| `schema.rs` | Workflow schema loading (YAML), 3-level resolution (project-local → built-in → default), 4 built-in schemas |
+| `evidence.rs` | **[IDSD]** `EvidenceCriterionResult`, `EvidenceReport`, `collect_evidence()` (keyword-match evidence criteria against implemented test scaffolds), `update_intent_status()` (in-place rewrite of `intent.md` Status field), `format_evidence_report()` |
+| `review.rs` | Preflight spec quality review, 8 dimension scoring (7 base + `IntentAlignment`), placeholder detection. **[IDSD]** `review_intent_alignment()` — scores FR-XXX traceability to evidence criteria; penalizes draft status |
 | `change.rs` | Change-based workflow: delta spec parser (ADDED/MODIFIED/REMOVED), archive merge engine, change metadata |
-| `constitution.rs` | Load constitution, parse gates, check plan compliance |
+| `constitution.rs` | Load constitution, parse gates, check plan compliance. **[IDSD]** `check_intent_constraints()` — validates plan against intent constraints |
 | `task_generator.rs` | Generate `TaskList` from spec + plan, organize by phases |
 | `test_generator.rs` | Extract Given/When/Then scenarios, detect framework, generate test scaffolds |
-| `pipeline.rs` | Pipeline phase definitions, skip conditions, filtering, log generation |
-| `analyzer.rs` | Cross-artifact consistency validation, severity heuristic |
+| `pipeline.rs` | Phase list constants (`PHASES` 8-phase SDD, `PHASES_IDSD` 10-phase), skip conditions, phase type (Auto/Handoff), filtering, log generation |
+| `analyzer.rs` | Cross-artifact consistency validation, severity heuristics. **[IDSD]** `compute_drift()` — intent evidence vs implemented tests; `AnalysisReport` gains `trace_graph: Option<TraceGraph>` and `intent_coverage: Option<f64>`; orphaned-FR findings when tasks.md exists but doesn't reference a spec requirement |
 | `feature.rs` | Feature numbering, branch name generation, 4-level resolution |
 | `git.rs` | Git operations: init, branch creation, current branch detection |
 | `errors.rs` | Typed error enum `SolidSpecError` with what/where/fix |
@@ -117,7 +125,7 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 
 | File | Responsibility |
 |------|---------------|
-| `mod.rs` | Tera rendering (autoescape disabled), embedded template constants |
+| `mod.rs` | Tera rendering (autoescape disabled), embedded template constants. **[IDSD]** `INTENT_TEMPLATE`, `IDSD_SPEC_TEMPLATE`, `IDSD_PLAN_TEMPLATE` embedded via `include_str!` |
 | `resolver.rs` | 4-layer resolution: overrides > presets > extensions > embedded |
 
 **Resolution hierarchy:**
@@ -127,6 +135,11 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 3. .solidspec/extensions/<id>/templates/
 4. Embedded in binary (include_str!)
 ```
+
+**IDSD templates** (in `templates/`):
+- `intent-template.md` — ICE scaffold (Goal / Constraints / Evidence / Risks / Open Questions)
+- `idsd/spec-template.md` — SDD spec template + `## Intent Reference` header
+- `idsd/plan-template.md` — SDD plan template + `## Intent Reference` section with `{{ intent_goal }}`, `{{ intent_constraints }}`, `{{ intent_evidence }}`
 
 ### `src/presets/` — Preset System
 
@@ -149,11 +162,13 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 
 | File | Responsibility |
 |------|---------------|
-| `mod.rs` | `RootConfig` (solidspec.toml), `PipelineConfig` (per-phase agent mapping), `ProjectInternalConfig`, `InitOptions`, project root finder |
+| `mod.rs` | `RootConfig` (solidspec.toml), `PipelineConfig` (per-phase agent mapping, schema field), `ProjectInternalConfig`, `InitOptions`, project root finder |
+
+---
 
 ## Data Flow
 
-### Specify → Plan → Tasks Pipeline
+### SDD: Specify → Plan → Tasks Pipeline
 
 ```
 User description
@@ -169,6 +184,116 @@ User description
 └─────────────┘    │ - quickstart │    └───────────────┘
                    │ - AGENT.md   │
                    └──────────────┘
+```
+
+### IDSD: Full 10-Phase Chain
+
+```
+solidspec intent "title"
+      │
+      ▼
+┌─────────────┐
+│   intent    │  Phase 0 (IDSD only)
+│             │
+│ - intent.md │  ICE model:
+│   INT-XXX   │  Goal / Constraints / Evidence
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+│   specify   │──>│    plan     │──>│    tasks    │
+│  idsd/spec  │   │  idsd/plan  │   │   tasks.md  │
+│  -template  │   │  +intent    │   │  [FR-001]   │
+│  INT-001 ref│   │  reference  │   │  tags       │
+└─────────────┘   └─────────────┘   └──────┬──────┘
+                                           │
+                                           ▼
+┌─────────────┐                    ┌─────────────┐
+│   evidence  │<───────────────────│  implement  │
+│             │  Phase 8 (IDSD)    │  (handoff)  │
+│ - evidence  │                    └─────────────┘
+│   -report   │
+│   .md       │
+│ - per-      │
+│   criterion │
+│   status    │
+│ - updates   │
+│   intent    │
+│   Status    │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐   ┌─────────────┐
+│   analyze   │──>│   review    │
+│             │   │             │
+│ - trace     │   │ - 8 dims    │
+│   tree      │   │ - Intent    │
+│ - drift     │   │   Alignment │
+│ - orphaned  │   │ - score     │
+│   FRs       │   └─────────────┘
+│ - intent    │
+│   coverage  │
+└─────────────┘
+```
+
+### IDSD Traceability Graph Construction
+
+```
+build_trace_graph(feature_dir)
+      │
+      ├── Read intent.md  →  extract INT-XXX
+      │
+      ├── Read spec.md    →  extract FR-XXX → description
+      │                      (FR_DEF_RE: **FR-001**: text)
+      │
+      ├── Read tasks.md   →  extract T-XXX lines
+      │                      (TASK_LINE_RE: - [ ] T001 ... [FR-001])
+      │                       dedup FR refs per task line
+      │
+      └── Scan tests/     →  for each .md/.ts/.py/.rs/.go file
+                              find T\d+ patterns
+                              (TASK_IN_TEST_RE: \bT(\d+)\b, normalised to T001)
+      │
+      ▼
+Links:
+  INT-XXX → FR-XXX  (IntentToRequirement)
+  FR-XXX  → T-XXX   (RequirementToTask, one per [FR-XXX] tag in task line)
+  T-XXX   → file    (TaskToTest, when file mentions T-number)
+
+Orphaned FRs:
+  FR-XXX present in spec but with zero RequirementToTask links
+  → High finding in analyze (only when tasks.md exists)
+```
+
+### IDSD Intent Drift Computation
+
+```
+compute_drift(feature_dir)
+      │
+      ├── Parse intent.md  →  evidence criteria list
+      │
+      ├── Scan tests/       →  collect scaffold files
+      │                         (.md, .ts, .py, .rs, .go)
+      │
+      ├── Check baseline:   →  if no file has STATUS: IMPLEMENTED
+      │                         return IntentDrift { score: 0.0, unsatisfied: [] }
+      │                         (baseline — not yet measurable)
+      │
+      └── For each criterion:
+            keywords = words ≥ 5 chars from criterion text
+            if keywords empty → short criterion, exact phrase match
+            check: any keyword in implemented_words (word set from IMPLEMENTED tests)
+            if not found → unsatisfied
+
+score = unsatisfied_count / total_criteria * 100
+  → 0%:  all covered (or baseline)
+  → 30%+: High finding
+  → 70%+: Critical finding
+
+intent_coverage (in AnalysisReport):
+  → None at baseline (has_implemented_tests == false)
+  → Some(satisfaction_rate) once any test is IMPLEMENTED
+  → Distinguishes "0% covered" from "baseline: not measured yet"
 ```
 
 ### Template Resolution Flow
@@ -191,6 +316,15 @@ Command needs template
         │
         ▼
   Write to specs/<feature>/
+```
+
+IDSD template selection (in `specify.rs` and `plan.rs`):
+```rust
+let (template_name, fallback) = if effective_schema == "intent-driven" {
+    ("idsd/spec-template.md", IDSD_SPEC_TEMPLATE)
+} else {
+    ("spec-template.md", SPEC_TEMPLATE)
+};
 ```
 
 ### Feature Resolution (4 levels)
@@ -227,57 +361,125 @@ fire_hooks(trigger, project_root, registry)
 ### Pipeline Execution Flow
 
 ```
-solidspec pipeline [--new "desc"] [--from X] [--to Y] [--auto] [--no-agent]
+solidspec pipeline [--new "desc"] [--from X] [--to Y]
+                  [--auto] [--no-agent] [--schema S]
         │
         ▼
+┌─ Select phase list ─────────────────────────────────┐
+│  schema == "intent-driven"                           │
+│    → PHASES_IDSD: intent→specify→clarify→plan→tasks  │
+│                   →tests→implement→evidence→analyze  │
+│                   →review  (10 phases)               │
+│  else                                                │
+│    → PHASES: specify→clarify→plan→tasks→tests        │
+│              →implement→analyze→review  (8 phases)   │
+└─────────────────────┬───────────────────────────────┘
+                      │
+        ▼─────────────┘
 ┌─ Resolve feature ──────────────────────────────┐
 │  --new → next_feature_number() + branch name    │
 │  else  → 4-level feature resolution             │
-└─────────────────────┬───────────────────────────┘
+└─────────────────────┬──────────────────────────┘
                       │
         ▼─────────────┘
 ┌─ Check agent availability ─────────────────────┐
 │  For each phase, check if agent CLI is in PATH  │
-│  → AllCli (fully automated)                     │
-│  → Mixed (some handoff)                         │
-│  → Disabled (--no-agent, scaffold only)         │
+│  → AllCli / Mixed / Disabled (--no-agent)       │
 └─────────────────────┬──────────────────────────┘
                       │
         ▼─────────────┘
-┌─ For each phase in [specify→clarify→plan→tasks→tests→implement→analyze] ─┐
-│                                                                           │
-│  1. Resolve agent (per-phase config > default_agent)                      │
-│  2. Check skip condition (artifact exists? force?)                        │
-│  3. Generate scaffold:                                                    │
-│     └── call cli::{phase}::run() → creates template files                │
-│  4. Invoke AI agent (unless --no-agent):                                  │
-│     ├── Auto phases → invoker::invoke_agent() with phase-specific prompt  │
-│     │   ├── Success → agent fills templates with real content             │
-│     │   ├── NotAvailable → fall back to handoff (show manual command)     │
-│     │   └── Failed → fall back to handoff (log warning)                   │
-│     └── Handoff phases (implement) → prompt user, wait for Enter          │
-│  5. After specify with --new → re-detect feature dir                      │
-│  6. Record PhaseResult (status, duration, output)                         │
-│                                                                           │
-└───────────────────────────────────────────────────────────────────────────┘
+┌─ For each phase ───────────────────────────────────────────────┐
+│                                                                 │
+│  1. Resolve agent (per-phase config > default_agent)            │
+│  2. Check skip condition (artifact exists? force?)              │
+│  3. Execute phase:                                              │
+│     ├── "intent"    → intent::run()    [IDSD phase 0]          │
+│     ├── "specify"   → specify::run() or run_for_existing()     │
+│     ├── "clarify"   → clarify::run()                           │
+│     ├── "plan"      → plan::run(schema)  [injects intent vars] │
+│     ├── "tasks"     → tasks::run()                              │
+│     ├── "tests"     → tests_cmd::run()                          │
+│     ├── "implement" → HANDOFF (always; user confirms)           │
+│     ├── "evidence"  → evidence::run(false)  [IDSD phase 8]     │
+│     ├── "analyze"   → analyze::run()                            │
+│     └── "review"    → review::run()                             │
+│  4. Invoke AI agent (unless --no-agent or Handoff):             │
+│     ├── Auto phases → invoker::invoke_agent()                   │
+│     └── NotAvailable/Failed → fall back to handoff              │
+│  5. After intent/specify with --new → re-detect feature dir     │
+│  6. Record PhaseResult (status, duration, output)               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
         │
         ▼
   Write specs/<feature>/pipeline-log.md
 ```
 
+### IntentAlignment Review Dimension
+
+```
+preflight_review(feature_dir, project_root)
+        │
+        ├── [checks 1-8: placeholders, sections, ambiguity,
+        │    requirement quality, scenario coverage,
+        │    cross-references, task links, test coverage,
+        │    security hints]
+        │
+        ├── Cap findings at MAX_FINDINGS = 100
+        │
+        └── review_intent_alignment(feature_dir, spec)
+              │
+              ├── intent.md absent → ([], 0.0)  score=0/10
+              │
+              ├── parse_intent fails → ([High: "could not be parsed"], 0.0)
+              │
+              └── intent.md present:
+                    penalty = 0
+                    if status == Draft → High finding, penalty += 3
+                    for each FR-XXX:
+                      keywords = words ≥ 5 chars; fallback ≥ 3 chars
+                      if no evidence criterion contains keyword:
+                        Medium finding, penalty += 1.5
+                    score = max(0, 10 - penalty)
+              │
+              ▼
+        DimensionScore { dimension: IntentAlignment, score, max: 10.0 }
+        (appended after cap — never truncated)
+
+format_review_report():
+  → "## Intent Alignment" section (dedicated, not in general Findings)
+  → "## Findings (N)" excludes IntentAlignment findings (shown above)
+  → "No issues found" only if report.findings.is_empty() (all dims)
+```
+
+### Evidence Baseline vs Satisfied Distinction
+
+```
+At baseline (no tests marked STATUS: IMPLEMENTED):
+  compute_drift()   → IntentDrift { score: 0.0, unsatisfied: [] }
+  collect_evidence() → EvidenceReport { has_implemented_tests: false, satisfaction_rate: 0.0 }
+
+In AnalysisReport:
+  intent_drift    = Some(IntentDrift { score: 0.0 })
+  intent_coverage = None  ← signals "not measurable yet"
+
+In format_report():
+  if drift.unsatisfied.is_empty():
+    if intent_coverage.is_some() → "✓ all evidence criteria satisfied"
+    else                         → "(baseline — no tests implemented yet)"
+
+After first implementation (≥1 test is STATUS: IMPLEMENTED):
+  intent_coverage = Some(satisfaction_rate)  ← measured value
+```
+
 ### Agent CLI Invocation Flow
 
 ```
-Pipeline Auto phase (specify, plan, tasks, tests, analyze)
+Pipeline Auto phase
         │
         ▼
 ┌─ invoker::build_phase_prompt() ────────────────┐
-│  Generate phase-specific instructions:          │
-│  - specify: "Fill spec.md with user stories..." │
-│  - plan: "Fill plan.md, research.md, ..."       │
-│  - tasks: "Fill tasks.md with actionable..."    │
-│  - tests: "Enhance test scaffolds..."           │
-│  - analyze: "Validate consistency..."           │
+│  Generate phase-specific instructions           │
 └─────────────────────┬──────────────────────────┘
                       │
         ▼─────────────┘
@@ -287,38 +489,13 @@ Pipeline Auto phase (specify, plan, tasks, tests, analyze)
 │  3. Check binary exists in PATH (which::which)  │
 │  4. Build Command:                              │
 │     ├── claude: claude -p "prompt" --allowedTools│
-│     ├── vibe: vibe -p "prompt" --max-turns 25   │
-│     ├── codex: codex exec "prompt"              │
-│     ├── kimi: kimi --yolo "prompt"              │
+│     ├── vibe:   vibe -p "prompt" --max-turns 25 │
+│     ├── codex:  codex exec "prompt"             │
+│     ├── kimi:   kimi --yolo "prompt"            │
 │     └── others: {binary} {flag} "prompt"        │
 │  5. Execute with current_dir = project_root     │
 │  6. Return Success/NotAvailable/Failed          │
 └─────────────────────────────────────────────────┘
-```
-
-### Spec-to-Test Generation Flow
-
-```
-solidspec tests [feature-id] [--framework X] [--output-dir Y]
-        │
-        ▼
-┌─ test_generator::extract_scenarios(spec_text) ─┐
-│  Parse Given/When/Then blocks from spec.md      │
-│  Group by user story index                      │
-└─────────────────────┬──────────────────────────┘
-                      │
-        ▼─────────────┘
-┌─ Detect framework ──────────────────────────────┐
-│  --framework flag > Cargo.toml/package.json/etc  │
-│  Fallback: generic                               │
-└─────────────────────┬───────────────────────────┘
-                      │
-        ▼─────────────┘
-┌─ Render test scaffolds ─────────────────────────┐
-│  Jest (.test.js) │ pytest (.py) │ Cargo (.rs)    │
-│  Go (_test.go)   │ generic (.test.txt)           │
-│  One file per user story                         │
-└──────────────────────────────────────────────────┘
 ```
 
 ### Change-Based Workflow (Delta Specs)
@@ -327,24 +504,16 @@ solidspec tests [feature-id] [--framework X] [--output-dir Y]
 solidspec change propose "Add social login"
         │
         ▼
-┌─ create_change(feature_dir, title) ─────────────────┐
-│  1. Generate slug from title (lowercase-hyphens)     │
-│  2. Create specs/<id>/changes/<slug>/ directory      │
-│  3. Write proposal.md (Why/What/Impact/Non-Goals)    │
-│  4. Write delta-spec.md (ADDED/MODIFIED/REMOVED)     │
-│  5. Write .change.yaml (metadata: status, created_at)│
+┌─ create_change() ───────────────────────────────────┐
+│  1. Generate slug, create specs/<id>/changes/<slug>/ │
+│  2. Write proposal.md + delta-spec.md + .change.yaml │
 └──────────────────────┬──────────────────────────────┘
-                       │
-        User edits proposal + delta-spec
-                       │
+                       │ (user edits)
                        ▼
-┌─ archive_change(feature_dir, slug) ──────────────────┐
+┌─ archive_change() ────────────────────────────────────┐
 │  1. Parse delta-spec.md → DeltaSpec                   │
-│  2. Read main spec.md                                 │
-│  3. merge_deltas(): remove → modify → append          │
-│  4. Write merged spec.md                              │
-│  5. Move change to changes/archive/<slug>/            │
-│  6. Update metadata → status: archived                │
+│  2. merge_deltas(): remove → modify → append          │
+│  3. Write merged spec.md, move to archive/             │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -355,27 +524,22 @@ solidspec status [feature-id] [--schema X]
         │
         ▼
 ┌─ schema::load_graph(name, root) ──────────────────┐
-│  1. Check .solidspec/workflows/<name>/schema.yaml  │
-│  2. Fall back to built-in schema                   │
-│  3. Fall back to default (spec-driven)             │
+│  3-level: project-local → built-in → default       │
 └────────────────────┬───────────────────────────────┘
-                     │
                      ▼
 ┌─ graph.detect_completion(feature_dir) ────────────┐
 │  Scan filesystem for generated artifacts           │
-│  spec.md → spec done, plan.md → plan done, etc.   │
 └────────────────────┬───────────────────────────────┘
-                     │
                      ▼
 ┌─ graph.compute_states(completed) ─────────────────┐
-│  For each artifact:                                │
-│    Done  — file exists                             │
-│    Ready — all deps done, file missing             │
-│    Blocked — waiting on deps                       │
+│  Done / Ready / Blocked (missing deps)             │
 └────────────────────┬───────────────────────────────┘
-                     │
                      ▼
           Print status table (topological order)
+          [IDSD] If intent.md present: show intent drift score
+```
+
+---
 
 ## Key Design Decisions
 
@@ -441,25 +605,52 @@ The `solidspec status` command uses Kahn's algorithm topological sort to compute
 
 ### 16. OpenCode skill system support
 
-SolidSpec generates directory-based skills for OpenCode (`.opencode/skills/solidspec-specify/SKILL.md`) with the required `name:` + `description:` YAML frontmatter per OpenCode's skill discovery protocol. Skills are auto-discovered via the `skill` tool.
+SolidSpec generates directory-based skills for OpenCode (`.opencode/skills/solidspec-specify/SKILL.md`) with the required `name:` + `description:` YAML frontmatter per OpenCode's skill discovery protocol.
 
-### 17. Schema-driven workflows
+### 17. Schema-driven workflows (4 built-in)
 
-Workflows are defined in YAML schema files rather than hardcoded in Rust. Three built-in schemas (spec-driven, minimal, security-first) are shipped with the binary. Users can create project-local overrides in `.solidspec/workflows/<name>/schema.yaml`. Resolution follows a 3-level cascade (project-local → built-in → default).
+Workflows are defined in YAML schema files rather than hardcoded in Rust. Four built-in schemas ship with the binary (`spec-driven`, `minimal`, `security-first`, `intent-driven`). Users can create project-local overrides in `.solidspec/workflows/<name>/schema.yaml`. Resolution follows a 3-level cascade (project-local → built-in → default).
+
+### 18. IDSD additive design
+
+All IDSD features are strictly additive — they activate only when `schema == "intent-driven"` is explicitly set. The `spec-driven` schema YAML is never modified. SDD commands (`specify`, `plan`, `analyze`, `review`, `pipeline`) behave identically in SDD mode. IDSD-specific output (trace tree, drift score, intent coverage, IntentAlignment dimension) only appears when `intent.md` is present or the schema is `intent-driven`.
+
+### 19. IntentAlignment appended after finding cap
+
+The `IntentAlignment` `DimensionScore` is computed by `review_intent_alignment()` and pushed to `dimension_scores` after the 100-finding cap runs. This ensures the IntentAlignment score is always present in the dimension table regardless of how many base-dimension findings exist. IntentAlignment findings are displayed in their own `## Intent Alignment` section, not in the general `## Findings` section.
+
+### 20. Orphaned-FR findings before finding cap, guarded by `has_tasks`
+
+Orphaned-FR findings (FR in spec with no task referencing it) are added to `all_findings` before the `MAX_FINDINGS` cap so they participate in overflow counting. They are only added when `tasks.md` exists (`has_tasks == true`) — when `tasks.md` is absent, the existing "tasks.md missing" finding is sufficient and avoids generating N redundant "FR-XXX has no task" findings.
+
+### 21. Drift vs coverage distinction
+
+`compute_drift()` returns 0% drift at baseline (all tests are `STATUS: NOT IMPLEMENTED`) to avoid false alarms. `intent_coverage` returns `None` at baseline (not `Some(0.0)`) so the report can distinguish "baseline — not measured yet" from "0% coverage measured". `format_report()` uses `intent_coverage.is_some()` as the signal to print "✓ all satisfied" vs "(baseline — no tests implemented yet)" when drift is 0%.
+
+### 22. Traceability regex asymmetry resolved
+
+`TASK_LINE_RE` in `build_trace_graph` matches `T\d+` (any digit count) in `tasks.md`. `TASK_IN_TEST_RE` also matches `T\d+` with left-pad normalisation to T001 format (e.g., `T5` → `T005`) so test-file references to short task IDs can be matched to the zero-padded IDs stored in `task_texts`.
+
+---
 
 ## File Counts
 
-| Category | Files | Tests |
-|----------|-------|-------|
-| CLI commands | 19 | 19 |
-| Core domain | 16 | 130 |
+| Category | Files | Unit Tests |
+|----------|-------|-----------|
+| CLI commands | 21 | 21 |
+| Core domain | 18 | 175 |
 | Agents | 8 | 58 |
 | Templates | 2 | 22 |
 | Presets | 4 | 28 |
 | Extensions | 5 | 40 |
 | Config | 1 | 9 |
 | main.rs | 1 | — |
-| **Total** | **56** | **306** |
+| **Total src** | **60** | **353** |
+| Integration tests | 7 files | 402 total |
+
+Integration test files: `pipeline.rs`, `evidence.rs`, `traceability.rs`, `status.rs`, `change.rs`, `check.rs`, `completions.rs`
+
+---
 
 ## Dependencies
 
@@ -469,7 +660,7 @@ Workflows are defined in YAML schema files rather than hardcoded in Rust. Three 
 | `serde` + `toml` + `serde_yaml` + `serde_json` | Config serialization |
 | `tera` | Template rendering |
 | `git2` | Git operations (libgit2 bindings) |
-| `regex` | Spec parsing, feature numbering |
+| `regex` | Spec parsing, feature numbering, trace graph extraction |
 | `semver` | Version validation |
 | `thiserror` + `anyhow` | Error handling |
 | `console` | Colored output |

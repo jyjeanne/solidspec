@@ -149,6 +149,61 @@ pub fn check_plan_compliance(constitution: &Constitution, plan_content: &str) ->
     results
 }
 
+/// Check that an architecture plan respects the constraints declared in an intent.
+///
+/// This check is **additive** — it only runs when an `IntentSpec` is provided.
+/// It does not modify or remove any existing gate logic.
+pub fn check_intent_constraints(
+    intent: &super::intent_parser::IntentSpec,
+    plan_content: &str,
+) -> GateResult {
+    let plan_lower = plan_content.to_lowercase();
+    let mut violations = Vec::new();
+
+    for constraint in &intent.constraints {
+        // Strip punctuation from each word so "PostgreSQL." matches "postgresql".
+        let cleaned: Vec<String> = constraint
+            .split_whitespace()
+            .map(|w| {
+                w.trim_matches(|c: char| !c.is_alphanumeric())
+                    .to_lowercase()
+            })
+            .filter(|w| !w.is_empty())
+            .collect();
+
+        // Extract key terms (≥5 chars) as the primary signal.
+        // When no long words exist (e.g., "No SQL"), fall back to the full cleaned phrase.
+        let mentioned = {
+            let long_keywords: Vec<&str> = cleaned
+                .iter()
+                .filter(|w| w.len() >= 5)
+                .map(|w| w.as_str())
+                .collect();
+
+            if long_keywords.is_empty() {
+                // Fallback: check if the entire constraint phrase appears verbatim.
+                let phrase = cleaned.join(" ");
+                !phrase.is_empty() && plan_lower.contains(&phrase)
+            } else {
+                long_keywords.iter().any(|kw| plan_lower.contains(*kw))
+            }
+        };
+
+        if !mentioned {
+            violations.push(format!(
+                "Intent constraint not addressed in plan: \"{}\"",
+                constraint
+            ));
+        }
+    }
+
+    GateResult {
+        gate_name: "Intent Constraints Gate".into(),
+        passed: violations.is_empty(),
+        violations,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

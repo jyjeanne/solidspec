@@ -5,6 +5,7 @@ use anyhow::Result;
 use regex::Regex;
 
 use super::errors::SolidSpecError;
+use super::intent_parser;
 use super::spec_parser;
 
 static US_STORY_LINK_RE: LazyLock<Regex> =
@@ -26,6 +27,8 @@ pub enum Dimension {
     Security,
     Performance,
     Maintainability,
+    /// IDSD only — scores 0/10 when `intent.md` is absent.
+    IntentAlignment,
 }
 
 impl std::fmt::Display for Dimension {
@@ -38,6 +41,7 @@ impl std::fmt::Display for Dimension {
             Dimension::Security => write!(f, "Security"),
             Dimension::Performance => write!(f, "Performance"),
             Dimension::Maintainability => write!(f, "Maintainability"),
+            Dimension::IntentAlignment => write!(f, "IntentAlignment"),
         }
     }
 }
@@ -165,7 +169,9 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
         findings.extend(check_security_hints(plan, &spec_content));
     }
 
-    // Cap findings
+    // Cap the 8 base-dimension findings first, before appending IA findings.
+    // This ensures overflow_count reflects only non-IA findings and IA findings
+    // are never silently truncated (which would produce false "all traced" output).
     let overflow_count = if findings.len() > MAX_FINDINGS {
         let overflow = findings.len() - MAX_FINDINGS;
         findings.truncate(MAX_FINDINGS);
@@ -174,8 +180,22 @@ pub fn preflight_review(feature_dir: &Path, _project_root: &Path) -> Result<Revi
         0
     };
 
-    // Score dimensions
-    let dimension_scores = score_dimensions(&findings);
+    // 9. Intent alignment (IDSD; 0/10 when intent.md absent) — appended after cap
+    let (intent_findings, intent_score) = review_intent_alignment(feature_dir, &spec);
+    let intent_finding_count = intent_findings.len();
+    findings.extend(intent_findings);
+
+    // Score the 7 base dimensions via penalty-based helper
+    let mut dimension_scores = score_dimensions(&findings);
+
+    // IntentAlignment score is computed separately (not penalty-based via findings)
+    dimension_scores.push(DimensionScore {
+        dimension: Dimension::IntentAlignment,
+        score: intent_score,
+        max_score: 10.0,
+        finding_count: intent_finding_count,
+    });
+
     let overall_score = if dimension_scores.is_empty() {
         100.0
     } else {
@@ -599,6 +619,113 @@ fn check_security_hints(plan_content: &str, spec_content: &str) -> Vec<ReviewFin
     findings
 }
 
+/// Check intent alignment for the IDSD workflow.
+///
+/// Returns `(findings, score_out_of_10)`.
+/// When `intent.md` is absent the score is `0.0` (0/10) with no findings —
+/// the caller adds the `DimensionScore` directly so the table always shows the row.
+fn review_intent_alignment(
+    feature_dir: &Path,
+    spec: &spec_parser::ParsedSpec,
+) -> (Vec<ReviewFinding>, f64) {
+    let intent_path = feature_dir.join("intent.md");
+    if !intent_path.exists() {
+        return (vec![], 0.0);
+    }
+
+    let intent = match intent_parser::parse_intent(&intent_path) {
+        Ok(i) => i,
+        Err(e) => {
+            return (
+                vec![ReviewFinding {
+                    dimension: Dimension::IntentAlignment,
+                    severity: Severity::High,
+                    message: format!("intent.md could not be parsed: {e}"),
+                    remediation: "Check intent.md format. Run 'solidspec intent' to recreate it."
+                        .into(),
+                    location: Some("intent.md".into()),
+                }],
+                0.0,
+            );
+        }
+    };
+
+    let mut findings = Vec::new();
+    let mut penalty: f64 = 0.0;
+
+    // Intent must not be in 'draft' status before implementation
+    if intent.status == intent_parser::IntentStatus::Draft {
+        findings.push(ReviewFinding {
+            dimension: Dimension::IntentAlignment,
+            severity: Severity::High,
+            message: "Intent is in 'draft' status — must be 'active' before implementation".into(),
+            remediation: "Update the **Status** field in intent.md to 'active'.".into(),
+            location: Some("intent.md".into()),
+        });
+        penalty += 3.0;
+    }
+
+    // Every FR-XXX must trace to at least one evidence criterion (keyword overlap).
+    // Prefer long keywords (≥5 chars); fall back to shorter ones (≥3 chars) for terse
+    // requirements so that "Must log on" still matches "log" in any evidence criterion
+    // rather than requiring an impossible verbatim phrase match.
+    for req in &spec.requirements {
+        let req_keywords: Vec<String> = {
+            let long: Vec<String> = req
+                .text
+                .split_whitespace()
+                .map(|w| {
+                    w.trim_matches(|c: char| !c.is_alphanumeric())
+                        .to_lowercase()
+                })
+                .filter(|w| w.len() >= 5)
+                .collect();
+            if long.is_empty() {
+                req.text
+                    .split_whitespace()
+                    .map(|w| {
+                        w.trim_matches(|c: char| !c.is_alphanumeric())
+                            .to_lowercase()
+                    })
+                    .filter(|w| w.len() >= 3)
+                    .collect()
+            } else {
+                long
+            }
+        };
+
+        let covered = if req_keywords.is_empty() {
+            // All tokens are 1-2 chars (e.g., "FR-001: Do it") — skip tracing check.
+            true
+        } else {
+            intent.evidence.iter().any(|ev| {
+                let ev_lower = ev.to_lowercase();
+                req_keywords.iter().any(|kw| ev_lower.contains(kw.as_str()))
+            })
+        };
+
+        if !covered {
+            findings.push(ReviewFinding {
+                dimension: Dimension::IntentAlignment,
+                severity: Severity::Medium,
+                message: format!(
+                    "{} cannot be traced to any evidence criterion in intent.md",
+                    req.id
+                ),
+                remediation: format!(
+                    "Add an evidence criterion in intent.md that covers the intent of {}.",
+                    req.id
+                ),
+                location: Some("intent.md".into()),
+            });
+            penalty += 1.5;
+        }
+    }
+
+    let score = (10.0 - penalty).max(0.0);
+    (findings, score)
+}
+
 /// Score each dimension based on findings.
 fn score_dimensions(findings: &[ReviewFinding]) -> Vec<DimensionScore> {
     let all_dims = [
@@ -668,8 +795,55 @@ pub fn format_review_report(report: &ReviewReport) -> String {
     }
     out.push('\n');
 
-    // Findings by severity
-    out.push_str(&format!("## Findings ({})", report.findings.len()));
+    // Intent Alignment section
+    out.push_str("## Intent Alignment\n\n");
+    if let Some(ia) = report
+        .dimension_scores
+        .iter()
+        .find(|ds| ds.dimension == Dimension::IntentAlignment)
+    {
+        out.push_str(&format!(
+            "**Score**: {:.0}/{:.0}\n\n",
+            ia.score, ia.max_score
+        ));
+        if ia.finding_count == 0 && ia.score == 0.0 {
+            out.push_str(
+                "`intent.md` not found — IDSD is not active for this feature.\n\
+                 Run `solidspec intent \"<title>\"` to capture intent and enable the IDSD workflow.\n",
+            );
+        } else if ia.finding_count == 0 {
+            out.push_str(
+                "Intent status is valid and all functional requirements \
+                 are traced to evidence criteria.\n",
+            );
+        } else {
+            let ia_findings: Vec<_> = report
+                .findings
+                .iter()
+                .filter(|f| f.dimension == Dimension::IntentAlignment)
+                .collect();
+            for finding in ia_findings {
+                let loc = finding
+                    .location
+                    .as_deref()
+                    .map(|l| format!(" ({l})"))
+                    .unwrap_or_default();
+                out.push_str(&format!(
+                    "- **[{}]**{loc} {}\n  *Fix*: {}\n\n",
+                    finding.severity, finding.message, finding.remediation
+                ));
+            }
+        }
+    }
+    out.push('\n');
+
+    // Findings by severity (excludes IntentAlignment — shown in its own section above)
+    let non_ia_count = report
+        .findings
+        .iter()
+        .filter(|f| f.dimension != Dimension::IntentAlignment)
+        .count();
+    out.push_str(&format!("## Findings ({})", non_ia_count));
     if report.overflow_count > 0 {
         out.push_str(&format!(" (+{} not shown)", report.overflow_count));
     }
@@ -687,7 +861,7 @@ pub fn format_review_report(report: &ReviewReport) -> String {
         let sev_findings: Vec<_> = report
             .findings
             .iter()
-            .filter(|f| &f.severity == sev)
+            .filter(|f| &f.severity == sev && f.dimension != Dimension::IntentAlignment)
             .collect();
         if sev_findings.is_empty() {
             continue;
@@ -925,6 +1099,268 @@ Session managed via tokens.
             plan_before,
             std::fs::read_to_string(feature.join("plan.md")).unwrap(),
             "Review modified plan.md!"
+        );
+    }
+
+    // ── review_intent_alignment() tests ─────────────────────────────────────
+
+    const SAMPLE_INTENT_ACTIVE: &str = r#"# Intent: Auth System
+
+**Intent ID**: INT-001
+**Feature**: 001-auth
+**Created**: 2026-06-01
+**Status**: active
+
+## Goal
+Allow users to authenticate securely.
+
+## Evidence
+- Users can authenticate with valid credentials
+- Password reset email is delivered
+- Session is created after login
+"#;
+
+    const SAMPLE_INTENT_DRAFT: &str = r#"# Intent: Auth System
+
+**Intent ID**: INT-001
+**Feature**: 001-auth
+**Created**: 2026-06-01
+**Status**: draft
+
+## Goal
+Allow users to authenticate securely.
+
+## Evidence
+- Authentication succeeds with valid credentials
+"#;
+
+    fn setup_intent(dir: &Path, content: &str) {
+        std::fs::write(dir.join("intent.md"), content).unwrap();
+    }
+
+    fn minimal_spec_with_reqs() -> spec_parser::ParsedSpec {
+        spec_parser::parse_spec_content(
+            "## Requirements\n\
+             - **FR-001**: System MUST authenticate users\n\
+             - **FR-002**: System MUST allow password resets\n",
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn intent_alignment_zero_score_when_no_intent_md() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+        let spec = minimal_spec_with_reqs();
+
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+        assert_eq!(score, 0.0, "Score must be 0.0 when intent.md is absent");
+        assert!(findings.is_empty(), "No findings when intent.md absent");
+    }
+
+    #[test]
+    fn intent_alignment_high_finding_when_draft_status() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+        setup_intent(&feature, SAMPLE_INTENT_DRAFT);
+        let spec = minimal_spec_with_reqs();
+
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+        assert!(score < 10.0, "Draft status should penalise score");
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.severity == Severity::High && f.message.contains("draft")),
+            "Expected HIGH finding about draft status"
+        );
+    }
+
+    #[test]
+    fn intent_alignment_medium_finding_for_untraced_requirement() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+
+        // Evidence only mentions authentication, not password reset
+        let intent = "# Intent: Auth\n\n\
+                      **Intent ID**: INT-001\n**Feature**: 001-auth\n\
+                      **Created**: 2026-01-01\n**Status**: active\n\n\
+                      ## Goal\nAuth.\n\n\
+                      ## Evidence\n- Authentication succeeds with valid credentials\n";
+        setup_intent(&feature, intent);
+
+        let spec = minimal_spec_with_reqs(); // has FR-001 (authenticate) and FR-002 (password resets)
+
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+        assert!(
+            findings.iter().any(|f| f.severity == Severity::Medium
+                && f.message.contains("FR-002")
+                && f.message.contains("evidence criterion")),
+            "FR-002 not covered by evidence — expected MEDIUM finding"
+        );
+        assert!(score < 10.0);
+    }
+
+    #[test]
+    fn intent_alignment_perfect_score_when_all_requirements_covered() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+        setup_intent(&feature, SAMPLE_INTENT_ACTIVE); // covers authenticate AND password reset
+        let spec = minimal_spec_with_reqs();
+
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+        assert_eq!(score, 10.0, "All requirements covered → 10/10");
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.severity == Severity::Medium || f.severity == Severity::High),
+            "No Medium/High findings when all FRs are traced"
+        );
+    }
+
+    #[test]
+    fn preflight_review_includes_intent_alignment_dimension() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(&feature, GOOD_SPEC, Some(MINIMAL_PLAN), Some(MINIMAL_TASKS));
+        setup_project(dir.path());
+        // No intent.md → IntentAlignment score must be 0/10
+
+        let report = preflight_review(&feature, dir.path()).unwrap();
+        let ia = report
+            .dimension_scores
+            .iter()
+            .find(|ds| ds.dimension == Dimension::IntentAlignment)
+            .expect("IntentAlignment dimension must be present");
+        assert_eq!(ia.score, 0.0);
+        assert_eq!(ia.max_score, 10.0);
+    }
+
+    #[test]
+    fn format_report_contains_intent_alignment_section() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(&feature, GOOD_SPEC, Some(MINIMAL_PLAN), Some(MINIMAL_TASKS));
+        setup_project(dir.path());
+
+        let report = preflight_review(&feature, dir.path()).unwrap();
+        let md = format_review_report(&report);
+        assert!(
+            md.contains("## Intent Alignment"),
+            "Report must contain '## Intent Alignment' section"
+        );
+        assert!(
+            md.contains("0/10"),
+            "Missing intent.md should show 0/10 in Intent Alignment"
+        );
+    }
+
+    #[test]
+    fn intent_alignment_section_shows_traced_when_all_good() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(&feature, GOOD_SPEC, Some(MINIMAL_PLAN), Some(MINIMAL_TASKS));
+        setup_project(dir.path());
+        setup_intent(&feature, SAMPLE_INTENT_ACTIVE);
+
+        let report = preflight_review(&feature, dir.path()).unwrap();
+        let md = format_review_report(&report);
+
+        assert!(md.contains("## Intent Alignment"));
+        let ia = report
+            .dimension_scores
+            .iter()
+            .find(|ds| ds.dimension == Dimension::IntentAlignment)
+            .unwrap();
+        assert!(
+            ia.score > 0.0,
+            "Active intent with covered FRs should score > 0"
+        );
+    }
+
+    // ── Regression tests for confirmed bugs ─────────────────────────────────
+
+    #[test]
+    fn parse_error_shows_high_finding_not_not_found_message() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+        // Write a malformed intent.md (not valid ICE content but parseable as a file)
+        // parse_intent may still succeed for minimal content, so write truly broken UTF-8-like
+        // content that forces a structural parse issue — in practice the parser is lenient,
+        // so write an intent.md that triggers Err via a bad file read by making it a directory.
+        // Instead: directly test review_intent_alignment with a bad file path indirection.
+        // The simplest way: create a directory named intent.md so open() fails.
+        let intent_path = feature.join("intent.md");
+        std::fs::create_dir_all(&intent_path).unwrap(); // directory, not a file → read_to_string fails
+
+        let spec = minimal_spec_with_reqs();
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+
+        // Must return a High finding describing the parse failure, NOT return ([], 0.0)
+        assert_eq!(score, 0.0);
+        assert!(
+            !findings.is_empty(),
+            "Parse failure must produce a finding, not silent ([], 0.0)"
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.severity == Severity::High && f.message.contains("could not be parsed")),
+            "Finding must say 'could not be parsed', got: {:?}",
+            findings.iter().map(|f| &f.message).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn no_issues_message_suppressed_when_ia_has_findings() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        // Use GOOD_SPEC with MINIMAL_PLAN + MINIMAL_TASKS → all non-IA dimensions pass
+        setup_feature(&feature, GOOD_SPEC, Some(MINIMAL_PLAN), Some(MINIMAL_TASKS));
+        setup_project(dir.path());
+        setup_intent(&feature, SAMPLE_INTENT_DRAFT); // draft → HIGH IA finding
+
+        let report = preflight_review(&feature, dir.path()).unwrap();
+        let md = format_review_report(&report);
+
+        assert!(
+            !md.contains("No issues found"),
+            "Must NOT print 'No issues found' when IA has a HIGH finding"
+        );
+        assert!(
+            md.contains("draft"),
+            "Report must show the draft-status finding"
+        );
+    }
+
+    #[test]
+    fn terse_requirements_are_not_false_medium() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        std::fs::create_dir_all(&feature).unwrap();
+
+        // Evidence explicitly covers "log on"
+        let intent = "# Intent: Login\n\n\
+                      **Intent ID**: INT-001\n**Feature**: 001-auth\n\
+                      **Created**: 2026-01-01\n**Status**: active\n\n\
+                      ## Goal\nUsers can log on.\n\n\
+                      ## Evidence\n- Users can log on to the system\n";
+        setup_intent(&feature, intent);
+
+        // Requirement whose keywords are all < 5 chars: "log" (3), "on" (2), "must" (4)
+        let spec = spec_parser::parse_spec_content("## Requirements\n- **FR-001**: Must log on\n")
+            .unwrap();
+
+        let (findings, score) = review_intent_alignment(&feature, &spec);
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.severity == Severity::Medium && f.message.contains("FR-001")),
+            "FR-001 with short keywords should NOT get a false MEDIUM finding (score={score})"
         );
     }
 

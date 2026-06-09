@@ -169,3 +169,76 @@ fn pipeline_dry_run_output_contains_dry_run_marker() {
         .success()
         .stdout(predicate::str::contains("[dry-run]"));
 }
+
+/// P2-T8: IDSD pipeline (--schema intent-driven) creates intent.md first, then spec.md
+#[test]
+fn pipeline_idsd_generates_intent_before_spec() {
+    let dir = TempDir::new().unwrap();
+
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "IDSD test feature",
+            "--schema",
+            "intent-driven",
+            "--no-agent",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let specs_dir = dir.path().join("specs");
+    let feature_dir = std::fs::read_dir(&specs_dir)
+        .unwrap()
+        .flatten()
+        .find(|e| e.file_type().unwrap().is_dir())
+        .expect("No feature directory created")
+        .path();
+
+    assert!(
+        feature_dir.join("intent.md").exists(),
+        "intent.md must be created by IDSD pipeline"
+    );
+    assert!(
+        feature_dir.join("spec.md").exists(),
+        "spec.md must exist after specify phase"
+    );
+}
+
+/// P2-T9: SDD pipeline (default schema) never creates intent.md
+#[test]
+fn pipeline_sdd_unchanged_no_intent_md() {
+    let dir = TempDir::new().unwrap();
+
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["pipeline", "--new", "SDD test feature", "--no-agent"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let specs_dir = dir.path().join("specs");
+    let feature_dir = std::fs::read_dir(&specs_dir)
+        .unwrap()
+        .flatten()
+        .find(|e| e.file_type().unwrap().is_dir())
+        .expect("No feature directory created")
+        .path();
+
+    assert!(
+        !feature_dir.join("intent.md").exists(),
+        "intent.md must NOT be created by SDD pipeline"
+    );
+    assert!(
+        feature_dir.join("spec.md").exists(),
+        "spec.md must exist in SDD pipeline"
+    );
+}

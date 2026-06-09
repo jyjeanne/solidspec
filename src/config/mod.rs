@@ -19,6 +19,8 @@ pub struct RootConfig {
     pub pipeline: PipelineConfig,
     #[serde(default)]
     pub context: ContextConfig,
+    #[serde(default)]
+    pub fan_out: FanOutConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -146,8 +148,11 @@ impl ContextConfig {
 }
 
 /// Pipeline configuration: maps SDD phases to agent IDs.
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PipelineConfig {
+    /// Workflow schema to use. Default: "spec-driven". Use "intent-driven" for IDSD mode.
+    #[serde(default = "default_schema")]
+    pub schema: String,
     #[serde(default)]
     pub specify: Option<String>,
     #[serde(default)]
@@ -164,6 +169,22 @@ pub struct PipelineConfig {
     pub analyze: Option<String>,
     #[serde(default)]
     pub review: Option<String>,
+}
+
+impl Default for PipelineConfig {
+    fn default() -> Self {
+        Self {
+            schema: default_schema(),
+            specify: None,
+            clarify: None,
+            plan: None,
+            tasks: None,
+            tests: None,
+            implement: None,
+            analyze: None,
+            review: None,
+        }
+    }
 }
 
 impl PipelineConfig {
@@ -223,6 +244,76 @@ fn default_true() -> bool {
 fn default_override_dir() -> String {
     ".solidspec/templates/overrides".into()
 }
+fn default_schema() -> String {
+    "spec-driven".into()
+}
+fn default_code_threshold() -> u8 {
+    70
+}
+fn default_security_threshold() -> u8 {
+    80
+}
+fn default_tests_threshold() -> u8 {
+    70
+}
+fn default_perf_threshold() -> u8 {
+    60
+}
+fn default_fanout_timeout() -> u64 {
+    300
+}
+
+/// Fan-out orchestration configuration for `solidspec ship`.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FanOutConfig {
+    /// Override the agent used for the code review lane (None → default_agent).
+    #[serde(default)]
+    pub code_agent: Option<String>,
+    /// Override the agent used for the security audit lane (None → default_agent).
+    #[serde(default)]
+    pub security_agent: Option<String>,
+    /// Override the agent used for the test coverage lane (None → default_agent).
+    #[serde(default)]
+    pub tests_agent: Option<String>,
+    /// Override the agent used for the performance lane (None → default_agent).
+    #[serde(default)]
+    pub perf_agent: Option<String>,
+    /// Score threshold for the code lane (0–100). Below this → HOLD.
+    #[serde(default = "default_code_threshold")]
+    pub code_threshold: u8,
+    /// Score threshold for the security lane (0–100). Below this → HOLD.
+    #[serde(default = "default_security_threshold")]
+    pub security_threshold: u8,
+    /// Score threshold for the test coverage lane (0–100). Below this → HOLD.
+    #[serde(default = "default_tests_threshold")]
+    pub tests_threshold: u8,
+    /// Score threshold for the performance lane (0–100). Below this → HOLD.
+    #[serde(default = "default_perf_threshold")]
+    pub perf_threshold: u8,
+    /// Per-lane timeout in seconds before the lane is killed and marked TimedOut.
+    #[serde(default = "default_fanout_timeout")]
+    pub timeout: u64,
+    /// When true, any Critical finding in any lane blocks shipping regardless of score.
+    #[serde(default = "default_true")]
+    pub block_on_critical: bool,
+}
+
+impl Default for FanOutConfig {
+    fn default() -> Self {
+        Self {
+            code_agent: None,
+            security_agent: None,
+            tests_agent: None,
+            perf_agent: None,
+            code_threshold: default_code_threshold(),
+            security_threshold: default_security_threshold(),
+            tests_threshold: default_tests_threshold(),
+            perf_threshold: default_perf_threshold(),
+            timeout: default_fanout_timeout(),
+            block_on_critical: true,
+        }
+    }
+}
 
 impl RootConfig {
     pub fn new(project_name: &str) -> Self {
@@ -236,6 +327,7 @@ impl RootConfig {
             templates: TemplatesConfig::default(),
             pipeline: PipelineConfig::default(),
             context: ContextConfig::default(),
+            fan_out: FanOutConfig::default(),
         }
     }
 
@@ -411,5 +503,52 @@ version = "1.0.0"
     #[test]
     fn find_project_root_returns_none_at_root() {
         assert!(find_project_root(Path::new("/tmp/nonexistent-solidspec-test")).is_none());
+    }
+
+    #[test]
+    fn fanout_config_defaults_when_section_absent() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("solidspec.toml");
+        std::fs::write(&path, "[project]\nname = \"minimal\"\n").unwrap();
+        let cfg = RootConfig::load(&path).unwrap();
+        assert_eq!(cfg.fan_out.code_threshold, 70);
+        assert_eq!(cfg.fan_out.security_threshold, 80);
+        assert_eq!(cfg.fan_out.tests_threshold, 70);
+        assert_eq!(cfg.fan_out.perf_threshold, 60);
+        assert_eq!(cfg.fan_out.timeout, 300);
+        assert!(cfg.fan_out.block_on_critical);
+        assert!(cfg.fan_out.code_agent.is_none());
+        assert!(cfg.fan_out.security_agent.is_none());
+    }
+
+    #[test]
+    fn fanout_config_round_trips_toml() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("solidspec.toml");
+        let content = r#"
+[project]
+name = "fanout-test"
+
+[fan_out]
+code_agent     = "claude"
+security_agent = "gemini"
+code_threshold     = 75
+security_threshold = 90
+tests_threshold    = 65
+perf_threshold     = 55
+timeout            = 120
+block_on_critical  = false
+"#;
+        std::fs::write(&path, content).unwrap();
+        let cfg = RootConfig::load(&path).unwrap();
+        assert_eq!(cfg.fan_out.code_agent.as_deref(), Some("claude"));
+        assert_eq!(cfg.fan_out.security_agent.as_deref(), Some("gemini"));
+        assert!(cfg.fan_out.tests_agent.is_none());
+        assert_eq!(cfg.fan_out.code_threshold, 75);
+        assert_eq!(cfg.fan_out.security_threshold, 90);
+        assert_eq!(cfg.fan_out.tests_threshold, 65);
+        assert_eq!(cfg.fan_out.perf_threshold, 55);
+        assert_eq!(cfg.fan_out.timeout, 120);
+        assert!(!cfg.fan_out.block_on_critical);
     }
 }
