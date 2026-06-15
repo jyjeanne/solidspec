@@ -38,7 +38,7 @@ log = "0.4"
 env_logger = "0.11"
 
 # Terminal UI
-console = "0.15"
+console = "0.16"
 
 # CLI detection
 which = "8"
