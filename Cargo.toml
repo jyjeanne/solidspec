@@ -21,7 +21,7 @@ toml = "1"
 semver = "1"
 
 # Templates
-tera = "1"
+tera = "2"
 
 # Git integration
 git2 = "0.21"
