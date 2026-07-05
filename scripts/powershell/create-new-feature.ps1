@@ -20,7 +20,10 @@ if ($nextNum -gt 999) {
 }
 
 $featureId = $nextNum.ToString("D3")
-$shortName = ($Description.ToLower() -replace '[^a-z0-9]', '-' -replace '-+', '-').Substring(0, [Math]::Min(50, $Description.Length)).TrimEnd('-')
+# Truncate based on the transformed slug's own length — the replaces can make
+# it shorter than $Description, and Substring past the end throws.
+$slug = ($Description.ToLower() -replace '[^a-z0-9]', '-' -replace '-+', '-').Trim('-')
+$shortName = $slug.Substring(0, [Math]::Min(50, $slug.Length)).TrimEnd('-')
 $branchName = "$featureId-$shortName"
 
 # Create git branch if in a repo
