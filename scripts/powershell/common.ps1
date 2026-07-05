@@ -4,20 +4,30 @@
 $ErrorActionPreference = 'Stop'
 
 function Get-RepoRoot {
-    $dir = Get-Location
-    while ($dir.Path -ne [System.IO.Path]::GetPathRoot($dir.Path)) {
-        if ((Test-Path "$dir\solidspec.toml") -or (Test-Path "$dir\.solidspec")) {
-            return $dir.Path
+    # Walk up as a string path — Split-Path returns a string, so relying on
+    # a .Path property would stop the walk after the first parent step.
+    $dir = (Get-Location).Path
+    while ($dir) {
+        if ((Test-Path (Join-Path $dir "solidspec.toml")) -or (Test-Path (Join-Path $dir ".solidspec"))) {
+            return $dir
         }
-        $dir = Split-Path $dir -Parent
+        $parent = Split-Path $dir -Parent
+        if (-not $parent -or $parent -eq $dir) { break }
+        $dir = $parent
     }
     throw "Not inside a SolidSpec project"
 }
 
 function Get-CurrentBranch {
-    # Level 1: env var
+    # Level 1: env var (full dir name or numeric prefix)
     if ($env:SOLIDSPEC_FEATURE) {
-        return $env:SOLIDSPEC_FEATURE
+        $root = Get-RepoRoot
+        if (Test-Path (Join-Path $root "specs\$env:SOLIDSPEC_FEATURE")) {
+            return $env:SOLIDSPEC_FEATURE
+        }
+        # Bare prefix like "001" — resolve to the full directory name,
+        # matching the Rust CLI's resolution behavior.
+        return Find-FeatureDir -Prefix $env:SOLIDSPEC_FEATURE
     }
 
     # Level 2: git branch
@@ -41,12 +51,14 @@ function Get-CurrentBranch {
 function Find-FeatureDir {
     param([string]$Prefix)
     $root = Get-RepoRoot
-    $matches = Get-ChildItem "$root\specs" -Directory | Where-Object { $_.Name -match "^${Prefix}-" }
+    # Do not name this $matches — that is the automatic variable the -match
+    # operator writes to.
+    $found = @(Get-ChildItem "$root\specs" -Directory | Where-Object { $_.Name -match "^${Prefix}-" })
 
-    if ($matches.Count -eq 0) {
+    if ($found.Count -eq 0) {
         throw "No feature matching '$Prefix' in specs/"
     }
-    return ($matches | Sort-Object Name | Select-Object -Last 1).Name
+    return ($found | Sort-Object Name | Select-Object -Last 1).Name
 }
 
 function Get-FeaturePaths {

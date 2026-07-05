@@ -83,8 +83,8 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
         feature_dir_name
     );
 
-    // IDSD: show intent drift score when schema is intent-driven and intent.md exists
-    if schema_name == "intent-driven"
+    // IDSD: show intent drift score when the schema is intent-based and intent.md exists
+    if schema::is_intent_schema(schema_name)
         && let Some(drift) = analyzer::compute_drift(&feature_dir)
     {
         println!();

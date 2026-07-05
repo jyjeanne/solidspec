@@ -20,10 +20,18 @@ get_repo_root() {
 
 # Get the current feature branch or fallback
 get_current_branch() {
-    # Level 1: SOLIDSPEC_FEATURE env var
+    # Level 1: SOLIDSPEC_FEATURE env var (full dir name or numeric prefix)
     if [ -n "${SOLIDSPEC_FEATURE:-}" ]; then
-        echo "$SOLIDSPEC_FEATURE"
-        return 0
+        local root
+        root="$(get_repo_root)" || return 1
+        if [ -d "$root/specs/$SOLIDSPEC_FEATURE" ]; then
+            echo "$SOLIDSPEC_FEATURE"
+        else
+            # Bare prefix like "001" — resolve to the full directory name,
+            # matching the Rust CLI's resolution behavior.
+            find_feature_dir "$SOLIDSPEC_FEATURE"
+        fi
+        return
     fi
 
     # Level 2: git branch
@@ -81,7 +89,7 @@ get_feature_paths() {
 
     echo "REPO_ROOT=\"$root\""
     echo "CURRENT_BRANCH=\"$branch\""
-    echo "HAS_GIT=$(git rev-parse --is-inside-work-tree 2>/dev/null && echo true || echo false)"
+    echo "HAS_GIT=$(git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo true || echo false)"
     echo "FEATURE_DIR=\"$feature_dir\""
     echo "FEATURE_SPEC=\"$feature_dir/spec.md\""
     echo "IMPL_PLAN=\"$feature_dir/plan.md\""

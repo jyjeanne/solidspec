@@ -164,15 +164,19 @@ impl ArtifactGraph {
             let all_present = node.generates.iter().all(|pattern| {
                 let path = feature_dir.join(pattern);
                 if pattern.contains('*') {
-                    // Glob: check if the parent directory is non-empty
-                    if let Some(parent) = path.parent() {
-                        parent.exists()
-                            && std::fs::read_dir(parent)
-                                .map(|mut d| d.next().is_some())
-                                .unwrap_or(false)
-                    } else {
-                        false
-                    }
+                    // Glob: at least one entry in the pattern's directory must
+                    // match the filename component (only `*` wildcards supported).
+                    let (dir, file_pattern) = match pattern.rsplit_once('/') {
+                        Some((d, f)) => (feature_dir.join(d), f),
+                        None => (feature_dir.to_path_buf(), pattern.as_str()),
+                    };
+                    std::fs::read_dir(&dir)
+                        .map(|entries| {
+                            entries.flatten().any(|e| {
+                                glob_matches(&e.file_name().to_string_lossy(), file_pattern)
+                            })
+                        })
+                        .unwrap_or(false)
                 } else if pattern.ends_with('/') {
                     // Directory pattern: require the directory to exist and be non-empty
                     // (an empty directory means the agent hasn't written any test files yet)
@@ -192,6 +196,38 @@ impl ArtifactGraph {
 
         completed
     }
+}
+
+/// Match a file name against a simple glob pattern where `*` matches any
+/// (possibly empty) sequence of characters. No other wildcards are supported.
+fn glob_matches(name: &str, pattern: &str) -> bool {
+    let parts: Vec<&str> = pattern.split('*').collect();
+    if parts.len() == 1 {
+        return name == pattern;
+    }
+
+    let mut remaining = name;
+
+    // First literal segment must anchor at the start.
+    let first = parts[0];
+    if !remaining.starts_with(first) {
+        return false;
+    }
+    remaining = &remaining[first.len()..];
+
+    // Middle segments match greedily left-to-right.
+    for part in &parts[1..parts.len() - 1] {
+        if part.is_empty() {
+            continue;
+        }
+        match remaining.find(part) {
+            Some(i) => remaining = &remaining[i + part.len()..],
+            None => return false,
+        }
+    }
+
+    // Last literal segment must anchor at the end of what's left.
+    remaining.ends_with(parts[parts.len() - 1])
 }
 
 // ── Traceability graph ──────────────────────────────────────────────────────
@@ -649,6 +685,66 @@ mod tests {
         assert!(ids.contains("implement"));
         assert!(ids.contains("analyze"));
         assert!(ids.contains("review"));
+    }
+
+    #[test]
+    fn glob_matches_star_patterns() {
+        assert!(glob_matches("spec.md", "*.md"));
+        assert!(glob_matches("anything", "*"));
+        assert!(glob_matches("api-v2.md", "api-*.md"));
+        assert!(!glob_matches("spec.txt", "*.md"));
+        assert!(!glob_matches("api.md", "api-*.md"));
+        // No wildcard → exact match only
+        assert!(glob_matches("spec.md", "spec.md"));
+        assert!(!glob_matches("spec.md.bak", "spec.md"));
+    }
+
+    #[test]
+    fn detect_completion_glob_requires_matching_file() {
+        // A `*.md` pattern must NOT be satisfied by unrelated files in the dir.
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("notes.txt"), "not markdown").unwrap();
+
+        let graph = ArtifactGraph::new(vec![ArtifactNode {
+            id: "docs".into(),
+            generates: vec!["*.md".into()],
+            requires: vec![],
+            instruction: "".into(),
+            template: None,
+        }])
+        .unwrap();
+
+        let completed = graph.detect_completion(dir.path());
+        assert!(
+            !completed.contains("docs"),
+            "*.md must not match a dir containing only .txt files"
+        );
+
+        std::fs::write(dir.path().join("report.md"), "# md").unwrap();
+        let completed = graph.detect_completion(dir.path());
+        assert!(completed.contains("docs"));
+    }
+
+    #[test]
+    fn detect_completion_glob_in_subdirectory() {
+        let dir = TempDir::new().unwrap();
+        let contracts = dir.path().join("contracts");
+        std::fs::create_dir(&contracts).unwrap();
+        std::fs::write(contracts.join("readme.txt"), "x").unwrap();
+
+        let graph = ArtifactGraph::new(vec![ArtifactNode {
+            id: "contracts".into(),
+            generates: vec!["contracts/*.md".into()],
+            requires: vec![],
+            instruction: "".into(),
+            template: None,
+        }])
+        .unwrap();
+
+        assert!(!graph.detect_completion(dir.path()).contains("contracts"));
+
+        std::fs::write(contracts.join("api.md"), "# api").unwrap();
+        assert!(graph.detect_completion(dir.path()).contains("contracts"));
     }
 
     #[test]

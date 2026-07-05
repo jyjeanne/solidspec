@@ -278,4 +278,110 @@ mod tests {
         assert_ne!(content, "OLD", "Scripts should be overwritten on copy");
         assert!(content.contains("get_repo_root"));
     }
+
+    /// Execute the embedded bash scripts end-to-end (they ship in every project).
+    #[cfg(unix)]
+    mod bash_execution {
+        use super::*;
+        use std::process::Command;
+
+        /// Write the embedded bash scripts + a minimal project into a temp dir.
+        fn setup_script_project(dir: &Path) -> std::path::PathBuf {
+            std::fs::write(dir.join("solidspec.toml"), "[project]\nname = \"t\"\n").unwrap();
+            std::fs::create_dir_all(dir.join(".solidspec")).unwrap();
+            std::fs::create_dir_all(dir.join("specs/001-auth")).unwrap();
+            let scripts = dir.join("scripts");
+            std::fs::create_dir_all(&scripts).unwrap();
+            for (name, content) in scripts::bash_scripts() {
+                std::fs::write(scripts.join(name), content).unwrap();
+            }
+            scripts
+        }
+
+        #[test]
+        fn create_new_feature_increments_past_existing_features() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+
+            // specs/ already has 001-auth — the script must allocate 002, not
+            // reallocate 001 (trailing-slash parsing regression).
+            let output = Command::new("bash")
+                .arg(scripts.join("create-new-feature.sh"))
+                .arg("second feature idea")
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+
+            assert!(output.status.success(), "script failed: {stderr}");
+            assert!(
+                stdout.trim().starts_with("002-"),
+                "must allocate 002 after 001-auth, got: {stdout} (stderr: {stderr})"
+            );
+            assert!(
+                !stderr.contains("error"),
+                "script must not print errors: {stderr}"
+            );
+            assert!(dir.path().join("specs").join(stdout.trim()).is_dir());
+        }
+
+        #[test]
+        fn get_current_branch_resolves_env_var_prefix_to_dir_name() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+
+            // A bare "001" prefix must resolve to the full directory name,
+            // matching the Rust CLI's SOLIDSPEC_FEATURE handling.
+            let output = Command::new("bash")
+                .arg("-c")
+                .arg(format!(
+                    "source '{}' && get_current_branch",
+                    scripts.join("common.sh").display()
+                ))
+                .env("SOLIDSPEC_FEATURE", "001")
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            assert!(output.status.success());
+            assert_eq!(
+                stdout.trim(),
+                "001-auth",
+                "prefix must resolve to full feature dir name"
+            );
+        }
+
+        #[test]
+        fn get_feature_paths_emits_eval_safe_single_line_vars() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+
+            let output = Command::new("bash")
+                .arg("-c")
+                .arg(format!(
+                    "source '{}' && get_feature_paths",
+                    scripts.join("common.sh").display()
+                ))
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            assert!(output.status.success());
+            let has_git_lines: Vec<&str> = stdout
+                .lines()
+                .filter(|l| l.starts_with("HAS_GIT="))
+                .collect();
+            assert_eq!(has_git_lines, vec!["HAS_GIT=false"]);
+            // Every line must be a VAR=... assignment (agents eval this output)
+            for line in stdout.lines().filter(|l| !l.is_empty()) {
+                assert!(
+                    line.contains('='),
+                    "non-assignment line in get_feature_paths output: {line}"
+                );
+            }
+        }
+    }
 }

@@ -12,7 +12,10 @@ mkdir -p "$specs_dir"
 max_num=0
 for dir in "$specs_dir"/[0-9][0-9][0-9]-*/; do
     [ -d "$dir" ] || continue
-    num="${dir##*/}"
+    # Strip the trailing slash from the glob before taking the basename —
+    # ${dir##*/} on "…/001-x/" would yield an empty string and reset numbering.
+    num="${dir%/}"
+    num="${num##*/}"
     num="${num%%-*}"
     num=$((10#$num))
     if [ "$num" -gt "$max_num" ]; then

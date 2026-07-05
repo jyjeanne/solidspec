@@ -39,8 +39,12 @@ for dir in "$root"/specs/[0-9][0-9][0-9]-*/; do
     feature="$(basename "$dir")"
     status="draft"
     if [ -f "$dir/tasks.md" ]; then
-        done_count=$(grep -c -i '\- \[x\] T' "$dir/tasks.md" 2>/dev/null || echo 0)
-        total_count=$(grep -c '\- \[.\] T' "$dir/tasks.md" 2>/dev/null || echo 0)
+        # grep -c prints the count (including 0) even when it exits nonzero,
+        # so "|| echo 0" would emit a second line and break the -eq/-gt tests.
+        done_count=$(grep -c -i '\- \[x\] T' "$dir/tasks.md" 2>/dev/null || true)
+        total_count=$(grep -c '\- \[.\] T' "$dir/tasks.md" 2>/dev/null || true)
+        done_count="${done_count:-0}"
+        total_count="${total_count:-0}"
         if [ "$total_count" -gt 0 ] && [ "$done_count" -eq "$total_count" ]; then
             status="complete"
         elif [ "$done_count" -gt 0 ]; then

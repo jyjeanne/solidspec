@@ -293,15 +293,11 @@ pub fn slugify(text: &str, style: &SlugStyle) -> String {
             let slug = slug.trim_matches('_').to_string();
             // Collapse consecutive underscores
             let slug = UNDERSCORE_COLLAPSE_RE.replace_all(&slug, "_").to_string();
-            // Max 80 chars (safe truncation on char boundary)
+            // Max 80 bytes (safe truncation on char boundary)
             if slug.len() > 80 {
-                let end = slug
-                    .char_indices()
-                    .take_while(|(i, _)| *i < 80)
-                    .last()
-                    .map(|(i, c)| i + c.len_utf8())
-                    .unwrap_or(80);
-                slug[..end].trim_end_matches('_').to_string()
+                crate::core::text::truncate_at_boundary(&slug, 80)
+                    .trim_end_matches('_')
+                    .to_string()
             } else {
                 slug
             }
@@ -542,11 +538,10 @@ fn render_generic(
 /// Generate the test file name for a story.
 pub fn test_file_name(story_index: usize, story_title: &str, framework: &TestFramework) -> String {
     let slug = slugify(story_title, &SlugStyle::Underscores);
-    let short = if slug.len() > 40 {
-        slug[..40].trim_end_matches('_').to_string()
-    } else {
-        slug
-    };
+    // Truncate on a char boundary — slugify keeps Unicode alphanumerics.
+    let short = crate::core::text::truncate_at_boundary(&slug, 40)
+        .trim_end_matches('_')
+        .to_string();
     format!("us{story_index}_{short}{}", framework.file_extension)
 }
 
@@ -741,6 +736,25 @@ mod tests {
         let long = "a ".repeat(50);
         let slug = slugify(&long, &SlugStyle::Underscores);
         assert!(slug.len() <= 80);
+    }
+
+    #[test]
+    fn slugify_long_multibyte_title_does_not_panic() {
+        // 'é' is 2 bytes; byte 80 can land mid-char
+        let long = "é".repeat(60);
+        let slug = slugify(&long, &SlugStyle::Underscores);
+        assert!(slug.len() <= 80);
+    }
+
+    #[test]
+    fn test_file_name_long_multibyte_title_does_not_panic() {
+        // "a" + 30×'é' → 2-byte chars start at odd offsets, so byte 40 is
+        // guaranteed to fall in the middle of a character.
+        let title = format!("a{}", "é".repeat(30));
+        let fw = framework_from_name("generic").unwrap();
+        let name = test_file_name(1, &title, &fw);
+        assert!(name.starts_with("us1_"));
+        assert!(name.ends_with(".test.txt"));
     }
 
     // ── Template Rendering Tests ──

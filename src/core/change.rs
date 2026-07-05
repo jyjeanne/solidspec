@@ -19,6 +19,8 @@ static FR_LINE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\s*-\s*\*\*(FR-\d{3})\*\*:").expect("invalid FR line regex"));
 static FR_ID_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(FR-\d{3})").expect("invalid FR id regex"));
+static WAS_MARKER_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i) \(was:").expect("invalid was-marker regex"));
 
 /// A parsed delta spec — describes changes to a feature's main spec.
 #[derive(Debug, Clone)]
@@ -141,11 +143,12 @@ fn extract_modified(content: &str) -> Vec<DeltaModification> {
         .map(|caps| {
             let id = caps[1].to_string();
             let full_text = caps[2].trim().to_string();
-            // Split on " (was:" (case-insensitive) to get new + previous text
-            let lower = full_text.to_lowercase();
-            if let Some(was_pos) = lower.find(" (was:") {
-                let new_text = full_text[..was_pos].trim().to_string();
-                let prev = full_text[was_pos + 6..] // skip " (was:"
+            // Split on " (was:" (case-insensitive) to get new + previous text.
+            // Match on the original string — offsets from a to_lowercase() copy
+            // are not valid here because case folding can change byte lengths.
+            if let Some(m) = WAS_MARKER_RE.find(&full_text) {
+                let new_text = full_text[..m.start()].trim().to_string();
+                let prev = full_text[m.end()..]
                     .trim_end_matches(')')
                     .trim()
                     .to_string();
@@ -467,6 +470,21 @@ mod tests {
         assert_eq!(
             delta.modified[0].previous_text.as_deref(),
             Some("email only")
+        );
+    }
+
+    #[test]
+    fn parse_modified_with_multibyte_text_and_uppercase_was() {
+        // 'İ' (U+0130) changes byte length under to_lowercase(); the split
+        // must use offsets from the original string, not a lowercased copy.
+        let content = "## Modified Requirements\n\n\
+                       - **FR-001**: İmproved İnterface handling (WAS: old behaviour)\n";
+        let delta = parse_delta_spec(content);
+        assert_eq!(delta.modified.len(), 1);
+        assert_eq!(delta.modified[0].new_text, "İmproved İnterface handling");
+        assert_eq!(
+            delta.modified[0].previous_text.as_deref(),
+            Some("old behaviour")
         );
     }
 
