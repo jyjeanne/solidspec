@@ -63,7 +63,7 @@ pub fn run(feature_id: Option<&str>, schema: Option<&str>) -> Result<()> {
     vars.insert("arguments".into(), feature_dir_name.clone());
 
     // IDSD: load intent.md and inject intent vars into template context
-    let intent_spec = if effective_schema == "intent-driven" {
+    let intent_spec = if crate::core::schema::is_intent_schema(effective_schema) {
         let intent_path = feature_dir.join("intent.md");
         if intent_path.exists() {
             match intent_parser::parse_intent(&intent_path) {
@@ -122,14 +122,15 @@ pub fn run(feature_id: Option<&str>, schema: Option<&str>) -> Result<()> {
     // Phase 1: Generate plan.md + supporting docs (resolved through hierarchy)
     let preset_priorities =
         preset_manager::get_preset_priorities(&project_root).unwrap_or_default();
-    let (plan_template_name, plan_fallback) = if effective_schema == "intent-driven" {
-        (
-            "idsd/plan-template.md",
-            templates::embedded::IDSD_PLAN_TEMPLATE,
-        )
-    } else {
-        ("plan-template.md", templates::embedded::PLAN_TEMPLATE)
-    };
+    let (plan_template_name, plan_fallback) =
+        if crate::core::schema::is_intent_schema(effective_schema) {
+            (
+                "idsd/plan-template.md",
+                templates::embedded::IDSD_PLAN_TEMPLATE,
+            )
+        } else {
+            ("plan-template.md", templates::embedded::PLAN_TEMPLATE)
+        };
     let (plan_template, _) =
         resolver::load_template(plan_template_name, &project_root, &preset_priorities)
             .unwrap_or_else(|e| {

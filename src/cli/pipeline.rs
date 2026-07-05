@@ -54,6 +54,7 @@ pub fn run(
 
     // Resolve or create feature
     let is_new = new_desc.is_some();
+    let mut new_feature_prefix: Option<String> = None;
     let mut feature_dir_name = if is_new {
         let desc = new_desc.unwrap();
         if desc.trim().is_empty() {
@@ -64,6 +65,7 @@ pub fn run(
         let num = feature::next_feature_number(&specs_dir)?;
         let fid = feature::format_feature_id(num);
         let short = feature::generate_branch_name(desc)?;
+        new_feature_prefix = Some(fid.clone());
         format!("{fid}-{short}")
     } else {
         feature::resolve_feature(feature_id, &project_root)?
@@ -200,9 +202,17 @@ pub fn run(
                 });
 
                 // After intent or specify with --new, re-detect the actual feature dir
-                // (both commands create the dir with their own numbering)
-                if (*phase == "intent" || *phase == "specify") && is_new {
-                    feature_dir_name = feature::resolve_feature(None, &project_root)?;
+                // (both commands create the dir with their own numbering).
+                // Resolve by the new feature's numeric prefix — full resolution honors
+                // SOLIDSPEC_FEATURE and the current git branch, which can point at a
+                // DIFFERENT feature (e.g. when branch creation failed) and would make
+                // later phases overwrite that feature's artifacts.
+                if (*phase == "intent" || *phase == "specify")
+                    && is_new
+                    && let Some(ref prefix) = new_feature_prefix
+                {
+                    feature_dir_name =
+                        feature::find_feature_dir_by_prefix(&project_root.join("specs"), prefix)?;
                     feature_dir = project_root.join("specs").join(&feature_dir_name);
                 }
             }
@@ -313,9 +323,11 @@ fn execute_phase(
         }
         "specify" => {
             let desc = new_desc.unwrap_or(feature_dir_name);
-            // In IDSD mode the intent phase already created the feature dir.
-            // Use run_for_existing so specify doesn't allocate a new feature number.
-            if schema == "intent-driven" && feature_dir.exists() {
+            // When the feature dir already exists (the intent phase created it in
+            // IDSD schemas, or a previous run left it behind), generate spec.md in
+            // place — calling `run` would allocate a NEW feature number and split
+            // the feature's artifacts across two directories.
+            if feature_dir.exists() {
                 crate::cli::specify::run_for_existing(feature_dir_name, desc, schema)?;
             } else {
                 crate::cli::specify::run(desc)?;

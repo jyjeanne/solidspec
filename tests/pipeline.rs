@@ -210,6 +210,123 @@ fn pipeline_idsd_generates_intent_before_spec() {
     );
 }
 
+/// `pipeline --new` must operate on the feature it just created, even when
+/// SOLIDSPEC_FEATURE points at a different (pre-existing) feature. A stale
+/// env var previously redirected the plan phase to the old feature and
+/// overwrote its artifacts.
+#[test]
+fn pipeline_new_ignores_stale_feature_env_var() {
+    let dir = TempDir::new().unwrap();
+
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    // Pre-existing feature 001
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["specify", "First feature"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    // New pipeline run with a stale env var pointing at 001
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "Second widget feature",
+            "--no-agent",
+            "--to",
+            "plan",
+        ])
+        .env("SOLIDSPEC_FEATURE", "001")
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let specs_dir = dir.path().join("specs");
+    let old_feature = std::fs::read_dir(&specs_dir)
+        .unwrap()
+        .flatten()
+        .find(|e| e.file_name().to_string_lossy().starts_with("001"))
+        .expect("feature 001 must still exist")
+        .path();
+    let new_feature = std::fs::read_dir(&specs_dir)
+        .unwrap()
+        .flatten()
+        .find(|e| e.file_name().to_string_lossy().starts_with("002"))
+        .expect("pipeline --new must create feature 002")
+        .path();
+
+    assert!(
+        new_feature.join("spec.md").exists(),
+        "new feature must have spec.md"
+    );
+    assert!(
+        new_feature.join("plan.md").exists(),
+        "plan phase must target the NEW feature, not the env-var one"
+    );
+    assert!(
+        !old_feature.join("plan.md").exists(),
+        "plan phase must NOT write into the pre-existing feature 001"
+    );
+}
+
+/// The intent-apex pipeline must keep intent.md and spec.md in ONE feature
+/// directory. The specify phase previously allocated a second feature number
+/// because only the intent-driven schema was special-cased.
+#[test]
+fn pipeline_intent_apex_uses_single_feature_dir() {
+    let dir = TempDir::new().unwrap();
+
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "Apex intent feature",
+            "--schema",
+            "intent-apex",
+            "--no-agent",
+            "--to",
+            "specify",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let specs_dir = dir.path().join("specs");
+    let feature_dirs: Vec<_> = std::fs::read_dir(&specs_dir)
+        .unwrap()
+        .flatten()
+        .filter(|e| e.file_type().unwrap().is_dir())
+        .collect();
+
+    assert_eq!(
+        feature_dirs.len(),
+        1,
+        "intent-apex pipeline must create exactly one feature directory, found: {:?}",
+        feature_dirs
+            .iter()
+            .map(|e| e.file_name())
+            .collect::<Vec<_>>()
+    );
+
+    let feature_dir = feature_dirs[0].path();
+    assert!(
+        feature_dir.join("intent.md").exists(),
+        "intent.md must be in the feature dir"
+    );
+    assert!(
+        feature_dir.join("spec.md").exists(),
+        "spec.md must be in the SAME feature dir as intent.md"
+    );
+}
+
 /// P2-T9: SDD pipeline (default schema) never creates intent.md
 #[test]
 fn pipeline_sdd_unchanged_no_intent_md() {

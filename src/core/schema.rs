@@ -136,6 +136,13 @@ pub enum SchemaSource {
     Default,
 }
 
+/// True for schemas that follow the IDSD workflow: an `intent` phase runs
+/// before `specify` (creating the feature directory), and intent.md drives
+/// template selection, constraint gates, and drift metrics.
+pub fn is_intent_schema(name: &str) -> bool {
+    matches!(name, "intent-driven" | "intent-apex")
+}
+
 /// List all available schema names (built-in + project-local).
 #[allow(dead_code)]
 pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
@@ -479,6 +486,16 @@ artifacts:
         let schemas = list_available_schemas(dir.path());
         assert!(schemas.iter().any(|s| s.name == "apex-driven"));
         assert!(schemas.iter().any(|s| s.name == "intent-apex"));
+    }
+
+    #[test]
+    fn is_intent_schema_matches_both_idsd_variants() {
+        assert!(is_intent_schema("intent-driven"));
+        assert!(is_intent_schema("intent-apex"));
+        assert!(!is_intent_schema("spec-driven"));
+        assert!(!is_intent_schema("apex-driven"));
+        assert!(!is_intent_schema("minimal"));
+        assert!(!is_intent_schema("tdd-driven"));
     }
 
     #[test]

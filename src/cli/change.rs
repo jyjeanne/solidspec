@@ -62,8 +62,8 @@ pub fn run(command: ChangeCommands) -> Result<()> {
                 slug
             );
             println!(
-                "    3. Run 'solidspec change archive {} {}' when done",
-                feature_dir_name, slug
+                "    3. Run 'solidspec change archive {} --feature-id {}' when done",
+                slug, feature_dir_name
             );
         }
 

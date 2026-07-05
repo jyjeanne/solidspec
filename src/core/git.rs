@@ -37,7 +37,9 @@ pub fn init_repo(path: &Path) -> Result<()> {
 }
 
 pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
-    let repo = Repository::open(repo_path).map_err(|e| SolidSpecError::Git {
+    // discover (not open) so this works when the project root is a
+    // subdirectory of the repository — matching is_git_repo().
+    let repo = Repository::discover(repo_path).map_err(|e| SolidSpecError::Git {
         message: format!("Cannot open repo: {e}"),
         fix: "Ensure you're inside a git repository.".into(),
     })?;
@@ -61,7 +63,9 @@ pub fn create_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
 }
 
 pub fn current_branch(repo_path: &Path) -> Option<String> {
-    let repo = Repository::open(repo_path).ok()?;
+    // discover (not open) so branch-based feature resolution works when the
+    // project root is a subdirectory of the repository — matching is_git_repo().
+    let repo = Repository::discover(repo_path).ok()?;
     let head = repo.head().ok()?;
     head.shorthand().ok().map(String::from)
 }
@@ -116,5 +120,24 @@ mod tests {
     fn current_branch_returns_none_for_non_git() {
         let dir = TempDir::new().unwrap();
         assert!(current_branch(dir.path()).is_none());
+    }
+
+    #[test]
+    fn current_branch_works_from_subdirectory() {
+        // Project roots nested inside a repo (monorepo layout) must still
+        // resolve the current branch.
+        let dir = TempDir::new().unwrap();
+        std::fs::write(dir.path().join("f.txt"), "x").unwrap();
+        init_repo(dir.path()).unwrap();
+        create_branch(dir.path(), "002-nested-feature").unwrap();
+
+        let sub = dir.path().join("projects/app");
+        std::fs::create_dir_all(&sub).unwrap();
+
+        assert_eq!(
+            current_branch(&sub).as_deref(),
+            Some("002-nested-feature"),
+            "branch must resolve from a subdirectory of the repo"
+        );
     }
 }

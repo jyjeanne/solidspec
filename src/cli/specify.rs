@@ -53,9 +53,14 @@ pub fn run(feature_name: &str) -> Result<()> {
     let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))?;
     let vars = build_template_vars(&root_config, &feature_id, feature_name, &branch_name);
 
-    // IDSD soft reminder: warn if intent.md is absent when using intent-driven schema
-    if root_config.pipeline.schema == "intent-driven" && !feature_dir.join("intent.md").exists() {
-        println!("  Hint: Schema is 'intent-driven' but intent.md is missing for {feature_id}.");
+    // IDSD soft reminder: warn if intent.md is absent when using an intent schema
+    if crate::core::schema::is_intent_schema(&root_config.pipeline.schema)
+        && !feature_dir.join("intent.md").exists()
+    {
+        println!(
+            "  Hint: Schema is '{}' but intent.md is missing for {feature_id}.",
+            root_config.pipeline.schema
+        );
         println!(
             "  Run 'solidspec intent \"{feature_name}\" --feature {feature_id}' to capture intent first."
         );
@@ -151,7 +156,7 @@ fn write_spec(
     project_root: &std::path::Path,
     preset_priorities: &[(String, u32)],
 ) -> Result<()> {
-    let (template_name, fallback) = if schema == "intent-driven" {
+    let (template_name, fallback) = if crate::core::schema::is_intent_schema(schema) {
         (
             "idsd/spec-template.md",
             templates::embedded::IDSD_SPEC_TEMPLATE,
