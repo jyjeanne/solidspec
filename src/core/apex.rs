@@ -239,9 +239,10 @@ pub fn build_solidspec_context(feature_dir: &Path, feature_id: &str) -> Result<S
          than re-analyzing the spec._\n"
     );
 
-    // Hard cap at 16 KB
+    // Hard cap at 16 KB (truncate on a char boundary — spec/plan content may be non-ASCII)
     if context.len() > MAX_CONTEXT_BYTES {
-        let mut truncated = context[..MAX_CONTEXT_BYTES].to_string();
+        let mut truncated =
+            super::text::truncate_at_boundary(&context, MAX_CONTEXT_BYTES).to_string();
         truncated.push_str("\n\n[context truncated at 16 KB limit]");
         return Ok(truncated);
     }
@@ -304,7 +305,10 @@ fn is_pending_task(line: &str) -> bool {
 
 fn is_completed_task(line: &str) -> bool {
     let s = line.trim_start();
-    if let Some(rest) = s.strip_prefix("- [x] T") {
+    if let Some(rest) = s
+        .strip_prefix("- [x] T")
+        .or_else(|| s.strip_prefix("- [X] T"))
+    {
         rest.starts_with(|c: char| c.is_ascii_digit())
     } else {
         false
@@ -395,7 +399,7 @@ fn extract_completed_task_ids(log: &str) -> Vec<String> {
 /// recognised completion marker immediately before a T-prefixed task ID.
 fn find_task_id_after_completion_marker(line: &str) -> Option<String> {
     // Look for the checkmark character or `[x]` pattern followed by T + digits
-    let markers = ["✓ T", "[x] T"];
+    let markers = ["✓ T", "[x] T", "[X] T"];
     for marker in markers {
         if let Some(pos) = line.find(marker) {
             let after = &line[pos + marker.len()..];
@@ -667,6 +671,56 @@ mod tests {
         // All three sections must have placeholders, not panic
         assert!(ctx.contains("not yet generated"));
         assert!(ctx.contains("001-auth"));
+    }
+
+    #[test]
+    fn context_truncation_does_not_panic_on_multibyte_content() {
+        // A spec whose Functional Requirements section is large and non-ASCII
+        // pushes the context past 16 KB; truncation must land on a char boundary.
+        let dir = TempDir::new().unwrap();
+        let mut spec = String::from("# Feature\n\n## Functional Requirements\n\n");
+        for i in 0..600 {
+            spec.push_str(&format!(
+                "- FR-{i:03}: exportação de relatórios — critères d'acceptation ✓✓✓\n"
+            ));
+        }
+        spec.push_str("\n## User Scenarios\n\n**US1:** ok\n");
+        std::fs::write(dir.path().join("spec.md"), spec).unwrap();
+
+        let ctx = build_solidspec_context(dir.path(), "001-auth").unwrap();
+        assert!(
+            ctx.ends_with("[context truncated at 16 KB limit]"),
+            "oversized context must be truncated"
+        );
+    }
+
+    #[test]
+    fn context_counts_uppercase_checked_tasks_as_done() {
+        let dir = TempDir::new().unwrap();
+        write_spec(dir.path());
+        write_plan(dir.path(), 5);
+        std::fs::write(
+            dir.path().join("tasks.md"),
+            "- [ ] T001 Pending\n- [X] T002 Done uppercase\n",
+        )
+        .unwrap();
+        let ctx = build_solidspec_context(dir.path(), "001-auth").unwrap();
+        assert!(ctx.contains("1 pending"), "pending count must be 1");
+        assert!(ctx.contains("1 done"), "uppercase [X] must count as done");
+    }
+
+    #[test]
+    fn sync_marks_uppercase_checkbox_pattern() {
+        let dir = TempDir::new().unwrap();
+        make_tasks_md(dir.path(), &["- [ ] T007 Implement export"]);
+        make_execute_log(dir.path(), "- [X] T007 Implement export — complete");
+        let report = sync_tasks_from_apex_log(
+            &dir.path().join("03-execute.md"),
+            &dir.path().join("tasks.md"),
+        )
+        .unwrap();
+        assert!(read_tasks(dir.path()).contains("- [x] T007"));
+        assert_eq!(report.tasks_marked_done, 1);
     }
 
     #[test]

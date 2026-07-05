@@ -468,7 +468,10 @@ fn invoke_or_handoff(
         InvokeResult::Success { output } => {
             let preview = output.lines().take(3).collect::<Vec<_>>().join(" ");
             let preview = if preview.len() > 100 {
-                format!("{}...", &preview[..100])
+                format!(
+                    "{}...",
+                    crate::core::text::truncate_at_boundary(&preview, 100)
+                )
             } else if preview.is_empty() {
                 "(completed)".to_string()
             } else {

@@ -16,5 +16,6 @@ pub mod spec_parser;
 pub mod task_generator;
 pub mod tdd;
 pub mod test_generator;
+pub mod text;
 pub mod token;
 pub mod vscode;
