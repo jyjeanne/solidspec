@@ -30,20 +30,24 @@ Severity scale: **P1** = correctness/behavior risk, fix first · **P2** = struct
 
 ## P2 — Structural debt (graph hotspots)
 
-### 3. `register_commands` bypasses the template system with ~250 lines of inline prompts
-`src/agents/registry.rs:69-330` embeds all ~10 slash-command bodies as inline `format!` strings inside one giant match — while the project ships a Tera template system (`src/templates/`) with `include_str!` embedding and 3-level project-local overrides, plus a data-table precedent (`src/agents/personas.rs`). The graph flags `register_commands()` as a god node (20 edges) and `src/agents/registry.rs` (923 lines) as its own low-cohesion community. Users also cannot override command bodies the way they can override templates.
+### 3. ✅ FIXED — `register_commands` bypassed the template system with ~250 lines of inline prompts
+`src/agents/registry.rs` embedded all ~11 slash-command bodies as inline `format!` strings inside one giant match. Users could not override command bodies the way they can override spec/plan/tasks templates.
 
-**Action:** move command bodies into embedded templates (or a static table like `personas.rs`), leaving `register_commands` as pure orchestration over `formats.rs`. Bonus: project-local overrides of command prompts come for free via `templates/resolver.rs`.
+**Fix applied:** the 11 named-phase bodies now live as `include_str!`-embedded files under `templates/commands/<phase>.md` (`specify.md`, `clarify.md`, `plan.md`, `tasks.md`, `implement.md`, `tests.md`, `analyze.md`, `review.md`, `apex.md`, `tdd-tests.md`, `tdd-refactor.md`), each containing the canonical `$ARGUMENTS` placeholder. `register_commands` now calls a single `command_body(cmd_name, project_root)` that returns the right body — reducing the match in `registry.rs` from a ~250-line inline-`format!` block to one line per phase. Bodies were extracted by running the actual pre-refactor binary and capturing byte-exact output (not hand-transcribed), then verified with a full `diff -rq` between pre- and post-refactor `init` output for both a Markdown agent (claude) and a TOML agent (gemini, exercising the `{{args}}` placeholder path) — output is byte-identical. Net: registry.rs -122 lines.
+
+**Bonus delivered:** `command_body()` checks `.solidspec/templates/overrides/commands/<phase>.md` first — a project can now override any command's body, documented in CLAUDE.md. This is a single-layer override (not the full preset/extension resolver chain in `templates/resolver.rs`, which would have required threading `preset_priorities` through `register_all`/`init`/`upgrade` call sites — out of scope for this fix). Regression tests: `project_local_override_wins_over_embedded_command_body`, `no_override_falls_back_to_embedded_default`, `command_body_generic_fallback_for_unknown_phase` (`src/agents/registry.rs`).
 
 ### 4. `fan_out.rs` (1,476 lines) mixes four concerns; lane prompts are ~70% copy-paste
 The four lane prompts (`code_review_prompt`, `security_audit_prompt`, `test_coverage_prompt`, `performance_prompt`, `src/core/fan_out.rs:272-359`) share the same frame (context preamble, SEVERITY/LOCATION/PROBLEM/FIX block, scoring rubric) and differ only in the focus bullet list. The file also contains lane orchestration, score parsing, aggregation, and report formatting. `FanOutConfig` is one of the top cross-community bridge nodes (betweenness 0.034) — the file couples otherwise-unrelated communities. The scoring rubric ("10 per CRITICAL, 5 per HIGH…") is additionally duplicated in `apply_penalty_formula` and `derive_score_from_keywords`.
 
 **Action:** one prompt-builder taking a focus-bullet list + lane name; single source of truth for the penalty weights; split report formatting into its own module.
 
-### 5. Integration-test helpers copy-pasted across 6 files
-The graph's #1 and #2 god nodes are **test helpers**, not production code: `init_project()` / `solidspec()` / `create_feature()` are re-implemented in `tests/apex.rs`, `tests/ship.rs`, `tests/tdd.rs`, `tests/change.rs`, `tests/traceability.rs`, `tests/pipeline.rs` (53 + 29 edges on the two `init_project` variants alone). Any change to `solidspec init` output ripples through six copies.
+### 5. ✅ FIXED — integration-test helpers copy-pasted across 6 files
+The graph's #1 and #2 god nodes were **test helpers**, not production code: `init_project()` / `solidspec()` / `create_feature()` were re-implemented in `tests/apex.rs`, `tests/ship.rs`, `tests/tdd.rs`, `tests/change.rs`, `tests/traceability.rs`, `tests/pipeline.rs` (53 + 29 edges on the two `init_project` variants alone).
 
-**Action:** extract `tests/common/mod.rs` with the shared helpers (standard Cargo pattern for integration tests).
+**Fix applied:** added `tests/common/mod.rs` (standard Cargo convention — not compiled as its own test binary) exporting `solidspec()`, `init_project()` (the CI-robust variant that pre-creates `.claude/`, since the divergence was a real robustness gap, not just style drift), and `first_feature_dir()`. `apex.rs`/`ship.rs`/`tdd.rs` now import these directly; `change.rs`/`traceability.rs`/`pipeline.rs` keep their file-local convenience wrappers (different call signatures — e.g. `solidspec(dir)` binding `current_dir` upfront, or a combined init+specify helper) but those wrappers now delegate to `common::solidspec()` internally instead of duplicating `Command::cargo_bin(...)`. Repeated inline "find first feature dir under specs/" `read_dir` blocks (7 occurrences across `pipeline.rs`/`ship.rs`/`traceability.rs`) were replaced with `common::first_feature_dir()`. Net: -103 lines across the 6 files; all 646 tests still pass.
+
+`create_feature()` was deliberately **not** unified — each suite's fixture content differs (different `plan.md`/`tasks.md`/`spec.md` bodies with suite-specific markers like `[US1]` or acceptance-criteria sections that other tests assert against), so merging them risked silently changing fixtures other tests depend on.
 
 ### 6. `src/core/review.rs` (1,392 lines): monolithic check pipeline
 `preflight_review` (hub, 22 edges) drives ten independent `check_*` functions plus scoring plus report formatting in one file. Checks are self-contained (each returns `Vec<ReviewFinding>`), which is good — but they're not discoverable or extensible, even though the project has an extensions system (`src/extensions/`).
@@ -83,8 +87,8 @@ The graph's #1 and #2 god nodes are **test helpers**, not production code: `init
 |---|------|--------|--------|--------|
 | 1 | Schema-driven `should_skip` (P1.1) | M | Fixes silent re-runs for custom workflows, deletes duplication | ✅ Fixed |
 | 2 | De-panic `status` (P1.2) | S | User-input errors stop crashing the CLI | ✅ Fixed |
-| 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph | |
-| 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | |
+| 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph | ✅ Fixed |
+| 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | ✅ Fixed |
 | 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | |
 | 6 | Split review.rs (P2.6) | M | Extensible check registry | |
 | 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | |

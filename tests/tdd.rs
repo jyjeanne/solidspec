@@ -1,25 +1,10 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+mod common;
+use common::{first_feature_dir, init_project, solidspec};
+
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-fn solidspec() -> Command {
-    Command::cargo_bin("solidspec").unwrap()
-}
-
-fn init_project() -> TempDir {
-    let dir = TempDir::new().unwrap();
-    // Create .claude/ so the agent is always detected regardless of whether
-    // the `claude` CLI binary is present in PATH (required for Linux CI).
-    std::fs::create_dir_all(dir.path().join(".claude")).unwrap();
-    solidspec()
-        .args(["init", "--here", "--no-git"])
-        .current_dir(dir.path())
-        .assert()
-        .success();
-    dir
-}
 
 fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
     solidspec()
@@ -54,16 +39,6 @@ fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
     .unwrap();
 
     feature_dir
-}
-
-fn first_feature_dir(dir: &std::path::Path) -> std::path::PathBuf {
-    let specs = dir.join("specs");
-    std::fs::read_dir(&specs)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("no feature dir found")
-        .path()
 }
 
 // ── T1: CLI registration ──────────────────────────────────────────────────────

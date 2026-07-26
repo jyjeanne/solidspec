@@ -71,6 +71,8 @@ All feature artifacts live under `specs/<NNN>-<slug>/` (e.g., `specs/001-auth-sy
 
 `solidspec init` auto-detects which agents are present (by checking their config dir or CLI binary) and writes slash-command files to each agent's command directory. The `implement` phase is always a `Handoff` (requires human confirmation in interactive pipeline runs); all other phases are `Auto`.
 
+Command bodies are embedded from `templates/commands/<phase>.md` (`src/agents/registry.rs`'s `command_body()`), written with the canonical `$ARGUMENTS` placeholder and translated per-agent by `formats::translate_placeholder`. A project can override a command's body by placing a file at `.solidspec/templates/overrides/commands/<phase>.md` — it takes precedence over the embedded default and still gets the compliance-guardrails footer appended.
+
 ### Testing
 
 Unit tests live in `#[cfg(test)]` blocks inside each source file and use `tempfile::TempDir` for isolated filesystem state. Integration tests are in `tests/pipeline.rs` and use `assert_cmd` + `predicates` to run the compiled binary end-to-end.

@@ -1,16 +1,18 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
-fn init_project(dir: &std::path::Path) {
-    Command::cargo_bin("solidspec")
-        .unwrap()
+mod common;
+use common::solidspec;
+
+/// Init a bare project and create feature 001 ("Test feature for changes"),
+/// ready for `solidspec change` commands.
+fn init_project_with_feature(dir: &std::path::Path) {
+    solidspec()
         .args(["init", "--here", "--no-git"])
         .current_dir(dir)
         .assert()
         .success();
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["specify", "Test feature for changes"])
         .current_dir(dir)
         .assert()
@@ -20,10 +22,9 @@ fn init_project(dir: &std::path::Path) {
 #[test]
 fn change_propose_creates_directory_and_files() {
     let dir = TempDir::new().unwrap();
-    init_project(dir.path());
+    init_project_with_feature(dir.path());
 
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args([
             "change",
             "propose",
@@ -57,23 +58,20 @@ fn change_propose_creates_directory_and_files() {
 #[test]
 fn change_list_shows_active_changes() {
     let dir = TempDir::new().unwrap();
-    init_project(dir.path());
+    init_project_with_feature(dir.path());
 
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["change", "propose", "First change", "--feature-id", "001"])
         .current_dir(dir.path())
         .assert()
         .success();
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["change", "propose", "Second change", "--feature-id", "001"])
         .current_dir(dir.path())
         .assert()
         .success();
 
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["change", "list", "--feature-id", "001"])
         .current_dir(dir.path())
         .assert()
@@ -86,10 +84,9 @@ fn change_list_shows_active_changes() {
 #[test]
 fn change_archive_merges_deltas_and_moves_to_archive() {
     let dir = TempDir::new().unwrap();
-    init_project(dir.path());
+    init_project_with_feature(dir.path());
 
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["change", "propose", "Delete FR-001", "--feature-id", "001"])
         .current_dir(dir.path())
         .assert()
@@ -104,8 +101,7 @@ fn change_archive_merges_deltas_and_moves_to_archive() {
     )
     .unwrap();
 
-    Command::cargo_bin("solidspec")
-        .unwrap()
+    solidspec()
         .args(["change", "archive", "delete-fr-001", "--feature-id", "001"])
         .current_dir(dir.path())
         .assert()

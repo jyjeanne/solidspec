@@ -2,6 +2,9 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+mod common;
+use common::first_feature_dir;
+
 fn setup_project(dir: &std::path::Path, init_cmd: &mut Command) {
     init_cmd
         .arg("init")
@@ -39,12 +42,7 @@ fn full_pipeline_scaffold_generates_all_artifacts() {
 
     let specs_dir = dir.path().join("specs");
     assert!(specs_dir.exists());
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory found")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
     assert!(feature_dir.join("spec.md").exists());
     let spec = std::fs::read_to_string(feature_dir.join("spec.md")).unwrap();
     assert!(spec.contains("Feature Specification"));
@@ -192,13 +190,7 @@ fn pipeline_idsd_generates_intent_before_spec() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory created")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     assert!(
         feature_dir.join("intent.md").exists(),
@@ -342,13 +334,7 @@ fn pipeline_sdd_unchanged_no_intent_md() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory created")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     assert!(
         !feature_dir.join("intent.md").exists(),
@@ -377,13 +363,7 @@ fn pipeline_dry_run_respects_custom_schema_generates_override() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory found")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     // Override spec-driven's "plan" artifact to also require research.md.
     let workflows_dir = dir.path().join(".solidspec/workflows/spec-driven");

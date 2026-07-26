@@ -100,9 +100,9 @@
     "semantic_hash": "ef3525ed742394feca40b079fc06baab"
   },
   "src/agents/registry.rs": {
-    "mtime": 1785076024.7822745,
-    "ast_hash": "47d21a9a9940bda845a4990360fc0969",
-    "semantic_hash": "47d21a9a9940bda845a4990360fc0969"
+    "mtime": 1785078456.109367,
+    "ast_hash": "920ea2e1977a8082b1358cdc004c3a6f",
+    "semantic_hash": "920ea2e1977a8082b1358cdc004c3a6f"
   },
   "src/cli/analyze.rs": {
     "mtime": 1785076024.7822745,
@@ -420,19 +420,24 @@
     "semantic_hash": "3e27f77e48d11e34dffc5eb0c80859e7"
   },
   "tests/apex.rs": {
-    "mtime": 1785076024.806316,
-    "ast_hash": "b2fe67bda511dce795b7ad3823c0f376",
-    "semantic_hash": "b2fe67bda511dce795b7ad3823c0f376"
+    "mtime": 1785077997.1733396,
+    "ast_hash": "37d3bb96dbf491c001aa72d3061092b7",
+    "semantic_hash": "37d3bb96dbf491c001aa72d3061092b7"
   },
   "tests/change.rs": {
-    "mtime": 1785076024.8072746,
-    "ast_hash": "e9e3ffe594889f783377712935875eef",
-    "semantic_hash": "e9e3ffe594889f783377712935875eef"
+    "mtime": 1785078035.1748047,
+    "ast_hash": "de8bd9d4d41ca1bd1bbc0cf0ab34e233",
+    "semantic_hash": "de8bd9d4d41ca1bd1bbc0cf0ab34e233"
   },
   "tests/check.rs": {
     "mtime": 1785076024.8072746,
     "ast_hash": "e5313327bf1500a75febb1440599155b",
     "semantic_hash": "e5313327bf1500a75febb1440599155b"
+  },
+  "tests/common/mod.rs": {
+    "mtime": 1785077913.1893346,
+    "ast_hash": "ea213aefa8c353d40f8743e8aca3f720",
+    "semantic_hash": "ea213aefa8c353d40f8743e8aca3f720"
   },
   "tests/completions.rs": {
     "mtime": 1785076024.8072746,
@@ -445,14 +450,14 @@
     "semantic_hash": "61e91eeb5f47c124443e44a8b175af92"
   },
   "tests/pipeline.rs": {
-    "mtime": 1785077593.2653155,
-    "ast_hash": "bfa864a68d43c66899447faa0a3ec2da",
-    "semantic_hash": "bfa864a68d43c66899447faa0a3ec2da"
+    "mtime": 1785078114.3813467,
+    "ast_hash": "57cb8db04498397ce654a652f85f2eb2",
+    "semantic_hash": "57cb8db04498397ce654a652f85f2eb2"
   },
   "tests/ship.rs": {
-    "mtime": 1785076024.8072746,
-    "ast_hash": "530975a5349c9f2bffba281ad26655fc",
-    "semantic_hash": "530975a5349c9f2bffba281ad26655fc"
+    "mtime": 1785077997.1733396,
+    "ast_hash": "d4b9546abc67331e6a8e7481dc411ebc",
+    "semantic_hash": "d4b9546abc67331e6a8e7481dc411ebc"
   },
   "tests/status.rs": {
     "mtime": 1785077542.6533127,
@@ -460,13 +465,13 @@
     "semantic_hash": "7aa0489a96df1f3545d61901436e48aa"
   },
   "tests/tdd.rs": {
-    "mtime": 1785076024.8072746,
-    "ast_hash": "1abc76dfe8eb0ad1f5b69df6630f3691",
-    "semantic_hash": "1abc76dfe8eb0ad1f5b69df6630f3691"
+    "mtime": 1785077997.1733396,
+    "ast_hash": "413b92d93e99829a2a5877de348f868e",
+    "semantic_hash": "413b92d93e99829a2a5877de348f868e"
   },
   "tests/traceability.rs": {
-    "mtime": 1785076024.8072746,
-    "ast_hash": "4572d53c4f410272a239f6337275c1ae",
-    "semantic_hash": "4572d53c4f410272a239f6337275c1ae"
+    "mtime": 1785078069.5777886,
+    "ast_hash": "5cd64de4ccaae5806bf06c52a30b4fd2",
+    "semantic_hash": "5cd64de4ccaae5806bf06c52a30b4fd2"
   }
 }

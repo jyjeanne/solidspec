@@ -1,22 +1,10 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+mod common;
+use common::{first_feature_dir, init_project, solidspec};
+
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-fn solidspec() -> Command {
-    Command::cargo_bin("solidspec").unwrap()
-}
-
-fn init_project() -> TempDir {
-    let dir = TempDir::new().unwrap();
-    solidspec()
-        .args(["init", "--here", "--no-git"])
-        .current_dir(dir.path())
-        .assert()
-        .success();
-    dir
-}
 
 /// Create a feature with spec.md + plan.md + tasks.md and return its path.
 fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
@@ -45,16 +33,6 @@ fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
     .unwrap();
 
     feature_dir
-}
-
-fn first_feature_dir(dir: &std::path::Path) -> std::path::PathBuf {
-    let specs = dir.join("specs");
-    std::fs::read_dir(&specs)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("no feature dir found")
-        .path()
 }
 
 // ── A1: apex subcommand is registered in the CLI ─────────────────────────────
