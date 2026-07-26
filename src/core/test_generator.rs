@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -110,13 +109,18 @@ pub struct TestFramework {
     pub name: String,
     pub language: String,
     pub file_extension: String,
-    pub slug_style: SlugStyle,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SlugStyle {
     Underscores, // Rust, Python, Go: spaces → _
-    Preserved,   // Jest/Vitest/Mocha: keep spaces in string
+    /// Jest/Vitest/Mocha: keep spaces in string. Not currently constructed —
+    /// `describe`/`it` blocks are generated from the raw story title (see
+    /// `render_jest`/`render_vitest`-style functions), never through
+    /// `slugify`, so no call site needs this variant today. Exercised by
+    /// `slugify_preserved_keeps_spaces` to keep the mode itself correct.
+    #[allow(dead_code)]
+    Preserved,
 }
 
 /// Detect the test framework from project files.
@@ -140,7 +144,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
                 name: "Vitest".into(),
                 language: lang.into(),
                 file_extension: ext.into(),
-                slug_style: SlugStyle::Preserved,
             };
         }
         if content.contains("\"jest\"") {
@@ -149,7 +152,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
                 name: "Jest".into(),
                 language: lang.into(),
                 file_extension: ext.into(),
-                slug_style: SlugStyle::Preserved,
             };
         }
         if content.contains("\"mocha\"") {
@@ -158,7 +160,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
                 name: "Mocha".into(),
                 language: lang.into(),
                 file_extension: ext.into(),
-                slug_style: SlugStyle::Preserved,
             };
         }
         // Default JS framework
@@ -167,7 +168,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
             name: "Jest".into(),
             language: lang.into(),
             file_extension: ext.into(),
-            slug_style: SlugStyle::Preserved,
         };
     }
 
@@ -177,7 +177,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
             name: "Jest".into(),
             language: "TypeScript".into(),
             file_extension: ".test.ts".into(),
-            slug_style: SlugStyle::Preserved,
         };
     }
 
@@ -187,7 +186,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
             name: "cargo test".into(),
             language: "Rust".into(),
             file_extension: ".rs".into(),
-            slug_style: SlugStyle::Underscores,
         };
     }
 
@@ -200,7 +198,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
             name: "pytest".into(),
             language: "Python".into(),
             file_extension: "_test.py".into(),
-            slug_style: SlugStyle::Underscores,
         };
     }
 
@@ -210,7 +207,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
             name: "go test".into(),
             language: "Go".into(),
             file_extension: "_test.go".into(),
-            slug_style: SlugStyle::Underscores,
         };
     }
 
@@ -219,7 +215,6 @@ pub fn detect_framework(project_root: &Path) -> TestFramework {
         name: "Generic".into(),
         language: "pseudocode".into(),
         file_extension: ".test.txt".into(),
-        slug_style: SlugStyle::Underscores,
     }
 }
 
@@ -231,49 +226,42 @@ pub fn framework_from_name(name: &str) -> Option<TestFramework> {
             name: "Jest".into(),
             language: "JavaScript".into(),
             file_extension: ".test.js".into(),
-            slug_style: SlugStyle::Preserved,
         }),
         "vitest" => Some(TestFramework {
             id: FrameworkId::Vitest,
             name: "Vitest".into(),
             language: "JavaScript".into(),
             file_extension: ".test.js".into(),
-            slug_style: SlugStyle::Preserved,
         }),
         "mocha" => Some(TestFramework {
             id: FrameworkId::Mocha,
             name: "Mocha".into(),
             language: "JavaScript".into(),
             file_extension: ".test.js".into(),
-            slug_style: SlugStyle::Preserved,
         }),
         "pytest" => Some(TestFramework {
             id: FrameworkId::Pytest,
             name: "pytest".into(),
             language: "Python".into(),
             file_extension: "_test.py".into(),
-            slug_style: SlugStyle::Underscores,
         }),
         "cargo" => Some(TestFramework {
             id: FrameworkId::CargoTest,
             name: "cargo test".into(),
             language: "Rust".into(),
             file_extension: ".rs".into(),
-            slug_style: SlugStyle::Underscores,
         }),
         "go" => Some(TestFramework {
             id: FrameworkId::GoTest,
             name: "go test".into(),
             language: "Go".into(),
             file_extension: "_test.go".into(),
-            slug_style: SlugStyle::Underscores,
         }),
         "generic" => Some(TestFramework {
             id: FrameworkId::Generic,
             name: "Generic".into(),
             language: "pseudocode".into(),
             file_extension: ".test.txt".into(),
-            slug_style: SlugStyle::Underscores,
         }),
         _ => None,
     }

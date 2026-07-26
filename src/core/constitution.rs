@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 
 use anyhow::Result;
@@ -7,6 +6,8 @@ use super::errors::SolidSpecError;
 
 #[derive(Debug, Clone)]
 pub struct Constitution {
+    /// Original constitution.md content. Not read anywhere today.
+    #[allow(dead_code)]
     pub raw: String,
     pub gates: Vec<Gate>,
 }
@@ -14,7 +15,15 @@ pub struct Constitution {
 #[derive(Debug, Clone)]
 pub struct Gate {
     pub name: String,
+    /// Which constitution article this gate enforces (e.g. "Article VII").
+    /// Parsed but not read — gate validation below dispatches on `name`
+    /// instead, with each check hardcoded per gate rather than driven by
+    /// this field or `checks`.
+    #[allow(dead_code)]
     pub article: String,
+    /// Human-readable checklist from the constitution file. Same status as
+    /// `article` above — captured but not consulted by validation.
+    #[allow(dead_code)]
     pub checks: Vec<String>,
 }
 

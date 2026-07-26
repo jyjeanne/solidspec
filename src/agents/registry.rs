@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -224,6 +223,11 @@ pub fn register_apex_skill(agent_id: &str, project_root: &Path) -> Result<bool> 
 }
 
 /// Remove the APEX skill directory for the given agent (if supported).
+///
+/// Tested (see `mod tests` below) but only called internally by
+/// `unregister_commands` — no CLI command unregisters an agent yet
+/// (candidate for a future `solidspec agent remove <id>`).
+#[allow(dead_code)]
 pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> {
     if let Some(dir) = apex_skill_dir(agent_id, project_root)
         && dir.exists()
@@ -234,6 +238,10 @@ pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> 
 }
 
 /// Unregister all SolidSpec commands for a specific agent.
+///
+/// Tested (see `mod tests` below) but not yet called from any CLI command —
+/// candidate for a future `solidspec agent remove <id>`.
+#[allow(dead_code)]
 pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)

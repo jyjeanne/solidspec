@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -69,10 +68,16 @@ impl ExtensionRegistry {
             .ok_or_else(|| anyhow::anyhow!("Extension '{}' is not installed.", id))
     }
 
+    /// Tested (see `mod tests` below) but not yet called from any CLI
+    /// command — candidate for a future `solidspec extension info <id>`.
+    #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Option<ExtensionEntry> {
         self.entries.get(id).cloned() // deep copy
     }
 
+    /// Tested (see `mod tests` below) but not yet called from any CLI
+    /// command — candidate for a future `solidspec extension update <id>`.
+    #[allow(dead_code)]
     pub fn update(&mut self, entry: ExtensionEntry) -> Result<()> {
         let existing = self.entries.get(&entry.id).ok_or_else(|| {
             anyhow::anyhow!("Extension '{}' not installed. Cannot update.", entry.id)

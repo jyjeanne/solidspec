@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 
 use anyhow::Result;
@@ -69,7 +68,12 @@ pub enum PhaseType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PhaseStatus {
+    /// Reserved for a future live-progress reporter; the current synchronous
+    /// CLI only ever records a phase's outcome after it finishes, so these
+    /// two intermediate states are never actually constructed today.
+    #[allow(dead_code)]
     Pending,
+    #[allow(dead_code)]
     Running,
     Done,
     Skipped,

@@ -98,7 +98,6 @@ pub struct FanOutFinding {
 /// dimension cluster, then applies the standard penalty formula.
 /// Returns `Err` when the heuristic cannot run (e.g. `spec.md` missing) so
 /// the caller can surface [`LaneStatus::Failed`].
-#[allow(dead_code)]
 pub(crate) fn score_from_heuristics(
     lane: &ReviewLane,
     feature_dir: &Path,
@@ -116,23 +115,10 @@ pub(crate) fn score_from_heuristics(
 pub fn run_lane_no_agent(lane: &ReviewLane, feature_dir: &Path, project_root: &Path) -> LaneResult {
     let start = Instant::now();
 
-    let report = match review::preflight_review(feature_dir, project_root) {
-        Ok(r) => r,
-        Err(e) => {
-            return LaneResult {
-                lane_id: lane.id,
-                lane_label: lane.label,
-                agent_id: lane.agent_id.clone(),
-                score: 0,
-                findings: vec![],
-                duration_ms: start.elapsed().as_millis() as u64,
-                status: LaneStatus::Failed(format!("{e}")),
-                threshold: lane.threshold,
-            };
-        }
+    let (score, findings, status) = match score_from_heuristics(lane, feature_dir, project_root) {
+        Ok((score, findings)) => (score, findings, LaneStatus::Done),
+        Err(e) => (0, vec![], LaneStatus::Failed(format!("{e}"))),
     };
-
-    let (score, findings) = lane_findings_from_report(lane.id, &report);
 
     LaneResult {
         lane_id: lane.id,
@@ -141,7 +127,7 @@ pub fn run_lane_no_agent(lane: &ReviewLane, feature_dir: &Path, project_root: &P
         score,
         findings,
         duration_ms: start.elapsed().as_millis() as u64,
-        status: LaneStatus::Done,
+        status,
         threshold: lane.threshold,
     }
 }

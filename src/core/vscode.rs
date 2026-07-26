@@ -1,4 +1,8 @@
+//! Deep-merge helper for `.vscode/settings.json`. Fully built and tested but
+//! not yet called from `cli/init.rs` or anywhere else — no current command
+//! writes VS Code settings during project setup.
 #![allow(dead_code)]
+
 use std::path::Path;
 
 use anyhow::Result;

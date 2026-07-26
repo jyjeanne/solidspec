@@ -77,18 +77,28 @@ Net: -64 lines across `invoker.rs` + `registry.rs`. All 649 tests pass unchanged
 
 ## P3 — Hygiene
 
-### 8. `.opencode/skills/ai-spec-review-skill` duplicates the Rust review logic in Python
-112 graph nodes come from `.opencode/` Python scripts (`review_spec.py`: `detect_security_gaps()`, etc.) that re-implement checks that exist in `src/core/review.rs`. Two implementations will drift.
+### 8. ✅ RESOLVED — `.opencode/skills/ai-spec-review-skill` vs. Rust review logic
+112 graph nodes come from `.opencode/` Python scripts (`review_spec.py`: `detect_security_gaps()`, etc.) that looked, from the graph alone, like a duplicate of `src/core/review.rs`'s checks.
 
-**Action:** decide on one source of truth — either the skill shells out to `solidspec review`, or it's documented as intentionally independent.
+**Investigation:** the skill directory has its own `LICENSE`, `README.md`, and `CONTRIBUTING.md` — it's a vendored, independently-versioned (v2.1.0) third-party skill, not code this project authored. It performs a 16-dimension AI-agent-driven review (security, architecture, dependencies, UX, ...) with no knowledge of SolidSpec's artifact conventions, genuinely different in kind from `solidspec review`'s fast, deterministic, no-LLM heuristics scoped to SDD artifacts. Making it shell out to `solidspec review` would mean rewriting a vendored third-party tool to match a narrower, unrelated purpose.
 
-### 9. Shell scripts are isolated graph nodes with no test coverage
-`scripts/check-prerequisites.sh`, `common.sh`, `create-new-feature.sh` appear as weakly-connected components (analysis "isolated_nodes" question). They're embedded via `include_str!` so the graph can't see their consumers — but nothing in CI exercises them either.
+**Resolution:** documented as intentionally independent in CLAUDE.md ("Vendored agent skills vs. `solidspec review`" section) rather than merged.
 
-**Action:** add a `shellcheck` step to CI and at least one integration test that runs a copied script.
+### 9. ✅ FIXED — shell scripts had no direct test coverage, no shellcheck gate
+`scripts/check-prerequisites.sh`, `common.sh`, `create-new-feature.sh` appeared as weakly-connected graph components — the graph can't see `Command::new("bash")` invocations, so this was a partial false positive: `create-new-feature.sh` and two `common.sh` functions already had execution tests in `src/templates/mod.rs`'s `bash_execution` test module. The real gaps were `check-prerequisites.sh`, `setup-plan.sh`, and `update-agent-context.sh`, which had none, and no shellcheck gate in CI.
 
-### 10. `#[allow(dead_code)]` accumulation
-11+ `#[allow(dead_code)]` markers (`src/core/change.rs`, `src/config/mod.rs`, `src/core/artifact_graph.rs`, …). Each one hides a field/function the graph also sees as low-degree. Periodically remove the allow and delete what no longer compiles. Two instances were removed opportunistically while fixing P2.7: a stale allow on `invoker::invoke_agent_with_prompt` (genuinely used now) and the `#[allow(dead_code)]` on `ArtifactGraph::get` (used by P1.1's `should_skip` default arm) — the rest are still open.
+**Fix applied:** added 5 new tests in `src/templates/mod.rs::tests::bash_execution` exercising all three previously-uncovered scripts (pass/fail paths for `check-prerequisites.sh`, file creation + idempotency for `setup-plan.sh`, feature-status listing for `update-agent-context.sh`). Added a `shellcheck` job to `.github/workflows/ci.yml` (`shellcheck -x --severity=warning scripts/bash/*.sh scripts/generate-graph.sh`) — verified clean locally before adding the gate.
+
+### 10. ✅ AUDITED — `#[allow(dead_code)]` accumulation
+Systematically audited all 28 occurrences (16 file-level blanket `#![allow(dead_code)]`, 12 item-level) by removing each and rebuilding to see exactly what surfaced, rather than guessing.
+
+**Deleted outright** (confirmed genuinely dead — zero callers anywhere, including tests): `ArtifactGraph::artifact_ids()`, `ContextConfig`'s unused prompt-formatting methods (`as_prompt_section`/`rules_for_phase`/`as_phase_prompt` — the config struct's data is loaded from `solidspec.toml` but this half-built prompt-injection feature was never wired up), `DeltaSpec.raw` and `ChangeInfo.dir` (write-only fields, small blast radius), `agents::config::all_agent_ids()`, `intent_parser::EvidenceCriterion` (superseded by `evidence::EvidenceCriterionResult`), `TestFramework.slug_style` (genuinely vestigial — JS/TS `describe`/`it` blocks are generated from the raw story title directly, never through `slugify`, so the field-driven style switch was never actually consulted).
+
+**Deduplicated instead of just allowed:** `fan_out::run_lane_no_agent` was reimplementing `score_from_heuristics` inline instead of calling it — now calls it, making the allow unnecessary and removing ~10 duplicated lines.
+
+**Kept with a narrowed, documented allow** (real functionality, tested, just not yet wired to a caller — each now says exactly why and names the likely future consumer): `SchemaInfo`/`WorkflowSchema::builtin::names()`/`list_available_schemas()` (untested-by-CLI schema listing, candidate `solidspec schema list`), `ExtensionRegistry::get`/`update`, `agents::registry::unregister_apex_skill`/`unregister_commands` (candidate `solidspec agent remove`), `AgentConfig.requires_cli`, `ArtifactNode.instruction`/`.template` (tied to the already-noted P1.1 schema-driven-pipeline follow-up), `cli::ux`'s whole `Step`/`StepTracker` progress-UI module, `core::vscode`'s `.vscode/settings.json` merger, `PhaseStatus::Pending`/`Running`, `tdd::RedReport`/`parse_red_report`, `core::token::resolve_github_token`, `IntentSpec`'s mostly-unused fields, `Constitution.raw`/`Gate.article`/`.checks`, `DeltaModification.previous_text`, `errors::SolidSpecError::Init`, `SlugStyle::Preserved`.
+
+Net: file-level blanket allows down from 16 to 2 (both now module-doc-commented, not silent); every remaining allow states in one line why the code exists and isn't used yet. All 654 tests pass; this was a mix of safe deletions and documentation, no behavior changes.
 
 ### 11. Keep the graph fresh
 `docs/graph/GRAPH_REPORT.md` records the commit it was built from. Regenerate with `./scripts/generate-graph.sh` after structural changes, or install git hooks (`graphify hook install`) to update automatically. A stale graph gives stale review signals.

@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::PathBuf;
 
 #[derive(Debug, thiserror::Error)]
@@ -30,6 +29,9 @@ pub enum SolidSpecError {
     #[error("Feature error: {message}\n  Fix: {fix}")]
     Feature { message: String, fix: String },
 
+    /// `cli/init.rs` currently reports errors via plain `anyhow::bail!`/`.context()`
+    /// rather than this typed variant; kept for parity with the other phases.
+    #[allow(dead_code)]
     #[error("Init error at {path}: {message}\n  Fix: {fix}")]
     Init {
         path: PathBuf,

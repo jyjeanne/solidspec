@@ -81,3 +81,11 @@ jobs:
         run: cargo install cargo-audit --locked
       - name: Run security audit
         run: cargo audit --deny warnings
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on embedded bash scripts
+        run: shellcheck -x --severity=warning scripts/bash/*.sh scripts/generate-graph.sh

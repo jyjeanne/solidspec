@@ -1,4 +1,10 @@
+//! Colored step-progress UI (`Step`/`StepTracker`) for reporting multi-step
+//! command progress. Fully built and tested but not yet wired into any CLI
+//! command — `cli/pipeline.rs` currently prints phase progress with plain
+//! `println!` calls instead. Candidate replacement for that ad-hoc reporting
+//! if/when a richer progress display is wanted.
 #![allow(dead_code)]
+
 use console::Style;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,6 +1,10 @@
-#![allow(dead_code)]
 /// Resolve GitHub token from CLI flag → GH_TOKEN env → GITHUB_TOKEN env.
 /// Empty strings are treated as None.
+///
+/// Tested (see `mod tests` below) but not yet called from anywhere — no
+/// current command authenticates to GitHub. Candidate for a future
+/// extension/preset installer that fetches from private GitHub repos.
+#[allow(dead_code)]
 pub fn resolve_github_token(cli_flag: Option<&str>) -> Option<String> {
     // Level 1: CLI flag
     if let Some(token) = cli_flag {

@@ -20,10 +20,18 @@ pub struct ArtifactNode {
     pub generates: Vec<String>,
     /// IDs of artifacts that must be completed first
     pub requires: Vec<String>,
-    /// Human-readable instruction for creating this artifact
+    /// Human-readable instruction for creating this artifact. Parsed from
+    /// every schema.yaml today but not yet consulted by any CLI command —
+    /// phase prompts are still hardcoded per-phase (see `agents/invoker.rs`'s
+    /// `build_phase_prompt`, `agents/registry.rs`'s command bodies). Reserved
+    /// for a future schema-driven prompt/pipeline (`filter_phases` and
+    /// `execute_phase` in `core/pipeline.rs` / `cli/pipeline.rs` have the
+    /// same gap — see the P1.1 follow-up note in docs/graph/CODE_REVIEW.md).
     #[allow(dead_code)]
     pub instruction: String,
-    /// Optional template name to scaffold before instruction
+    /// Optional template name to scaffold before instruction. Same status as
+    /// `instruction` above — parsed but not yet consulted; `cli/specify.rs`
+    /// etc. hardcode their template name per schema type instead.
     #[allow(dead_code)]
     pub template: Option<String>,
 }
@@ -80,12 +88,6 @@ impl ArtifactGraph {
     /// Get an artifact by ID.
     pub fn get(&self, id: &str) -> Option<&ArtifactNode> {
         self.nodes.get(id)
-    }
-
-    /// All artifact IDs in the graph.
-    #[allow(dead_code)]
-    pub fn artifact_ids(&self) -> Vec<&str> {
-        self.nodes.keys().map(|s| s.as_str()).collect()
     }
 
     /// Kahn's algorithm: returns artifacts in topological build order.
