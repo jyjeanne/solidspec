@@ -52,6 +52,10 @@ pub fn run(
     // Filter phases (schema selects SDD vs IDSD phase set)
     let phases = pipeline::filter_phases(schema, from, to)?;
 
+    // Resolved artifact graph, so should_skip can consult each phase's
+    // `generates` declaration (honors project-local schema overrides).
+    let (artifact_graph, _) = crate::core::schema::load_graph(schema, &project_root)?;
+
     // Resolve or create feature
     let is_new = new_desc.is_some();
     let mut new_feature_prefix: Option<String> = None;
@@ -96,7 +100,7 @@ pub fn run(
     if dry_run {
         for (i, phase) in phases.iter().enumerate() {
             let agent = root_config.pipeline.agent_for_phase(phase, default_agent);
-            let skip = pipeline::should_skip(phase, &feature_dir, force);
+            let skip = pipeline::should_skip(phase, &feature_dir, force, &artifact_graph);
             let ptype = pipeline::phase_type(phase);
             let type_label = if ptype == pipeline::PhaseType::Handoff {
                 " [HANDOFF]"
@@ -132,7 +136,7 @@ pub fn run(
         let ptype = pipeline::phase_type(phase);
 
         // Check skip
-        if pipeline::should_skip(phase, &feature_dir, force) {
+        if pipeline::should_skip(phase, &feature_dir, force, &artifact_graph) {
             let reason = skip_reason(phase, &feature_dir);
             println!(
                 "  Phase {}/{}: {} ({})\n    ○ skipped — {reason}",

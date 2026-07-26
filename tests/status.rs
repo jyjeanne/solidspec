@@ -79,3 +79,53 @@ fn status_fails_in_non_solidspec_dir() {
         .failure()
         .stderr(predicate::str::contains("Not a SolidSpec project"));
 }
+
+#[test]
+fn status_warns_instead_of_panicking_on_cyclic_schema() {
+    // A project-local schema with a dependency cycle (spec <-> plan) must not
+    // crash `solidspec status` — it should warn and still print the table.
+    let dir = TempDir::new().unwrap();
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["init", "--here", "--no-git"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["specify", "Cyclic schema test"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let workflows_dir = dir.path().join(".solidspec/workflows/spec-driven");
+    std::fs::create_dir_all(&workflows_dir).unwrap();
+    std::fs::write(
+        workflows_dir.join("schema.yaml"),
+        r#"
+name: spec-driven
+version: "1.0"
+artifacts:
+  - id: spec
+    generates: ["spec.md"]
+    requires: ["plan"]
+    instruction: "cyclic"
+  - id: plan
+    generates: ["plan.md"]
+    requires: ["spec"]
+    instruction: "cyclic"
+"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["status", "001"])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("dependency graph"))
+        .stdout(predicate::str::contains("spec"))
+        .stdout(predicate::str::contains("plan"));
+}

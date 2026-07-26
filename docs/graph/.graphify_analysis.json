@@ -147,14 +147,69 @@
       "tests_tdd_upgrade_registers_tdd_tests_command"
     ],
     "2": [
+      "src_extensions_manager",
+      "src_extensions_manager_add_dev_installs_extension",
+      "src_extensions_manager_add_extension_dev",
+      "src_extensions_manager_add_without_manifest_errors",
+      "src_extensions_manager_build_entry",
+      "src_extensions_manager_copy_dir_safe",
+      "src_extensions_manager_create_ext_source",
+      "src_extensions_manager_dev_flag_set_in_registry",
+      "src_extensions_manager_disable_already_disabled_noop",
+      "src_extensions_manager_disable_extension",
+      "src_extensions_manager_enable_disable_toggle",
+      "src_extensions_manager_enable_extension",
+      "src_extensions_manager_info_by_id",
+      "src_extensions_manager_info_extension",
+      "src_extensions_manager_info_missing_returns_none",
+      "src_extensions_manager_list_extensions",
+      "src_extensions_manager_list_shows_all",
+      "src_extensions_manager_load_registry",
+      "src_extensions_manager_remove_cleans_up",
+      "src_extensions_manager_remove_extension",
+      "src_extensions_manager_remove_nonexistent_errors",
+      "src_extensions_manager_rs_option",
+      "src_extensions_manager_rs_path",
+      "src_extensions_manager_rs_pathbuf",
+      "src_extensions_manager_rs_result",
+      "src_extensions_manager_rs_string",
+      "src_extensions_manager_rs_vec",
+      "src_extensions_manager_search_extensions",
+      "src_extensions_manager_search_filters",
+      "src_extensions_manager_setup_project",
+      "src_extensions_manifest",
+      "src_extensions_manifest_default_true",
+      "src_extensions_manifest_description_over_200_chars_errors",
+      "src_extensions_manifest_empty_commands_list_errors",
+      "src_extensions_manifest_extensioncommand",
+      "src_extensions_manifest_extensionconfig",
+      "src_extensions_manifest_extensioninfo",
+      "src_extensions_manifest_extensionmanifest",
+      "src_extensions_manifest_extensionmanifest_load",
+      "src_extensions_manifest_extensionmanifest_parse",
+      "src_extensions_manifest_extensionmanifest_validate",
+      "src_extensions_manifest_extensionprovides",
+      "src_extensions_manifest_extensionrequires",
+      "src_extensions_manifest_hook_referencing_declared_command_passes",
+      "src_extensions_manifest_hook_referencing_undeclared_command_errors",
+      "src_extensions_manifest_hookdef",
+      "src_extensions_manifest_invalid_command_name_errors",
+      "src_extensions_manifest_invalid_extension_id_errors",
+      "src_extensions_manifest_invalid_hook_trigger_errors",
+      "src_extensions_manifest_invalid_version_specifier_errors",
+      "src_extensions_manifest_missing_required_fields_errors",
+      "src_extensions_manifest_parse_valid_manifest",
+      "src_extensions_manifest_rs_hashmap",
+      "src_extensions_manifest_rs_path",
+      "src_extensions_manifest_rs_result",
+      "src_extensions_manifest_rs_self",
+      "src_extensions_manifest_rs_string",
+      "src_extensions_manifest_rs_vec",
+      "src_extensions_manifest_toolrequirement",
+      "src_extensions_manifest_valid_hooks_accepted"
+    ],
+    "3": [
       "default",
-      "src_cli_intent",
-      "src_cli_intent_build_template_vars",
-      "src_cli_intent_rs_hashmap",
-      "src_cli_intent_rs_option",
-      "src_cli_intent_rs_result",
-      "src_cli_intent_rs_string",
-      "src_cli_intent_run",
       "src_config_mod",
       "src_config_mod_aiconfig",
       "src_config_mod_aiconfig_default",
@@ -213,7 +268,7 @@
       "src_config_mod_templatesconfig",
       "src_config_mod_templatesconfig_default"
     ],
-    "3": [
+    "4": [
       "src_agents_guardrails",
       "src_agents_guardrails_anti_rationalization_table_is_nonempty",
       "src_agents_guardrails_compliance_checklist_is_nonempty",
@@ -271,7 +326,65 @@
       "src_cli_pipeline_run",
       "src_cli_pipeline_skip_reason"
     ],
-    "4": [
+    "5": [
+      "src_core_pipeline",
+      "src_core_pipeline_analyze_never_skipped",
+      "src_core_pipeline_filter_all_phases",
+      "src_core_pipeline_filter_apex_driven_apex_at_correct_position",
+      "src_core_pipeline_filter_apex_driven_from_tasks_to_analyze",
+      "src_core_pipeline_filter_apex_driven_has_apex_not_implement",
+      "src_core_pipeline_filter_apex_driven_only_apex",
+      "src_core_pipeline_filter_existing_schemas_unchanged_by_apex_addition",
+      "src_core_pipeline_filter_from_after_to_errors",
+      "src_core_pipeline_filter_from_plan_to_tasks",
+      "src_core_pipeline_filter_idsd_phases_includes_intent_and_evidence",
+      "src_core_pipeline_filter_intent_apex_apex_before_evidence",
+      "src_core_pipeline_filter_intent_apex_has_all_idsd_phases_with_apex",
+      "src_core_pipeline_filter_invalid_phase_errors",
+      "src_core_pipeline_filter_only_one_phase",
+      "src_core_pipeline_filter_phases",
+      "src_core_pipeline_format_log_entry",
+      "src_core_pipeline_format_log_has_table_and_totals",
+      "src_core_pipeline_graph_for",
+      "src_core_pipeline_phase_type",
+      "src_core_pipeline_phase_types_correct",
+      "src_core_pipeline_phaseresult",
+      "src_core_pipeline_phasestatus",
+      "src_core_pipeline_phasestatus_fmt",
+      "src_core_pipeline_phasetype",
+      "src_core_pipeline_rs_display",
+      "src_core_pipeline_rs_formatter",
+      "src_core_pipeline_rs_option",
+      "src_core_pipeline_rs_path",
+      "src_core_pipeline_rs_result",
+      "src_core_pipeline_rs_string",
+      "src_core_pipeline_rs_vec",
+      "src_core_pipeline_schema_artifact_id",
+      "src_core_pipeline_should_not_skip_clarify_when_markers_present",
+      "src_core_pipeline_should_not_skip_evidence_when_absent",
+      "src_core_pipeline_should_not_skip_implement_when_tasks_pending",
+      "src_core_pipeline_should_not_skip_intent_when_absent",
+      "src_core_pipeline_should_not_skip_ship_when_report_absent",
+      "src_core_pipeline_should_skip",
+      "src_core_pipeline_should_skip_apex_false_when_apex_dir_empty",
+      "src_core_pipeline_should_skip_apex_false_when_force",
+      "src_core_pipeline_should_skip_apex_false_when_no_apex_dir",
+      "src_core_pipeline_should_skip_apex_false_when_run_dir_has_no_finish",
+      "src_core_pipeline_should_skip_apex_ignores_file_entries_in_apex_dir",
+      "src_core_pipeline_should_skip_apex_true_when_finish_exists",
+      "src_core_pipeline_should_skip_clarify_when_no_markers",
+      "src_core_pipeline_should_skip_evidence_when_report_exists",
+      "src_core_pipeline_should_skip_implement_when_all_tasks_done",
+      "src_core_pipeline_should_skip_intent_when_intent_exists",
+      "src_core_pipeline_should_skip_ship_when_report_exists",
+      "src_core_pipeline_should_skip_specify_when_spec_exists",
+      "src_core_pipeline_should_skip_tests_when_dir_nonempty_via_schema_generates",
+      "src_core_pipeline_should_skip_unknown_phase_defaults_false_when_absent_from_schema",
+      "src_core_pipeline_write_log",
+      "src_core_pipeline_write_log_appends_to_existing",
+      "src_core_pipeline_write_log_creates_file"
+    ],
+    "6": [
       "src_presets_manager",
       "src_presets_manager_add_preset",
       "src_presets_manager_add_preset_copies_files_and_registers",
@@ -328,7 +441,7 @@
       "src_presets_registry_search_by_name",
       "src_presets_registry_sorted_priorities_for_resolver"
     ],
-    "5": [
+    "7": [
       "src_cli_checklist",
       "src_cli_checklist_append_continues_from_last_id",
       "src_cli_checklist_append_items_start_from_given_id",
@@ -384,7 +497,7 @@
       "src_core_feature_rs_string",
       "src_core_feature_sanitize"
     ],
-    "6": [
+    "8": [
       "src_core_review",
       "src_core_review_ambiguous_language_flagged",
       "src_core_review_check_ambiguous_language",
@@ -440,7 +553,7 @@
       "src_core_review_task_story_link_gaps",
       "src_core_review_terse_requirements_are_not_false_medium"
     ],
-    "7": [
+    "9": [
       "regex",
       "src_core_evidence",
       "src_core_evidence_baseline_all_not_implemented",
@@ -495,61 +608,7 @@
       "src_core_intent_parser_status_as_str_roundtrip",
       "src_core_intent_parser_status_from_str_variants"
     ],
-    "8": [
-      "src_core_pipeline",
-      "src_core_pipeline_analyze_never_skipped",
-      "src_core_pipeline_filter_all_phases",
-      "src_core_pipeline_filter_apex_driven_apex_at_correct_position",
-      "src_core_pipeline_filter_apex_driven_from_tasks_to_analyze",
-      "src_core_pipeline_filter_apex_driven_has_apex_not_implement",
-      "src_core_pipeline_filter_apex_driven_only_apex",
-      "src_core_pipeline_filter_existing_schemas_unchanged_by_apex_addition",
-      "src_core_pipeline_filter_from_after_to_errors",
-      "src_core_pipeline_filter_from_plan_to_tasks",
-      "src_core_pipeline_filter_idsd_phases_includes_intent_and_evidence",
-      "src_core_pipeline_filter_intent_apex_apex_before_evidence",
-      "src_core_pipeline_filter_intent_apex_has_all_idsd_phases_with_apex",
-      "src_core_pipeline_filter_invalid_phase_errors",
-      "src_core_pipeline_filter_only_one_phase",
-      "src_core_pipeline_filter_phases",
-      "src_core_pipeline_format_log_entry",
-      "src_core_pipeline_format_log_has_table_and_totals",
-      "src_core_pipeline_phase_type",
-      "src_core_pipeline_phase_types_correct",
-      "src_core_pipeline_phaseresult",
-      "src_core_pipeline_phasestatus",
-      "src_core_pipeline_phasestatus_fmt",
-      "src_core_pipeline_phasetype",
-      "src_core_pipeline_rs_display",
-      "src_core_pipeline_rs_formatter",
-      "src_core_pipeline_rs_option",
-      "src_core_pipeline_rs_path",
-      "src_core_pipeline_rs_result",
-      "src_core_pipeline_rs_string",
-      "src_core_pipeline_rs_vec",
-      "src_core_pipeline_should_not_skip_clarify_when_markers_present",
-      "src_core_pipeline_should_not_skip_evidence_when_absent",
-      "src_core_pipeline_should_not_skip_implement_when_tasks_pending",
-      "src_core_pipeline_should_not_skip_intent_when_absent",
-      "src_core_pipeline_should_not_skip_ship_when_report_absent",
-      "src_core_pipeline_should_skip",
-      "src_core_pipeline_should_skip_apex_false_when_apex_dir_empty",
-      "src_core_pipeline_should_skip_apex_false_when_force",
-      "src_core_pipeline_should_skip_apex_false_when_no_apex_dir",
-      "src_core_pipeline_should_skip_apex_false_when_run_dir_has_no_finish",
-      "src_core_pipeline_should_skip_apex_ignores_file_entries_in_apex_dir",
-      "src_core_pipeline_should_skip_apex_true_when_finish_exists",
-      "src_core_pipeline_should_skip_clarify_when_no_markers",
-      "src_core_pipeline_should_skip_evidence_when_report_exists",
-      "src_core_pipeline_should_skip_implement_when_all_tasks_done",
-      "src_core_pipeline_should_skip_intent_when_intent_exists",
-      "src_core_pipeline_should_skip_ship_when_report_exists",
-      "src_core_pipeline_should_skip_specify_when_spec_exists",
-      "src_core_pipeline_write_log",
-      "src_core_pipeline_write_log_appends_to_existing",
-      "src_core_pipeline_write_log_creates_file"
-    ],
-    "9": [
+    "10": [
       "src_core_apex",
       "src_core_apex_build_solidspec_context",
       "src_core_apex_context_counts_uppercase_checked_tasks_as_done",
@@ -601,58 +660,6 @@
       "src_core_apex_write_script",
       "src_core_apex_write_spec",
       "src_core_apex_write_tasks"
-    ],
-    "10": [
-      "hashset",
-      "src_core_artifact_graph",
-      "src_core_artifact_graph_all_artifacts_in_default_graph_are_reachable",
-      "src_core_artifact_graph_all_frs_orphaned_when_no_tasks_md",
-      "src_core_artifact_graph_artifactgraph",
-      "src_core_artifact_graph_artifactgraph_artifact_ids",
-      "src_core_artifact_graph_artifactgraph_compute_states",
-      "src_core_artifact_graph_artifactgraph_detect_completion",
-      "src_core_artifact_graph_artifactgraph_get",
-      "src_core_artifact_graph_artifactgraph_new",
-      "src_core_artifact_graph_artifactgraph_topological_order",
-      "src_core_artifact_graph_artifactnode",
-      "src_core_artifact_graph_artifactstate",
-      "src_core_artifact_graph_build_trace_graph",
-      "src_core_artifact_graph_compute_states_shows_blocked_when_deps_missing",
-      "src_core_artifact_graph_default_graph_has_eight_artifacts",
-      "src_core_artifact_graph_detect_completion_empty_trailing_slash_dir_is_incomplete",
-      "src_core_artifact_graph_detect_completion_finds_existing_files",
-      "src_core_artifact_graph_detect_completion_glob_in_subdirectory",
-      "src_core_artifact_graph_detect_completion_glob_requires_matching_file",
-      "src_core_artifact_graph_detect_completion_nonempty_trailing_slash_dir_is_complete",
-      "src_core_artifact_graph_duplicate_artifact_id_errors",
-      "src_core_artifact_graph_extracts_fr_ids_from_spec",
-      "src_core_artifact_graph_format_tree_contains_fr_ids",
-      "src_core_artifact_graph_fr_with_task_not_orphaned",
-      "src_core_artifact_graph_glob_matches",
-      "src_core_artifact_graph_glob_matches_star_patterns",
-      "src_core_artifact_graph_intent_to_req_links_created_when_intent_md_present",
-      "src_core_artifact_graph_no_spec_returns_none",
-      "src_core_artifact_graph_req_to_task_links_created",
-      "src_core_artifact_graph_rs_hashmap",
-      "src_core_artifact_graph_rs_option",
-      "src_core_artifact_graph_rs_path",
-      "src_core_artifact_graph_rs_result",
-      "src_core_artifact_graph_rs_self",
-      "src_core_artifact_graph_rs_string",
-      "src_core_artifact_graph_rs_vec",
-      "src_core_artifact_graph_spec_driven_graph",
-      "src_core_artifact_graph_task_to_test_link_when_test_mentions_task_id",
-      "src_core_artifact_graph_tasks_requires_spec_and_plan",
-      "src_core_artifact_graph_tasks_without_fr_refs_produce_orphaned_frs",
-      "src_core_artifact_graph_topological_order_starts_with_no_dependency_artifacts",
-      "src_core_artifact_graph_tracegraph",
-      "src_core_artifact_graph_tracegraph_format_tree",
-      "src_core_artifact_graph_tracegraph_tasks_for_req",
-      "src_core_artifact_graph_tracegraph_tests_for_task",
-      "src_core_artifact_graph_tracelink",
-      "src_core_artifact_graph_tracelinktype",
-      "src_core_artifact_graph_unknown_dependency_errors",
-      "src_core_artifact_graph_write"
     ],
     "11": [
       "src_cli_status",
@@ -707,6 +714,58 @@
       "src_core_schema_workflowschema_parse"
     ],
     "12": [
+      "src_core_artifact_graph",
+      "src_core_artifact_graph_all_artifacts_in_default_graph_are_reachable",
+      "src_core_artifact_graph_all_frs_orphaned_when_no_tasks_md",
+      "src_core_artifact_graph_artifactgraph",
+      "src_core_artifact_graph_artifactgraph_artifact_ids",
+      "src_core_artifact_graph_artifactgraph_compute_states",
+      "src_core_artifact_graph_artifactgraph_detect_completion",
+      "src_core_artifact_graph_artifactgraph_generates_present",
+      "src_core_artifact_graph_artifactgraph_get",
+      "src_core_artifact_graph_artifactgraph_new",
+      "src_core_artifact_graph_artifactgraph_topological_order",
+      "src_core_artifact_graph_artifactnode",
+      "src_core_artifact_graph_artifactstate",
+      "src_core_artifact_graph_build_trace_graph",
+      "src_core_artifact_graph_compute_states_shows_blocked_when_deps_missing",
+      "src_core_artifact_graph_default_graph_has_eight_artifacts",
+      "src_core_artifact_graph_detect_completion_empty_trailing_slash_dir_is_incomplete",
+      "src_core_artifact_graph_detect_completion_finds_existing_files",
+      "src_core_artifact_graph_detect_completion_glob_in_subdirectory",
+      "src_core_artifact_graph_detect_completion_glob_requires_matching_file",
+      "src_core_artifact_graph_detect_completion_nonempty_trailing_slash_dir_is_complete",
+      "src_core_artifact_graph_duplicate_artifact_id_errors",
+      "src_core_artifact_graph_extracts_fr_ids_from_spec",
+      "src_core_artifact_graph_format_tree_contains_fr_ids",
+      "src_core_artifact_graph_fr_with_task_not_orphaned",
+      "src_core_artifact_graph_glob_matches",
+      "src_core_artifact_graph_glob_matches_star_patterns",
+      "src_core_artifact_graph_intent_to_req_links_created_when_intent_md_present",
+      "src_core_artifact_graph_no_spec_returns_none",
+      "src_core_artifact_graph_req_to_task_links_created",
+      "src_core_artifact_graph_rs_hashmap",
+      "src_core_artifact_graph_rs_option",
+      "src_core_artifact_graph_rs_path",
+      "src_core_artifact_graph_rs_result",
+      "src_core_artifact_graph_rs_self",
+      "src_core_artifact_graph_rs_string",
+      "src_core_artifact_graph_rs_vec",
+      "src_core_artifact_graph_spec_driven_graph",
+      "src_core_artifact_graph_task_to_test_link_when_test_mentions_task_id",
+      "src_core_artifact_graph_tasks_requires_spec_and_plan",
+      "src_core_artifact_graph_tasks_without_fr_refs_produce_orphaned_frs",
+      "src_core_artifact_graph_topological_order_starts_with_no_dependency_artifacts",
+      "src_core_artifact_graph_tracegraph",
+      "src_core_artifact_graph_tracegraph_format_tree",
+      "src_core_artifact_graph_tracegraph_tasks_for_req",
+      "src_core_artifact_graph_tracegraph_tests_for_task",
+      "src_core_artifact_graph_tracelink",
+      "src_core_artifact_graph_tracelinktype",
+      "src_core_artifact_graph_unknown_dependency_errors",
+      "src_core_artifact_graph_write"
+    ],
+    "13": [
       "src_core_spec_parser",
       "src_core_spec_parser_clarificationmarker",
       "src_core_spec_parser_empty_spec_handled",
@@ -754,7 +813,7 @@
       "src_core_task_generator_tasklist",
       "src_core_task_generator_tasks_have_strict_format"
     ],
-    "13": [
+    "14": [
       "src_core_test_generator",
       "src_core_test_generator_acceptancescenario",
       "src_core_test_generator_cargo_template_valid_syntax",
@@ -802,7 +861,7 @@
       "src_core_test_generator_test_file_name_truncated",
       "src_core_test_generator_testframework"
     ],
-    "14": [
+    "15": [
       "src_extensions_hooks",
       "src_extensions_hooks_fire_hooks",
       "src_extensions_hooks_fire_hooks_skips_disabled_extensions",
@@ -849,7 +908,7 @@
       "src_extensions_registry_update_nonexistent_errors",
       "src_extensions_registry_update_preserves_timestamp"
     ],
-    "15": [
+    "16": [
       "tests_apex",
       "tests_apex_apex_auto_detects_feature_id",
       "tests_apex_apex_command_appears_in_help",
@@ -895,7 +954,51 @@
       "tests_apex_status_shows_apex_artifact_in_apex_driven_schema",
       "tests_apex_upgrade_refreshes_apex_skill_files"
     ],
-    "16": [
+    "17": [
+      "src_cli_intent",
+      "src_cli_intent_build_template_vars",
+      "src_cli_intent_rs_hashmap",
+      "src_cli_intent_rs_option",
+      "src_cli_intent_rs_result",
+      "src_cli_intent_rs_string",
+      "src_cli_intent_run",
+      "src_cli_plan",
+      "src_cli_plan_rs_option",
+      "src_cli_plan_rs_result",
+      "src_cli_plan_run",
+      "src_cli_specify",
+      "src_cli_specify_build_template_vars",
+      "src_cli_specify_rs_hashmap",
+      "src_cli_specify_rs_path",
+      "src_cli_specify_rs_result",
+      "src_cli_specify_rs_string",
+      "src_cli_specify_run",
+      "src_cli_specify_run_for_existing",
+      "src_cli_specify_write_spec",
+      "src_templates_resolver",
+      "src_templates_resolver_embedded_default_when_nothing_else",
+      "src_templates_resolver_empty_override_file_still_wins",
+      "src_templates_resolver_extension_wins_when_no_override_or_preset",
+      "src_templates_resolver_load_template",
+      "src_templates_resolver_load_template_embedded_default",
+      "src_templates_resolver_load_template_from_override",
+      "src_templates_resolver_load_unknown_template_returns_error",
+      "src_templates_resolver_lower_priority_number_preset_wins",
+      "src_templates_resolver_override_beats_preset",
+      "src_templates_resolver_override_present_wins",
+      "src_templates_resolver_preset_wins_when_no_override",
+      "src_templates_resolver_resolve",
+      "src_templates_resolver_resolve_cached",
+      "src_templates_resolver_resolvedtemplate",
+      "src_templates_resolver_rs_option",
+      "src_templates_resolver_rs_path",
+      "src_templates_resolver_rs_pathbuf",
+      "src_templates_resolver_rs_result",
+      "src_templates_resolver_rs_string",
+      "src_templates_resolver_setup_project",
+      "src_templates_resolver_templatesource"
+    ],
+    "18": [
       "src_core_change",
       "src_core_change_archive_change",
       "src_core_change_archive_nonexistent_change_errors",
@@ -937,44 +1040,7 @@
       "src_core_change_slugify",
       "src_core_change_slugify_produces_valid_slugs"
     ],
-    "17": [
-      "src_cli_plan",
-      "src_cli_plan_rs_option",
-      "src_cli_plan_rs_result",
-      "src_cli_plan_run",
-      "src_cli_specify",
-      "src_cli_specify_build_template_vars",
-      "src_cli_specify_rs_hashmap",
-      "src_cli_specify_rs_path",
-      "src_cli_specify_rs_result",
-      "src_cli_specify_rs_string",
-      "src_cli_specify_run",
-      "src_cli_specify_run_for_existing",
-      "src_cli_specify_write_spec",
-      "src_templates_resolver",
-      "src_templates_resolver_embedded_default_when_nothing_else",
-      "src_templates_resolver_empty_override_file_still_wins",
-      "src_templates_resolver_extension_wins_when_no_override_or_preset",
-      "src_templates_resolver_load_template",
-      "src_templates_resolver_load_template_embedded_default",
-      "src_templates_resolver_load_template_from_override",
-      "src_templates_resolver_load_unknown_template_returns_error",
-      "src_templates_resolver_lower_priority_number_preset_wins",
-      "src_templates_resolver_override_beats_preset",
-      "src_templates_resolver_override_present_wins",
-      "src_templates_resolver_preset_wins_when_no_override",
-      "src_templates_resolver_resolve",
-      "src_templates_resolver_resolve_cached",
-      "src_templates_resolver_resolvedtemplate",
-      "src_templates_resolver_rs_option",
-      "src_templates_resolver_rs_path",
-      "src_templates_resolver_rs_pathbuf",
-      "src_templates_resolver_rs_result",
-      "src_templates_resolver_rs_string",
-      "src_templates_resolver_setup_project",
-      "src_templates_resolver_templatesource"
-    ],
-    "18": [
+    "19": [
       "src_core_analyzer",
       "src_core_analyzer_analysisreport",
       "src_core_analyzer_analyze_does_not_modify_files",
@@ -1008,71 +1074,7 @@
       "src_core_analyzer_write_intent",
       "src_core_analyzer_write_test"
     ],
-    "19": [
-      "src_extensions_manager",
-      "src_extensions_manager_add_dev_installs_extension",
-      "src_extensions_manager_add_extension_dev",
-      "src_extensions_manager_add_without_manifest_errors",
-      "src_extensions_manager_build_entry",
-      "src_extensions_manager_copy_dir_safe",
-      "src_extensions_manager_create_ext_source",
-      "src_extensions_manager_dev_flag_set_in_registry",
-      "src_extensions_manager_disable_already_disabled_noop",
-      "src_extensions_manager_disable_extension",
-      "src_extensions_manager_enable_disable_toggle",
-      "src_extensions_manager_enable_extension",
-      "src_extensions_manager_info_by_id",
-      "src_extensions_manager_info_extension",
-      "src_extensions_manager_info_missing_returns_none",
-      "src_extensions_manager_list_extensions",
-      "src_extensions_manager_list_shows_all",
-      "src_extensions_manager_load_registry",
-      "src_extensions_manager_remove_cleans_up",
-      "src_extensions_manager_remove_extension",
-      "src_extensions_manager_remove_nonexistent_errors",
-      "src_extensions_manager_rs_option",
-      "src_extensions_manager_rs_path",
-      "src_extensions_manager_rs_pathbuf",
-      "src_extensions_manager_rs_result",
-      "src_extensions_manager_rs_string",
-      "src_extensions_manager_rs_vec",
-      "src_extensions_manager_search_extensions",
-      "src_extensions_manager_search_filters",
-      "src_extensions_manager_setup_project"
-    ],
     "20": [
-      "src_extensions_manifest",
-      "src_extensions_manifest_default_true",
-      "src_extensions_manifest_description_over_200_chars_errors",
-      "src_extensions_manifest_empty_commands_list_errors",
-      "src_extensions_manifest_extensioncommand",
-      "src_extensions_manifest_extensionconfig",
-      "src_extensions_manifest_extensioninfo",
-      "src_extensions_manifest_extensionmanifest",
-      "src_extensions_manifest_extensionmanifest_load",
-      "src_extensions_manifest_extensionmanifest_parse",
-      "src_extensions_manifest_extensionmanifest_validate",
-      "src_extensions_manifest_extensionprovides",
-      "src_extensions_manifest_extensionrequires",
-      "src_extensions_manifest_hook_referencing_declared_command_passes",
-      "src_extensions_manifest_hook_referencing_undeclared_command_errors",
-      "src_extensions_manifest_hookdef",
-      "src_extensions_manifest_invalid_command_name_errors",
-      "src_extensions_manifest_invalid_extension_id_errors",
-      "src_extensions_manifest_invalid_hook_trigger_errors",
-      "src_extensions_manifest_invalid_version_specifier_errors",
-      "src_extensions_manifest_missing_required_fields_errors",
-      "src_extensions_manifest_parse_valid_manifest",
-      "src_extensions_manifest_rs_hashmap",
-      "src_extensions_manifest_rs_path",
-      "src_extensions_manifest_rs_result",
-      "src_extensions_manifest_rs_self",
-      "src_extensions_manifest_rs_string",
-      "src_extensions_manifest_rs_vec",
-      "src_extensions_manifest_toolrequirement",
-      "src_extensions_manifest_valid_hooks_accepted"
-    ],
-    "21": [
       "src_agents_invoker_supports_cli",
       "src_agents_registry",
       "src_agents_registry_apex_skill_dir",
@@ -1103,7 +1105,7 @@
       "src_agents_registry_unregister_removes_apex_skill_directory",
       "src_agents_registry_write_command_file"
     ],
-    "22": [
+    "21": [
       "src_templates_mod",
       "src_templates_mod_all",
       "src_templates_mod_all_bash_scripts_are_nonempty",
@@ -1134,7 +1136,7 @@
       "src_templates_mod_rs_vec",
       "src_templates_mod_setup_script_project"
     ],
-    "23": [
+    "22": [
       "src_cli_check",
       "src_cli_check_rs_result",
       "src_cli_check_run",
@@ -1164,7 +1166,7 @@
       "src_core_git_rs_result",
       "src_core_git_rs_string"
     ],
-    "24": [
+    "23": [
       "src_core_tdd",
       "src_core_tdd_build_cycle_sections",
       "src_core_tdd_count_pending_tasks",
@@ -1192,16 +1194,16 @@
       "src_core_tdd_scaffold_refactor_report_warns_with_pending_tasks",
       "src_core_tdd_write_spec_with_ac"
     ],
-    "25": [
+    "24": [
+      "hashset",
       "src_agents_config",
       "src_agents_config_alias_bijection",
       "src_agents_config_alias_resolution_works",
       "src_agents_config_all_agent_ids",
       "src_agents_config_all_agents_have_nonempty_command_dir_and_format",
+      "src_agents_config_cli_agents_have_requires_cli_true",
       "src_agents_config_config_table_has_20_agents",
-      "src_agents_config_copilot_uses_agent_md_extension",
       "src_agents_config_ide_agents_have_requires_cli_false",
-      "src_agents_config_kimi_uses_skill_md_extension",
       "src_agents_config_no_duplicate_aliases",
       "src_agents_config_no_duplicate_ids",
       "src_agents_config_rs_vec",
@@ -1210,16 +1212,16 @@
       "src_cli_clarify_rs_option",
       "src_cli_clarify_rs_result",
       "src_cli_clarify_run",
-      "src_cli_tasks",
-      "src_cli_tasks_rs_option",
-      "src_cli_tasks_rs_result",
-      "src_cli_tasks_run",
-      "src_cli_tdd_refactor",
-      "src_cli_tdd_refactor_rs_option",
-      "src_cli_tdd_refactor_rs_result",
-      "src_cli_tdd_refactor_run"
+      "src_cli_evidence",
+      "src_cli_evidence_rs_option",
+      "src_cli_evidence_rs_result",
+      "src_cli_evidence_run",
+      "src_cli_review",
+      "src_cli_review_rs_option",
+      "src_cli_review_rs_result",
+      "src_cli_review_run"
     ],
-    "26": [
+    "25": [
       "src_agents_config_agentformat",
       "src_agents_formats",
       "src_agents_formats_adjust_script_paths",
@@ -1246,7 +1248,7 @@
       "src_agents_formats_translate_to_toml_replaces_arguments",
       "src_agents_formats_vibe_skill_has_required_frontmatter"
     ],
-    "27": [
+    "26": [
       "src_cli_change",
       "src_cli_change_changecommands",
       "src_cli_change_rs_option",
@@ -1272,7 +1274,7 @@
       "src_cli_preset_rs_string",
       "src_cli_preset_run"
     ],
-    "28": [
+    "27": [
       "src_presets_manifest",
       "src_presets_manifest_description_over_200_chars_errors",
       "src_presets_manifest_invalid_id_with_uppercase_errors",
@@ -1296,6 +1298,29 @@
       "src_presets_manifest_rs_vec",
       "src_presets_manifest_unknown_template_type_errors",
       "src_presets_manifest_wrong_schema_version_errors"
+    ],
+    "28": [
+      "src_agents_config_agentconfig",
+      "src_agents_config_copilot_uses_agent_md_extension",
+      "src_agents_config_find_agent",
+      "src_agents_config_kimi_uses_skill_md_extension",
+      "src_agents_config_rs_option",
+      "src_agents_registry_apex_command_file_contains_apex_workflow_text",
+      "src_agents_registry_command_files_contain_compliance_guardrails",
+      "src_agents_registry_copilot_creates_agent_md_and_prompt_md",
+      "src_agents_registry_detectedagent",
+      "src_agents_registry_kimi_creates_directory_based_skills",
+      "src_agents_registry_kimi_uses_dot_separator_others_use_hyphen",
+      "src_agents_registry_opencode_creates_directory_based_skills",
+      "src_agents_registry_register_commands",
+      "src_agents_registry_register_markdown_agent_creates_md_files",
+      "src_agents_registry_register_toml_agent_creates_toml_files",
+      "src_agents_registry_unregister_commands",
+      "src_agents_registry_unregister_removes_copilot_files",
+      "src_agents_registry_unregister_removes_kimi_dirs",
+      "src_agents_registry_unregister_removes_opencode_skills",
+      "src_agents_registry_unregister_removes_vibe_dirs",
+      "src_agents_registry_vibe_creates_directory_based_skills"
     ],
     "29": [
       "into",
@@ -1342,28 +1367,6 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_tmp_spec"
     ],
     "31": [
-      "src_agents_config_agentconfig",
-      "src_agents_config_cli_agents_have_requires_cli_true",
-      "src_agents_config_find_agent",
-      "src_agents_config_rs_option",
-      "src_agents_registry_apex_command_file_contains_apex_workflow_text",
-      "src_agents_registry_command_files_contain_compliance_guardrails",
-      "src_agents_registry_copilot_creates_agent_md_and_prompt_md",
-      "src_agents_registry_detectedagent",
-      "src_agents_registry_kimi_creates_directory_based_skills",
-      "src_agents_registry_kimi_uses_dot_separator_others_use_hyphen",
-      "src_agents_registry_opencode_creates_directory_based_skills",
-      "src_agents_registry_register_commands",
-      "src_agents_registry_register_markdown_agent_creates_md_files",
-      "src_agents_registry_register_toml_agent_creates_toml_files",
-      "src_agents_registry_unregister_commands",
-      "src_agents_registry_unregister_removes_copilot_files",
-      "src_agents_registry_unregister_removes_kimi_dirs",
-      "src_agents_registry_unregister_removes_opencode_skills",
-      "src_agents_registry_unregister_removes_vibe_dirs",
-      "src_agents_registry_vibe_creates_directory_based_skills"
-    ],
-    "32": [
       "src_core_constitution",
       "src_core_constitution_check_intent_constraints",
       "src_core_constitution_check_plan_compliance",
@@ -1384,7 +1387,7 @@
       "src_core_constitution_rs_vec",
       "src_core_constitution_strip_constitution_section"
     ],
-    "33": [
+    "32": [
       "tests_ship",
       "tests_ship_create_feature",
       "tests_ship_init_project",
@@ -1403,7 +1406,7 @@
       "tests_ship_solidspec",
       "tests_ship_status_shows_ship_artifact_after_review"
     ],
-    "34": [
+    "33": [
       "opencode_skills_ai_spec_review_skill_scripts_review_spec_basic_analysis",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_rationale_202",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbasicanalysis",
@@ -1421,7 +1424,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbasicanalysis_test_short_spec_flagged",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbasicanalysis_test_short_spec_severity_is_high"
     ],
-    "35": [
+    "34": [
       "opencode_skills_ai_spec_review_skill_scripts_review_spec_detect_testing_gaps",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_rationale_261",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetecttestinggaps",
@@ -1439,7 +1442,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetecttestinggaps_test_testing_accepted",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetecttestinggaps_test_tests_accepted"
     ],
-    "36": [
+    "35": [
       "tests_traceability",
       "tests_traceability_analyze_prints_traceability_chain_tree",
       "tests_traceability_analyze_shows_intent_coverage_with_intent_md",
@@ -1457,7 +1460,7 @@
       "tests_traceability_trace_tree_shows_task_to_test_links",
       "tests_traceability_write"
     ],
-    "37": [
+    "36": [
       "opencode_skills_ai_spec_review_skill_scripts_review_spec_build_summary",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbuildsummary",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbuildsummary_test_assumptions_non_empty",
@@ -1472,7 +1475,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbuildsummary_test_top_risks_max_three",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testbuildsummary_test_top_risks_sorted_by_severity"
     ],
-    "38": [
+    "37": [
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration_run",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration_test_all_issue_categories_are_valid",
@@ -1486,6 +1489,20 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration_test_rich_spec_is_ready",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration_test_rich_spec_no_issues",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testmainintegration_test_risk_register_matches_issues_count"
+    ],
+    "38": [
+      "tests_pipeline",
+      "tests_pipeline_full_pipeline_scaffold_generates_all_artifacts",
+      "tests_pipeline_pipeline_dry_run_output_contains_dry_run_marker",
+      "tests_pipeline_pipeline_dry_run_respects_custom_schema_generates_override",
+      "tests_pipeline_pipeline_idsd_generates_intent_before_spec",
+      "tests_pipeline_pipeline_intent_apex_uses_single_feature_dir",
+      "tests_pipeline_pipeline_new_ignores_stale_feature_env_var",
+      "tests_pipeline_pipeline_sdd_unchanged_no_intent_md",
+      "tests_pipeline_pipeline_status_shows_artifact_table",
+      "tests_pipeline_rs_command",
+      "tests_pipeline_rs_path",
+      "tests_pipeline_setup_project"
     ],
     "39": [
       "opencode_skills_ai_spec_review_skill_scripts_review_spec_build_risk_register",
@@ -1514,19 +1531,6 @@
       "value"
     ],
     "41": [
-      "tests_pipeline",
-      "tests_pipeline_full_pipeline_scaffold_generates_all_artifacts",
-      "tests_pipeline_pipeline_dry_run_output_contains_dry_run_marker",
-      "tests_pipeline_pipeline_idsd_generates_intent_before_spec",
-      "tests_pipeline_pipeline_intent_apex_uses_single_feature_dir",
-      "tests_pipeline_pipeline_new_ignores_stale_feature_env_var",
-      "tests_pipeline_pipeline_sdd_unchanged_no_intent_md",
-      "tests_pipeline_pipeline_status_shows_artifact_table",
-      "tests_pipeline_rs_command",
-      "tests_pipeline_rs_path",
-      "tests_pipeline_setup_project"
-    ],
-    "42": [
       "shell",
       "src_cli_completions",
       "src_cli_completions_bash_completions_contain_subcommands",
@@ -1538,7 +1542,7 @@
       "src_cli_completions_run",
       "src_cli_completions_zsh_completions_generated"
     ],
-    "43": [
+    "42": [
       "tests_evidence",
       "tests_evidence_evidence_fails_without_intent_md",
       "tests_evidence_evidence_prints_criteria_table_and_writes_report",
@@ -1550,7 +1554,7 @@
       "tests_evidence_write_implemented_test",
       "tests_evidence_write_intent"
     ],
-    "44": [
+    "43": [
       "src_cli_apex",
       "src_cli_apex_feature_slug",
       "src_cli_apex_feature_slug_leaves_non_numeric_prefix_intact",
@@ -1561,7 +1565,7 @@
       "src_cli_apex_run",
       "src_cli_apex_run_fails_without_project_root"
     ],
-    "45": [
+    "44": [
       "src_cli_upgrade",
       "src_cli_upgrade_rs_path",
       "src_cli_upgrade_rs_result",
@@ -1572,7 +1576,7 @@
       "src_cli_upgrade_upgrade_preserves_specs",
       "src_cli_upgrade_upgrade_refreshes_templates"
     ],
-    "46": [
+    "45": [
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testconstants",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testconstants_test_likelihood_covers_all_severities",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testconstants_test_likelihood_values_are_valid",
@@ -1582,7 +1586,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testconstants_test_severity_rank_ordering",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testconstants_test_valid_categories_count"
     ],
-    "47": [
+    "46": [
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testcreateissue",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testcreateissue_make",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testcreateissue_test_all_valid_categories_accepted",
@@ -1592,7 +1596,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testcreateissue_test_source_section_is_automated",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testcreateissue_test_values_pass_through"
     ],
-    "48": [
+    "47": [
       "src_core_token",
       "src_core_token_cli_flag_wins",
       "src_core_token_empty_string_treated_as_none",
@@ -1602,7 +1606,7 @@
       "src_core_token_rs_string",
       "src_core_token_whitespace_trimmed"
     ],
-    "49": [
+    "48": [
       "opencode_skills_ai_spec_review_skill_scripts_review_spec_detect_performance_gaps",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetectperformancegaps",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetectperformancegaps_test_case_insensitive",
@@ -1611,7 +1615,7 @@
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetectperformancegaps_test_no_performance_terms_flagged",
       "opencode_skills_ai_spec_review_skill_scripts_test_review_spec_testdetectperformancegaps_test_severity_is_medium"
     ],
-    "50": [
+    "49": [
       "scripts_bash_common",
       "scripts_bash_common_find_feature_dir",
       "scripts_bash_common_get_current_branch",
@@ -1620,7 +1624,7 @@
       "scripts_bash_common_json_escape",
       "scripts_bash_common_sh__entry"
     ],
-    "51": [
+    "50": [
       "src_core_errors",
       "src_core_errors_all_error_variants_produce_nonempty_messages",
       "src_core_errors_config_error_displays_path_and_fix",
@@ -1629,7 +1633,7 @@
       "src_core_errors_solidspecerror",
       "src_core_errors_spec_error_displays_feature_id"
     ],
-    "52": [
+    "51": [
       "src_core_text",
       "src_core_text_ascii_truncated_exactly",
       "src_core_text_emoji_not_split",
@@ -1638,7 +1642,7 @@
       "src_core_text_shorter_string_unchanged",
       "src_core_text_truncate_at_boundary"
     ],
-    "53": [
+    "52": [
       "tests_change",
       "tests_change_change_archive_merges_deltas_and_moves_to_archive",
       "tests_change_change_list_shows_active_changes",
@@ -1646,12 +1650,19 @@
       "tests_change_init_project",
       "tests_change_rs_path"
     ],
-    "54": [
+    "53": [
       "scripts_powershell_common",
       "scripts_powershell_common_find_featuredir",
       "scripts_powershell_common_get_currentbranch",
       "scripts_powershell_common_get_featurepaths",
       "scripts_powershell_common_get_reporoot"
+    ],
+    "54": [
+      "tests_status",
+      "tests_status_status_fails_in_non_solidspec_dir",
+      "tests_status_status_shows_artifacts_after_pipeline_scaffold",
+      "tests_status_status_warns_instead_of_panicking_on_cyclic_schema",
+      "tests_status_status_with_minimal_schema"
     ],
     "55": [
       "src_cli_analyze",
@@ -1660,16 +1671,16 @@
       "src_cli_analyze_run"
     ],
     "56": [
-      "src_cli_evidence",
-      "src_cli_evidence_rs_option",
-      "src_cli_evidence_rs_result",
-      "src_cli_evidence_run"
+      "src_cli_tasks",
+      "src_cli_tasks_rs_option",
+      "src_cli_tasks_rs_result",
+      "src_cli_tasks_run"
     ],
     "57": [
-      "src_cli_review",
-      "src_cli_review_rs_option",
-      "src_cli_review_rs_result",
-      "src_cli_review_run"
+      "src_cli_tdd_refactor",
+      "src_cli_tdd_refactor_rs_option",
+      "src_cli_tdd_refactor_rs_result",
+      "src_cli_tdd_refactor_run"
     ],
     "58": [
       "src_cli_tdd_tests",
@@ -1684,152 +1695,146 @@
       "src_cli_tests_cmd_run"
     ],
     "60": [
-      "tests_status",
-      "tests_status_status_fails_in_non_solidspec_dir",
-      "tests_status_status_shows_artifacts_after_pipeline_scaffold",
-      "tests_status_status_with_minimal_schema"
-    ],
-    "61": [
       "src_main",
       "src_main_main",
       "src_main_rs_result"
     ],
-    "62": [
+    "61": [
       "templates_apex_scripts_setup_templates",
       "templates_apex_scripts_setup_templates_render_template",
       "templates_apex_scripts_setup_templates_sh__entry"
     ],
-    "63": [
+    "62": [
       "tests_check",
       "tests_check_check_detects_initialized_project",
       "tests_check_check_detects_non_project_directory"
     ],
-    "64": [
+    "63": [
       "tests_completions",
       "tests_completions_completions_command_produces_output",
       "tests_completions_completions_unknown_shell_errors"
     ],
-    "65": [
+    "64": [
       "scripts_bash_check_prerequisites",
       "scripts_bash_check_prerequisites_sh__entry"
     ],
-    "66": [
+    "65": [
       "scripts_bash_create_new_feature",
       "scripts_bash_create_new_feature_sh__entry"
     ],
-    "67": [
+    "66": [
       "scripts_bash_setup_plan",
       "scripts_bash_setup_plan_sh__entry"
     ],
-    "68": [
+    "67": [
       "scripts_bash_update_agent_context",
       "scripts_bash_update_agent_context_sh__entry"
     ],
-    "69": [
+    "68": [
       "scripts_generate_graph",
       "scripts_generate_graph_sh__entry"
     ],
-    "70": [
+    "69": [
       "templates_apex_scripts_update_progress",
       "templates_apex_scripts_update_progress_sh__entry"
     ],
-    "71": [
+    "70": [
       "crate:solidspec"
     ],
-    "72": [
+    "71": [
       "scripts_powershell_check_prerequisites"
     ],
-    "73": [
+    "72": [
       "scripts_powershell_create_new_feature"
     ],
-    "74": [
+    "73": [
       "scripts_powershell_setup_plan"
     ],
-    "75": [
+    "74": [
       "scripts_powershell_update_agent_context"
     ],
-    "76": [
+    "75": [
       "src_agents_mod"
     ],
-    "77": [
+    "76": [
       "src_agents_registrar"
     ],
-    "78": [
+    "77": [
       "src_core_mod"
     ],
-    "79": [
+    "78": [
       "src_extensions_mod"
     ],
-    "80": [
+    "79": [
       "src_presets_mod"
     ]
   },
   "cohesion": {
     "0": 0.06306306306306306,
     "1": 0.09588421528720036,
-    "2": 0.0673076923076923,
-    "3": 0.06883116883116883,
-    "4": 0.09696969696969697,
-    "5": 0.06009783368273934,
-    "6": 0.10971348707197764,
-    "7": 0.08708272859216255,
-    "8": 0.058823529411764705,
-    "9": 0.11294117647058824,
-    "10": 0.12163265306122449,
+    "2": 0.08305084745762711,
+    "3": 0.07924984875983061,
+    "4": 0.06883116883116883,
+    "5": 0.06688311688311688,
+    "6": 0.09696969696969697,
+    "7": 0.06009783368273934,
+    "8": 0.10971348707197764,
+    "9": 0.08708272859216255,
+    "10": 0.11294117647058824,
     "11": 0.08489795918367347,
-    "12": 0.1111111111111111,
-    "13": 0.10821256038647344,
-    "14": 0.11818181818181818,
-    "15": 0.13530655391120508,
-    "16": 0.1423076923076923,
-    "17": 0.12773109243697478,
-    "18": 0.1532258064516129,
-    "19": 0.20229885057471264,
-    "20": 0.1310344827586207,
-    "21": 0.15024630541871922,
-    "22": 0.1330049261083744,
-    "23": 0.1402116402116402,
-    "24": 0.18153846153846154,
-    "25": 0.08,
-    "26": 0.16,
-    "27": 0.10869565217391304,
-    "28": 0.16600790513833993,
+    "12": 0.12244897959183673,
+    "13": 0.1111111111111111,
+    "14": 0.10821256038647344,
+    "15": 0.11818181818181818,
+    "16": 0.13530655391120508,
+    "17": 0.09872241579558652,
+    "18": 0.1423076923076923,
+    "19": 0.1532258064516129,
+    "20": 0.15024630541871922,
+    "21": 0.1330049261083744,
+    "22": 0.1402116402116402,
+    "23": 0.18153846153846154,
+    "24": 0.08,
+    "25": 0.16,
+    "26": 0.10869565217391304,
+    "27": 0.16600790513833993,
+    "28": 0.1761904761904762,
     "29": 0.22105263157894736,
     "30": 0.18421052631578946,
-    "31": 0.18947368421052632,
-    "32": 0.25146198830409355,
-    "33": 0.3382352941176471,
+    "31": 0.25146198830409355,
+    "32": 0.3382352941176471,
+    "33": 0.225,
     "34": 0.225,
-    "35": 0.225,
-    "36": 0.35,
-    "37": 0.28205128205128205,
-    "38": 0.2692307692307692,
+    "35": 0.35,
+    "36": 0.28205128205128205,
+    "37": 0.2692307692307692,
+    "38": 0.30303030303030304,
     "39": 0.43636363636363634,
     "40": 0.36363636363636365,
-    "41": 0.32727272727272727,
-    "42": 0.35555555555555557,
-    "43": 0.4444444444444444,
-    "44": 0.25,
-    "45": 0.3611111111111111,
-    "46": 0.25,
-    "47": 0.4642857142857143,
-    "48": 0.39285714285714285,
-    "49": 0.47619047619047616,
+    "41": 0.35555555555555557,
+    "42": 0.4444444444444444,
+    "43": 0.25,
+    "44": 0.3611111111111111,
+    "45": 0.25,
+    "46": 0.4642857142857143,
+    "47": 0.39285714285714285,
+    "48": 0.47619047619047616,
+    "49": 0.3333333333333333,
     "50": 0.3333333333333333,
-    "51": 0.3333333333333333,
-    "52": 0.2857142857142857,
-    "53": 0.5333333333333333,
-    "54": 0.9,
+    "51": 0.2857142857142857,
+    "52": 0.5333333333333333,
+    "53": 0.9,
+    "54": 0.4,
     "55": 0.5,
     "56": 0.5,
     "57": 0.5,
     "58": 0.5,
     "59": 0.5,
-    "60": 0.5,
+    "60": 1.0,
     "61": 1.0,
-    "62": 1.0,
+    "62": 0.6666666666666666,
     "63": 0.6666666666666666,
-    "64": 0.6666666666666666,
+    "64": 1.0,
     "65": 1.0,
     "66": 1.0,
     "67": 1.0,
@@ -1844,8 +1849,7 @@
     "76": 1.0,
     "77": 1.0,
     "78": 1.0,
-    "79": 1.0,
-    "80": 1.0
+    "79": 1.0
   },
   "gods": [
     {
@@ -1879,6 +1883,11 @@
       "degree": 24
     },
     {
+      "id": "src_core_pipeline_graph_for",
+      "label": "graph_for()",
+      "degree": 22
+    },
+    {
       "id": "src_core_review_preflight_review",
       "label": "preflight_review()",
       "degree": 22
@@ -1891,11 +1900,6 @@
     {
       "id": "src_agents_registry_register_commands",
       "label": "register_commands()",
-      "degree": 20
-    },
-    {
-      "id": "src_core_intent_parser_parse_intent_content",
-      "label": "parse_intent_content()",
       "degree": 20
     }
   ],
@@ -1959,18 +1963,13 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `ExtensionManifest` connect `Community 20` to `Community 19`?",
-      "why": "High betweenness centrality (0.055) - this node is a cross-community bridge."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `FanOutConfig` connect `Community 2` to `Community 0`?",
+      "question": "Why does `FanOutConfig` connect `Community 3` to `Community 0`?",
       "why": "High betweenness centrality (0.034) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `ExtensionEntry` connect `Community 14` to `Community 19`?",
-      "why": "High betweenness centrality (0.022) - this node is a cross-community bridge."
+      "question": "Why does `build_entry()` connect `Community 2` to `Community 15`?",
+      "why": "High betweenness centrality (0.028) - this node is a cross-community bridge."
     },
     {
       "type": "verify_inferred",
@@ -1991,6 +1990,11 @@
       "type": "low_cohesion",
       "question": "Should `Community 1` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.09588421528720036 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08305084745762711 - nodes in this community are weakly interconnected."
     }
   ]
 }

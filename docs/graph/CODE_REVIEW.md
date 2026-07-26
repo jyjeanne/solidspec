@@ -14,17 +14,17 @@ Severity scale: **P1** = correctness/behavior risk, fix first · **P2** = struct
 
 ## P1 — Correctness / behavior risk
 
-### 1. `should_skip` silently never skips custom-schema artifacts
-`src/core/pipeline.rs:102` hardcodes a phase→file match (`"specify" => spec.md`, …) ending in `_ => false`. Meanwhile every schema already declares its outputs in `generates:` (`schemas/*/schema.yaml`), and `ArtifactGraph` (`src/core/artifact_graph.rs`) already does filesystem completion detection from those declarations. Consequences:
-- Any artifact from a custom schema (`.solidspec/workflows/<name>/schema.yaml`) falls through to `_ => false`, so completed phases are **re-run on every pipeline invocation** — silently, and expensive when phases invoke an agent CLI.
-- Two parallel completion mechanisms (pipeline skip list vs. artifact-graph state) can disagree; the graph shows `pipeline.rs` and `schema.rs`/`artifact_graph.rs` in separate low-cohesion communities bridged only through the CLI layer.
+### 1. ✅ FIXED — `should_skip` silently never skipped custom-schema artifacts
+`src/core/pipeline.rs` hardcoded a phase→file match ending in `_ => false`. Custom/overridden artifact `generates` declarations (`schemas/*/schema.yaml`, `.solidspec/workflows/<name>/schema.yaml`) were silently ignored, so overridden or unmatched artifacts were **re-run on every pipeline invocation**.
 
-**Action:** derive default skip behavior from `SchemaArtifact.generates` (file exists → skip), keeping the special cases (`clarify`, `implement`, `analyze`, `apex`) as content-aware overrides. Delete the duplicated mapping.
+**Fix applied:** `should_skip` now takes the resolved `&ArtifactGraph` and, for any phase without a dedicated content-aware check (`clarify`, `implement`, `apex`, `analyze`, `tdd-tests` — kept as overrides because file existence alone is insufficient or actively wrong for them), defaults to `ArtifactGraph::generates_present`, a new helper factored out of `detect_completion`'s glob/dir/file matching. `src/cli/pipeline.rs` now loads the schema graph once per run and passes it through. Regression test: `pipeline_dry_run_respects_custom_schema_generates_override` (`tests/pipeline.rs`) — a project-local override adding `research.md` to the `plan` artifact's `generates` is now honored (phase reruns until the extra file exists). New unit tests: `should_skip_tests_when_dir_nonempty_via_schema_generates`, `should_skip_unknown_phase_defaults_false_when_absent_from_schema` (`src/core/pipeline.rs`).
 
-### 2. Panic paths in `status` rendering
-`src/cli/status.rs:49-63` — when `topological_order()` fails (cycle in a user-authored schema), the fallback rebuilds the list with `graph.nodes.get(id).unwrap()`, and each row uses `expect("artifact missing from states map")`. A malformed custom schema is exactly the case where these invariants are weakest, and it turns a user input error into a panic. Same pattern inside Kahn's algorithm itself (`src/core/artifact_graph.rs:100-115` — acceptable as internal invariants, but worth an error message).
+*Follow-up not in scope of this fix:* `filter_phases` still selects the phase-name list by a hardcoded match on the schema **name** (`spec-driven`/`intent-driven`/`apex-driven`/`intent-apex`/`tdd-driven`), not from the resolved schema's own artifact list — so a schema with a genuinely new phase name (e.g. `security-first`'s `security-review`) still can't be driven through `solidspec pipeline`, and `execute_phase`'s exhaustive dispatch has no generic executor for an arbitrary artifact id. Making the whole pipeline schema-driven end-to-end is a larger, separate change.
 
-**Action:** in `status`, surface the cycle to the user ("workflow schema has a dependency cycle: …") instead of silently falling back, and render missing state as `unknown` rather than panicking.
+### 2. ✅ FIXED — panic paths in `status` rendering
+`src/cli/status.rs` used `graph.nodes.get(id).unwrap()` in the cycle fallback and `.expect("artifact missing from states map")` per row — a malformed custom schema (dependency cycle) turned a user input error into a panic instead of a message.
+
+**Fix applied:** on a topological-order error, `status` now prints a warning to stderr (`Warning: schema '<name>' has an invalid dependency graph (<cause>); showing artifacts in unspecified order.`) and continues instead of crashing; missing state entries render as `? unknown` instead of panicking. Regression test: `status_warns_instead_of_panicking_on_cyclic_schema` (`tests/status.rs`) — a project-local schema with a `spec ↔ plan` cycle now exits successfully with a warning and a populated table.
 
 ---
 
@@ -79,13 +79,13 @@ The graph's #1 and #2 god nodes are **test helpers**, not production code: `init
 
 ## Suggested order of work
 
-| # | Item | Effort | Payoff |
-|---|------|--------|--------|
-| 1 | Schema-driven `should_skip` (P1.1) | M | Fixes silent re-runs for custom workflows, deletes duplication |
-| 2 | De-panic `status` (P1.2) | S | User-input errors stop crashing the CLI |
-| 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph |
-| 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs |
-| 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric |
-| 6 | Split review.rs (P2.6) | M | Extensible check registry |
-| 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged |
-| 8+ | P3 items | S each | Opportunistic |
+| # | Item | Effort | Payoff | Status |
+|---|------|--------|--------|--------|
+| 1 | Schema-driven `should_skip` (P1.1) | M | Fixes silent re-runs for custom workflows, deletes duplication | ✅ Fixed |
+| 2 | De-panic `status` (P1.2) | S | User-input errors stop crashing the CLI | ✅ Fixed |
+| 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph | |
+| 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | |
+| 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | |
+| 6 | Split review.rs (P2.6) | M | Extensible check registry | |
+| 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | |
+| 8+ | P3 items | S each | Opportunistic | |
