@@ -37,10 +37,15 @@ Severity scale: **P1** = correctness/behavior risk, fix first · **P2** = struct
 
 **Bonus delivered:** `command_body()` checks `.solidspec/templates/overrides/commands/<phase>.md` first — a project can now override any command's body, documented in CLAUDE.md. This is a single-layer override (not the full preset/extension resolver chain in `templates/resolver.rs`, which would have required threading `preset_priorities` through `register_all`/`init`/`upgrade` call sites — out of scope for this fix). Regression tests: `project_local_override_wins_over_embedded_command_body`, `no_override_falls_back_to_embedded_default`, `command_body_generic_fallback_for_unknown_phase` (`src/agents/registry.rs`).
 
-### 4. `fan_out.rs` (1,476 lines) mixes four concerns; lane prompts are ~70% copy-paste
-The four lane prompts (`code_review_prompt`, `security_audit_prompt`, `test_coverage_prompt`, `performance_prompt`, `src/core/fan_out.rs:272-359`) share the same frame (context preamble, SEVERITY/LOCATION/PROBLEM/FIX block, scoring rubric) and differ only in the focus bullet list. The file also contains lane orchestration, score parsing, aggregation, and report formatting. `FanOutConfig` is one of the top cross-community bridge nodes (betweenness 0.034) — the file couples otherwise-unrelated communities. The scoring rubric ("10 per CRITICAL, 5 per HIGH…") is additionally duplicated in `apply_penalty_formula` and `derive_score_from_keywords`.
+### 4. ✅ FIXED — `fan_out.rs` mixed four concerns; lane prompts were ~70% copy-paste
+The four lane prompts (`code_review_prompt`, `security_audit_prompt`, `test_coverage_prompt`, `performance_prompt`) shared the same frame (context preamble, SEVERITY/LOCATION/PROBLEM/FIX block, scoring rubric) and differed only in the focus bullet list. The scoring rubric ("10 per CRITICAL, 5 per HIGH…") was additionally duplicated in `apply_penalty_formula` and `derive_score_from_keywords`.
 
-**Action:** one prompt-builder taking a focus-bullet list + lane name; single source of truth for the penalty weights; split report formatting into its own module.
+**Fix applied:**
+- Replaced the four prompt functions with one `lane_prompt(feat, spec: &LaneSpec)` builder plus a `LANE_SPECS: &[LaneSpec]` table holding only what differs per lane (title, focus bullets, "not assessed" phrase, finding noun, problem/fix hints, score aspect). `build_lanes` now maps over `LANE_SPECS` instead of four repeated `ReviewLane { ... }` literals. Verified byte-identical prompt output against the pre-refactor functions (captured via a temporary test, diffed, then removed) for all 4 lanes.
+- Added `penalty_weight(severity) -> f64` as the single source of truth for the scoring rubric; both `apply_penalty_formula` (heuristic path) and `derive_score_from_keywords` (agent-output fallback path) now call it instead of each hardcoding the CRITICAL/HIGH/MEDIUM/LOW weights.
+- Split `format_ship_report` into `src/core/fan_out/report.rs` (adjacent submodule, re-exported as `fan_out::format_ship_report` so `cli/ship.rs` is unchanged), separating report rendering from lane orchestration/scoring/aggregation.
+
+All existing fan_out tests (37) plus the ship integration suite pass unchanged — this was a pure refactor, no behavior change.
 
 ### 5. ✅ FIXED — integration-test helpers copy-pasted across 6 files
 The graph's #1 and #2 god nodes were **test helpers**, not production code: `init_project()` / `solidspec()` / `create_feature()` were re-implemented in `tests/apex.rs`, `tests/ship.rs`, `tests/tdd.rs`, `tests/change.rs`, `tests/traceability.rs`, `tests/pipeline.rs` (53 + 29 edges on the two `init_project` variants alone).
@@ -89,7 +94,7 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 | 2 | De-panic `status` (P1.2) | S | User-input errors stop crashing the CLI | ✅ Fixed |
 | 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph | ✅ Fixed |
 | 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | ✅ Fixed |
-| 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | |
+| 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | ✅ Fixed |
 | 6 | Split review.rs (P2.6) | M | Extensible check registry | |
 | 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | |
 | 8+ | P3 items | S each | Opportunistic | |

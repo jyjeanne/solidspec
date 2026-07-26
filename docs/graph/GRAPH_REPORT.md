@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 1606 nodes · 3671 edges · 80 communities (65 shown, 15 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 226 edges (avg confidence: 0.8)
+- 1608 nodes · 3677 edges · 80 communities (65 shown, 15 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 228 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7e6c521b`
+- Built from commit: `adf8114b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -115,7 +115,7 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (61): Severity, aggregate_results(), all_lanes_failed_returns_hold_with_message(), all_lanes_pass_returns_ship(), all_lanes_timed_out_with_ignore_timeout_returns_hold(), apply_penalty_formula(), build_lanes(), build_lanes_creates_four_lanes() (+53 more)
+Nodes (62): Severity, aggregate_results(), all_lanes_failed_returns_hold_with_message(), all_lanes_pass_returns_ship(), all_lanes_timed_out_with_ignore_timeout_returns_hold(), apply_penalty_formula(), build_lanes(), build_lanes_creates_four_lanes() (+54 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.08
@@ -150,16 +150,16 @@ Cohesion: 0.09
 Nodes (48): Regex, baseline_all_not_implemented(), collect_evidence(), EvidenceCriterionResult, EvidenceReport, format_evidence_report(), format_report_contains_table_and_header(), low_satisfaction_gives_drifted_status() (+40 more)
 
 ### Community 9 - "Community 9"
+Cohesion: 0.12
+Nodes (37): HashSet, all_artifacts_in_default_graph_are_reachable(), all_frs_orphaned_when_no_tasks_md(), ArtifactGraph, ArtifactNode, ArtifactState, build_trace_graph(), compute_states_shows_blocked_when_deps_missing() (+29 more)
+
+### Community 10 - "Community 10"
 Cohesion: 0.11
 Nodes (48): build_solidspec_context(), context_counts_uppercase_checked_tasks_as_done(), context_includes_fr_lines(), context_includes_pending_tasks_only(), context_includes_user_scenarios(), context_missing_all_files_produces_placeholders(), context_missing_spec_produces_placeholder(), context_plan_not_truncated_when_under_limit() (+40 more)
 
-### Community 10 - "Community 10"
+### Community 11 - "Community 11"
 Cohesion: 0.08
 Nodes (44): Option, Result, run(), apex_driven_apex_requires_tasks(), apex_driven_converts_to_valid_graph(), apex_driven_has_apex_not_implement(), apex_driven_schema_has_ship_artifact(), by_name() (+36 more)
-
-### Community 11 - "Community 11"
-Cohesion: 0.12
-Nodes (36): all_artifacts_in_default_graph_are_reachable(), all_frs_orphaned_when_no_tasks_md(), ArtifactGraph, ArtifactNode, ArtifactState, build_trace_graph(), compute_states_shows_blocked_when_deps_missing(), default_graph_has_eight_artifacts() (+28 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.11
@@ -226,12 +226,12 @@ Cohesion: 0.11
 Nodes (20): ChangeCommands, Option, Result, String, run(), ExtensionCommands, Result, String (+12 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.09
-Nodes (13): HashSet, all_agent_ids(), cli_agents_have_requires_cli_true(), copilot_uses_agent_md_extension(), ide_agents_have_requires_cli_false(), kimi_uses_skill_md_extension(), Vec, Option (+5 more)
-
-### Community 29 - "Community 29"
 Cohesion: 0.17
 Nodes (18): description_over_200_chars_errors(), invalid_id_with_uppercase_errors(), invalid_semver_errors(), invalid_version_specifier_errors(), parse_valid_manifest(), PresetInfo, PresetManifest, PresetProvides (+10 more)
+
+### Community 29 - "Community 29"
+Cohesion: 0.09
+Nodes (12): all_agent_ids(), cli_agents_have_requires_cli_true(), copilot_uses_agent_md_extension(), ide_agents_have_requires_cli_false(), kimi_uses_skill_md_extension(), Vec, Option, Result (+4 more)
 
 ### Community 30 - "Community 30"
 Cohesion: 0.19
@@ -338,9 +338,9 @@ Nodes (3): Option, Result, run()
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `ExtensionManifest` connect `Community 21` to `Community 20`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
-- **Why does `solidspec()` connect `Community 18` to `Community 36`, `Community 39`, `Community 40`, `Community 43`, `Community 15`, `Community 53`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `solidspec()` connect `Community 18` to `Community 36`, `Community 39`, `Community 40`, `Community 43`, `Community 15`, `Community 53`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
 - **Why does `init_project()` connect `Community 15` to `Community 36`, `Community 39`, `Community 40`, `Community 43`, `Community 18`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Are the 99 inferred relationships involving `solidspec()` (e.g. with `apex_auto_detects_feature_id()` and `apex_command_appears_in_help()`) actually correct?**

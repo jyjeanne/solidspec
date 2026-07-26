@@ -275,9 +275,14 @@
     "semantic_hash": "cc33b6565660533b600e99baf0d579e0"
   },
   "src/core/fan_out.rs": {
-    "mtime": 1785076024.7903662,
-    "ast_hash": "da85f998bcec3dabcb968a18c56addce",
-    "semantic_hash": "da85f998bcec3dabcb968a18c56addce"
+    "mtime": 1785078828.025389,
+    "ast_hash": "53b1cd20abb3b332a50ed671d1397cfd",
+    "semantic_hash": "53b1cd20abb3b332a50ed671d1397cfd"
+  },
+  "src/core/fan_out/report.rs": {
+    "mtime": 1785078811.581388,
+    "ast_hash": "cd64eac5c9f12c684c3a2350f6985d73",
+    "semantic_hash": "cd64eac5c9f12c684c3a2350f6985d73"
   },
   "src/core/feature.rs": {
     "mtime": 1785076024.7903662,
