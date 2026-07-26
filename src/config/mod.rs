@@ -107,46 +107,6 @@ pub struct ContextRules {
     pub review: String,
 }
 
-#[allow(dead_code)]
-impl ContextConfig {
-    /// Format context as a prompt section.
-    #[allow(dead_code)]
-    pub fn as_prompt_section(&self) -> String {
-        if self.description.is_empty() {
-            return String::new();
-        }
-        format!("## Project Context\n\n{}\n", self.description)
-    }
-
-    /// Get per-phase rules for a given phase name.
-    pub fn rules_for_phase(&self, phase: &str) -> &str {
-        match phase {
-            "specify" => &self.rules.spec,
-            "clarify" => &self.rules.clarify,
-            "plan" => &self.rules.plan,
-            "tasks" => &self.rules.tasks,
-            "implement" => &self.rules.implement,
-            "tests" => &self.rules.tests,
-            "analyze" => &self.rules.analyze,
-            "review" => &self.rules.review,
-            _ => "",
-        }
-    }
-
-    /// Format the full context + rules for a phase, for prompt injection.
-    pub fn as_phase_prompt(&self, phase: &str) -> String {
-        let mut out = self.as_prompt_section();
-        let rules = self.rules_for_phase(phase);
-        if !rules.is_empty() {
-            if !out.is_empty() {
-                out.push('\n');
-            }
-            out.push_str(&format!("## Phase-Specific Rules ({phase})\n\n{rules}\n"));
-        }
-        out
-    }
-}
-
 /// Pipeline configuration: maps SDD phases to agent IDs.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PipelineConfig {

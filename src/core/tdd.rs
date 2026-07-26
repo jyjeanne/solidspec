@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::path::Path;
 
 use anyhow::Result;
@@ -239,6 +237,11 @@ pub fn scaffold_refactor_report(feature_dir: &Path, feature_id: &str) -> Result<
 
 // ── RED report parsing ────────────────────────────────────────────────────────
 
+/// Tested (`parse_red_report_extracts_counts`,
+/// `parse_red_report_preserves_colon_in_framework_name`) but not yet called
+/// from any CLI command — candidate for a `tdd-refactor` precondition check
+/// or a `solidspec status` test-count summary.
+#[allow(dead_code)]
 pub struct RedReport {
     pub tests_found: usize,
     pub tests_failing: usize,
@@ -247,6 +250,7 @@ pub struct RedReport {
 
 /// Parse a completed `tdd-red-report.md` for test counts and framework.
 /// Returns zeros / "unknown" for any field that can't be parsed.
+#[allow(dead_code)]
 pub fn parse_red_report(report_path: &Path) -> Result<RedReport> {
     let content = std::fs::read_to_string(report_path)?;
 

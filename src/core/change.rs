@@ -31,9 +31,6 @@ pub struct DeltaSpec {
     pub modified: Vec<DeltaModification>,
     /// Requirement IDs being removed
     pub removed: Vec<String>,
-    /// Raw content of the delta spec file
-    #[allow(dead_code)]
-    pub raw: String,
 }
 
 /// A single requirement being added or modified.
@@ -113,7 +110,6 @@ pub fn parse_delta_spec(content: &str) -> DeltaSpec {
         added,
         modified,
         removed,
-        raw: content.to_string(),
     }
 }
 
@@ -264,7 +260,6 @@ pub fn list_changes(feature_dir: &Path) -> Result<Vec<ChangeInfo>> {
                 slug,
                 title,
                 status,
-                dir: entry.path(),
             });
         }
     }
@@ -293,8 +288,6 @@ pub struct ChangeInfo {
     pub slug: String,
     pub title: String,
     pub status: ChangeStatus,
-    #[allow(dead_code)]
-    pub dir: PathBuf,
 }
 
 /// Generate a slug from a description (lowercase, hyphens).
@@ -505,7 +498,6 @@ mod tests {
             }],
             modified: vec![],
             removed: vec![],
-            raw: String::new(),
         };
         let merged = merge_deltas(main, &delta).unwrap();
         assert!(merged.contains("FR-042"));
@@ -522,7 +514,6 @@ mod tests {
             added: vec![],
             modified: vec![],
             removed: vec!["FR-008".into()],
-            raw: String::new(),
         };
         let merged = merge_deltas(main, &delta).unwrap();
         assert!(!merged.contains("FR-008"));
@@ -541,7 +532,6 @@ mod tests {
                 previous_text: Some("email only".into()),
             }],
             removed: vec![],
-            raw: String::new(),
         };
         let merged = merge_deltas(main, &delta).unwrap();
         assert!(merged.contains("OAuth provider"));

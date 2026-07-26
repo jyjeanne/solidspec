@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 /// Agent configuration table — data-driven, 21 agents.
 #[derive(Debug, Clone)]
 pub struct AgentConfig {
@@ -9,6 +8,13 @@ pub struct AgentConfig {
     pub extension: &'static str,
     pub format: AgentFormat,
     pub arg_placeholder: &'static str,
+    /// True for CLI-only agents (Claude, Gemini, Codex, ...); false for
+    /// IDE-integrated agents (Copilot, Cursor, Vibe, ...) — some of the
+    /// latter still declare a non-empty `cli_binary` for detection purposes
+    /// without strictly needing it. Tested (`cli_agents_have_requires_cli_true`,
+    /// `ide_agents_have_requires_cli_false`) but not yet read by any runtime
+    /// logic — `invoker.rs` currently gates purely on `cli_binary.is_empty()`.
+    #[allow(dead_code)]
     pub requires_cli: bool,
     pub aliases: &'static [&'static str],
     /// CLI binary name for non-interactive invocation (empty = no CLI support)
@@ -315,10 +321,6 @@ pub fn find_agent(id: &str) -> Option<&'static AgentConfig> {
     }
     // Check aliases
     AGENTS.iter().find(|a| a.aliases.contains(&id))
-}
-
-pub fn all_agent_ids() -> Vec<&'static str> {
-    AGENTS.iter().map(|a| a.id).collect()
 }
 
 #[cfg(test)]

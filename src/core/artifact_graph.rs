@@ -20,10 +20,18 @@ pub struct ArtifactNode {
     pub generates: Vec<String>,
     /// IDs of artifacts that must be completed first
     pub requires: Vec<String>,
-    /// Human-readable instruction for creating this artifact
+    /// Human-readable instruction for creating this artifact. Parsed from
+    /// every schema.yaml today but not yet consulted by any CLI command —
+    /// phase prompts are still hardcoded per-phase (see `agents/invoker.rs`'s
+    /// `build_phase_prompt`, `agents/registry.rs`'s command bodies). Reserved
+    /// for a future schema-driven prompt/pipeline (`filter_phases` and
+    /// `execute_phase` in `core/pipeline.rs` / `cli/pipeline.rs` have the
+    /// same gap — see the P1.1 follow-up note in docs/graph/CODE_REVIEW.md).
     #[allow(dead_code)]
     pub instruction: String,
-    /// Optional template name to scaffold before instruction
+    /// Optional template name to scaffold before instruction. Same status as
+    /// `instruction` above — parsed but not yet consulted; `cli/specify.rs`
+    /// etc. hardcode their template name per schema type instead.
     #[allow(dead_code)]
     pub template: Option<String>,
 }
@@ -78,15 +86,8 @@ impl ArtifactGraph {
     }
 
     /// Get an artifact by ID.
-    #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Option<&ArtifactNode> {
         self.nodes.get(id)
-    }
-
-    /// All artifact IDs in the graph.
-    #[allow(dead_code)]
-    pub fn artifact_ids(&self) -> Vec<&str> {
-        self.nodes.keys().map(|s| s.as_str()).collect()
     }
 
     /// Kahn's algorithm: returns artifacts in topological build order.
@@ -158,43 +159,45 @@ impl ArtifactGraph {
     /// An artifact is considered Done if all of its `generates` glob patterns
     /// match at least one file under the feature directory.
     pub fn detect_completion(&self, feature_dir: &Path) -> HashSet<String> {
-        let mut completed = HashSet::new();
+        self.nodes
+            .iter()
+            .filter(|(_, node)| Self::generates_present(node, feature_dir))
+            .map(|(id, _)| id.clone())
+            .collect()
+    }
 
-        for (id, node) in &self.nodes {
-            let all_present = node.generates.iter().all(|pattern| {
-                let path = feature_dir.join(pattern);
-                if pattern.contains('*') {
-                    // Glob: at least one entry in the pattern's directory must
-                    // match the filename component (only `*` wildcards supported).
-                    let (dir, file_pattern) = match pattern.rsplit_once('/') {
-                        Some((d, f)) => (feature_dir.join(d), f),
-                        None => (feature_dir.to_path_buf(), pattern.as_str()),
-                    };
-                    std::fs::read_dir(&dir)
-                        .map(|entries| {
-                            entries.flatten().any(|e| {
-                                glob_matches(&e.file_name().to_string_lossy(), file_pattern)
-                            })
-                        })
+    /// True when every `generates` pattern declared on `node` is present
+    /// under `feature_dir`: a plain path must exist, a glob (`*`) pattern
+    /// must match at least one file, and a trailing-slash directory pattern
+    /// must exist and be non-empty.
+    pub fn generates_present(node: &ArtifactNode, feature_dir: &Path) -> bool {
+        node.generates.iter().all(|pattern| {
+            let path = feature_dir.join(pattern);
+            if pattern.contains('*') {
+                // Glob: at least one entry in the pattern's directory must
+                // match the filename component (only `*` wildcards supported).
+                let (dir, file_pattern) = match pattern.rsplit_once('/') {
+                    Some((d, f)) => (feature_dir.join(d), f),
+                    None => (feature_dir.to_path_buf(), pattern.as_str()),
+                };
+                std::fs::read_dir(&dir)
+                    .map(|entries| {
+                        entries
+                            .flatten()
+                            .any(|e| glob_matches(&e.file_name().to_string_lossy(), file_pattern))
+                    })
+                    .unwrap_or(false)
+            } else if pattern.ends_with('/') {
+                // Directory pattern: require the directory to exist and be non-empty
+                // (an empty directory means the agent hasn't written any test files yet)
+                path.exists()
+                    && std::fs::read_dir(&path)
+                        .map(|mut d| d.next().is_some())
                         .unwrap_or(false)
-                } else if pattern.ends_with('/') {
-                    // Directory pattern: require the directory to exist and be non-empty
-                    // (an empty directory means the agent hasn't written any test files yet)
-                    path.exists()
-                        && std::fs::read_dir(&path)
-                            .map(|mut d| d.next().is_some())
-                            .unwrap_or(false)
-                } else {
-                    path.exists()
-                }
-            });
-
-            if all_present {
-                completed.insert(id.clone());
+            } else {
+                path.exists()
             }
-        }
-
-        completed
+        })
     }
 }
 

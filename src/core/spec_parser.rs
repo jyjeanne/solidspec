@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -28,6 +27,9 @@ pub struct ParsedSpec {
     pub requirements: Vec<Requirement>,
     pub clarification_markers: Vec<ClarificationMarker>,
     pub entities: Vec<String>,
+    /// Original file content. Not read anywhere today; kept for parity with
+    /// the other `raw` fields on parsed-artifact structs (e.g. `IntentSpec`).
+    #[allow(dead_code)]
     pub raw: String,
 }
 

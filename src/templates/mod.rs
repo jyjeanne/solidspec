@@ -383,5 +383,121 @@ mod tests {
                 );
             }
         }
+
+        #[test]
+        fn check_prerequisites_passes_for_complete_project() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+            std::fs::write(
+                dir.path().join(".solidspec/constitution.md"),
+                "# Constitution\n",
+            )
+            .unwrap();
+
+            let output = Command::new("bash")
+                .arg(scripts.join("check-prerequisites.sh"))
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            assert!(output.status.success(), "stdout: {stdout}");
+            assert!(stdout.contains("All checks passed."));
+        }
+
+        #[test]
+        fn check_prerequisites_fails_when_constitution_missing() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+            // setup_script_project does not write constitution.md
+
+            let output = Command::new("bash")
+                .arg(scripts.join("check-prerequisites.sh"))
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+
+            assert!(
+                !output.status.success(),
+                "script must exit non-zero when constitution.md is missing"
+            );
+            assert!(stdout.contains("Constitution file missing"));
+            assert!(stdout.contains("issue(s) found"));
+        }
+
+        #[test]
+        fn setup_plan_creates_supporting_files() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+
+            let output = Command::new("bash")
+                .arg(scripts.join("setup-plan.sh"))
+                .arg("001-auth")
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stderr = String::from_utf8_lossy(&output.stderr);
+
+            assert!(output.status.success(), "script failed: {stderr}");
+            let feature_dir = dir.path().join("specs/001-auth");
+            assert!(feature_dir.join("research.md").exists());
+            assert!(feature_dir.join("data-model.md").exists());
+            assert!(feature_dir.join("quickstart.md").exists());
+            assert!(feature_dir.join("contracts/api.md").exists());
+        }
+
+        #[test]
+        fn setup_plan_does_not_overwrite_existing_files() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+            let research_path = dir.path().join("specs/001-auth/research.md");
+            std::fs::write(&research_path, "# Custom research — do not clobber\n").unwrap();
+
+            let output = Command::new("bash")
+                .arg(scripts.join("setup-plan.sh"))
+                .arg("001-auth")
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+
+            assert!(output.status.success());
+            let content = std::fs::read_to_string(&research_path).unwrap();
+            assert!(
+                content.contains("do not clobber"),
+                "setup-plan.sh must not overwrite an existing research.md"
+            );
+        }
+
+        #[test]
+        fn update_agent_context_lists_feature_status() {
+            let dir = tempfile::TempDir::new().unwrap();
+            let scripts = setup_script_project(dir.path());
+            std::fs::write(
+                dir.path().join(".solidspec/constitution.md"),
+                "# Constitution\n",
+            )
+            .unwrap();
+            std::fs::write(
+                dir.path().join("specs/001-auth/tasks.md"),
+                "- [x] T001 Done\n- [ ] T002 Pending\n",
+            )
+            .unwrap();
+
+            let output = Command::new("bash")
+                .arg(scripts.join("update-agent-context.sh"))
+                .current_dir(dir.path())
+                .output()
+                .expect("bash must run");
+            let stderr = String::from_utf8_lossy(&output.stderr);
+
+            assert!(output.status.success(), "script failed: {stderr}");
+            let agent_md = std::fs::read_to_string(dir.path().join(".solidspec/AGENT.md")).unwrap();
+            assert!(agent_md.contains("001-auth"));
+            assert!(
+                agent_md.contains("in-progress (1/2)"),
+                "expected in-progress (1/2) status, got:\n{agent_md}"
+            );
+        }
     }
 }

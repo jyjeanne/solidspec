@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -69,7 +68,12 @@ pub fn run(feature_id: Option<&str>, pass: Option<u32>) -> Result<()> {
     Ok(())
 }
 
-/// Mark a task as complete in tasks.md
+/// Mark a task as complete in tasks.md.
+///
+/// Tested (`mark_task_done_updates_checkbox`) but not called by `run` above —
+/// `implement` currently prints pending tasks for the AI agent to check off
+/// itself rather than programmatically marking them done.
+#[allow(dead_code)]
 pub fn mark_task_done(tasks_path: &Path, task_id: &str) -> Result<()> {
     let content = std::fs::read_to_string(tasks_path)?;
     let updated = content.replace(&format!("- [ ] {task_id}"), &format!("- [X] {task_id}"));

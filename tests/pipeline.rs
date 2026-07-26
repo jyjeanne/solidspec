@@ -2,6 +2,9 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+mod common;
+use common::first_feature_dir;
+
 fn setup_project(dir: &std::path::Path, init_cmd: &mut Command) {
     init_cmd
         .arg("init")
@@ -39,12 +42,7 @@ fn full_pipeline_scaffold_generates_all_artifacts() {
 
     let specs_dir = dir.path().join("specs");
     assert!(specs_dir.exists());
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory found")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
     assert!(feature_dir.join("spec.md").exists());
     let spec = std::fs::read_to_string(feature_dir.join("spec.md")).unwrap();
     assert!(spec.contains("Feature Specification"));
@@ -192,13 +190,7 @@ fn pipeline_idsd_generates_intent_before_spec() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory created")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     assert!(
         feature_dir.join("intent.md").exists(),
@@ -342,13 +334,7 @@ fn pipeline_sdd_unchanged_no_intent_md() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("No feature directory created")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     assert!(
         !feature_dir.join("intent.md").exists(),
@@ -357,5 +343,104 @@ fn pipeline_sdd_unchanged_no_intent_md() {
     assert!(
         feature_dir.join("spec.md").exists(),
         "spec.md must exist in SDD pipeline"
+    );
+}
+
+/// A project-local schema override that adds an extra `generates` entry to
+/// an existing artifact must actually be consulted by `should_skip` — not
+/// silently ignored in favor of the hardcoded, name-only check.
+#[test]
+fn pipeline_dry_run_respects_custom_schema_generates_override() {
+    let dir = TempDir::new().unwrap();
+
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["specify", "Custom schema override test"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let feature_dir = first_feature_dir(dir.path());
+
+    // Override spec-driven's "plan" artifact to also require research.md.
+    let workflows_dir = dir.path().join(".solidspec/workflows/spec-driven");
+    std::fs::create_dir_all(&workflows_dir).unwrap();
+    std::fs::write(
+        workflows_dir.join("schema.yaml"),
+        r#"
+name: spec-driven
+version: "1.0"
+artifacts:
+  - id: spec
+    generates: ["spec.md"]
+    requires: []
+    instruction: "spec"
+  - id: plan
+    generates: ["plan.md", "research.md"]
+    requires: ["spec"]
+    instruction: "plan"
+"#,
+    )
+    .unwrap();
+
+    // plan.md exists but research.md does not: plan must NOT be skipped.
+    std::fs::write(feature_dir.join("plan.md"), "# Plan").unwrap();
+
+    let stdout = Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--only",
+            "plan",
+            "--dry-run",
+            "--auto",
+            "--no-agent",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let text = String::from_utf8(stdout).unwrap();
+    let plan_line = text
+        .lines()
+        .find(|l| l.trim_start().starts_with("Phase") && l.contains("plan"))
+        .unwrap_or("");
+    assert!(
+        plan_line.contains("run"),
+        "plan must run when research.md (from the schema override) is missing; got: {plan_line:?}"
+    );
+
+    // Once research.md also exists, plan must be skipped.
+    std::fs::write(feature_dir.join("research.md"), "# Research").unwrap();
+
+    let stdout = Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--only",
+            "plan",
+            "--dry-run",
+            "--auto",
+            "--no-agent",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let text = String::from_utf8(stdout).unwrap();
+    let plan_line = text
+        .lines()
+        .find(|l| l.trim_start().starts_with("Phase") && l.contains("plan"))
+        .unwrap_or("");
+    assert!(
+        plan_line.contains("skip"),
+        "plan must be skipped once both plan.md and research.md exist; got: {plan_line:?}"
     );
 }

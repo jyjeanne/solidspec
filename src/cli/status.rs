@@ -46,10 +46,16 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     println!();
 
     // Artifact table
-    let order = graph.topological_order().unwrap_or_else(|_| {
-        let ids: Vec<_> = graph.nodes.keys().cloned().collect();
-        ids.iter().map(|id| graph.nodes.get(id).unwrap()).collect()
-    });
+    let order: Vec<&crate::core::artifact_graph::ArtifactNode> = match graph.topological_order() {
+        Ok(order) => order,
+        Err(e) => {
+            eprintln!(
+                "Warning: schema '{schema_name}' has an invalid dependency graph ({e}); \
+                 showing artifacts in unspecified order."
+            );
+            graph.nodes.values().collect()
+        }
+    };
 
     println!(
         "{:<5} {:<15} {:<15} {:<30}",
@@ -58,15 +64,13 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     println!("{:-<65}", "");
 
     for (i, node) in order.iter().enumerate() {
-        let state = states
-            .get(&node.id)
-            .expect("artifact missing from states map");
-        let status = match state {
-            ArtifactState::Done => "✓ done".to_string(),
-            ArtifactState::Ready => "▶ ready".to_string(),
-            ArtifactState::Blocked { missing_deps } => {
+        let status = match states.get(&node.id) {
+            Some(ArtifactState::Done) => "✓ done".to_string(),
+            Some(ArtifactState::Ready) => "▶ ready".to_string(),
+            Some(ArtifactState::Blocked { missing_deps }) => {
                 format!("⏸ blocked ({})", missing_deps.join(", "))
             }
+            None => "? unknown".to_string(),
         };
         let deps = if node.requires.is_empty() {
             "—".to_string()

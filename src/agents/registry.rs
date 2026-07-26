@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -7,6 +6,54 @@ use super::config::{AGENTS, AgentConfig, find_agent};
 use super::formats;
 use super::guardrails;
 use crate::core::apex;
+
+/// Embedded default slash-command bodies, one per named workflow phase.
+/// Each contains the canonical `$ARGUMENTS` placeholder — `register_commands`
+/// converts it to the target agent's placeholder afterward via
+/// `formats::translate_placeholder`, so these bodies are agent-agnostic.
+mod command_bodies {
+    pub const SPECIFY: &str = include_str!("../../templates/commands/specify.md");
+    pub const CLARIFY: &str = include_str!("../../templates/commands/clarify.md");
+    pub const PLAN: &str = include_str!("../../templates/commands/plan.md");
+    pub const TASKS: &str = include_str!("../../templates/commands/tasks.md");
+    pub const IMPLEMENT: &str = include_str!("../../templates/commands/implement.md");
+    pub const TESTS: &str = include_str!("../../templates/commands/tests.md");
+    pub const ANALYZE: &str = include_str!("../../templates/commands/analyze.md");
+    pub const REVIEW: &str = include_str!("../../templates/commands/review.md");
+    pub const APEX: &str = include_str!("../../templates/commands/apex.md");
+    pub const TDD_TESTS: &str = include_str!("../../templates/commands/tdd-tests.md");
+    pub const TDD_REFACTOR: &str = include_str!("../../templates/commands/tdd-refactor.md");
+}
+
+/// Resolve a command's body: a project-local override at
+/// `.solidspec/templates/overrides/commands/<cmd_name>.md` wins if present,
+/// otherwise the embedded default for known phases, otherwise a generic
+/// fallback for phases with no dedicated body (e.g. `checklist`).
+fn command_body(cmd_name: &str, project_root: &Path) -> String {
+    let override_path = project_root
+        .join(".solidspec/templates/overrides/commands")
+        .join(format!("{cmd_name}.md"));
+    if let Ok(content) = std::fs::read_to_string(&override_path) {
+        return content;
+    }
+
+    match cmd_name {
+        "specify" => command_bodies::SPECIFY.to_string(),
+        "clarify" => command_bodies::CLARIFY.to_string(),
+        "plan" => command_bodies::PLAN.to_string(),
+        "tasks" => command_bodies::TASKS.to_string(),
+        "implement" => command_bodies::IMPLEMENT.to_string(),
+        "tests" => command_bodies::TESTS.to_string(),
+        "analyze" => command_bodies::ANALYZE.to_string(),
+        "review" => command_bodies::REVIEW.to_string(),
+        "apex" => command_bodies::APEX.to_string(),
+        "tdd-tests" => command_bodies::TDD_TESTS.to_string(),
+        "tdd-refactor" => command_bodies::TDD_REFACTOR.to_string(),
+        _ => format!(
+            "Read the project context from .solidspec/AGENT.md, then execute the '{cmd_name}' workflow for the feature specified by $ARGUMENTS."
+        ),
+    }
+}
 
 /// Detected agent in a repository.
 #[derive(Debug, Clone)]
@@ -73,217 +120,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
     std::fs::create_dir_all(&cmd_dir)?;
 
     for (cmd_name, description) in COMMANDS {
-        let arg = agent.arg_placeholder;
-        let body = match *cmd_name {
-            "implement" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md, then implement the feature.\n\n\
-                     The feature ID is: {arg}\n\
-                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
-                     Steps:\n\
-                     1. Read the feature's tasks.md for the task list\n\
-                     2. Read the feature's spec.md for requirements and acceptance criteria\n\
-                     3. Read the feature's plan.md for architecture decisions\n\
-                     4. Execute each task in order, respecting phase dependencies\n\
-                     5. Tasks marked [P] can be done in parallel\n\
-                     6. After completing each task, update tasks.md: change `- [ ]` to `- [x]` for that task\n\
-                     7. When all tasks are done, run /solidspec-analyze to validate"
-                )
-            }
-            "specify" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
-                     Fill in the feature's spec.md with real content:\n\
-                     1. Replace [Brief Title] with a descriptive story title\n\
-                     2. Write user stories with clear Given/When/Then acceptance scenarios\n\
-                     3. Define functional requirements (FR-001, FR-002, etc.)\n\
-                     4. Identify key entities and their relationships\n\
-                     5. Define measurable success criteria\n\
-                     6. List edge cases\n\n\
-                     Keep requirements technology-agnostic. Focus on WHAT, not HOW.\n\
-                     Only edit the existing spec.md — do not create new files."
-                )
-            }
-            "clarify" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/.\n\n\
-                     Read spec.md and find all [NEEDS CLARIFICATION] markers.\n\
-                     For each marker:\n\
-                     1. Identify the ambiguity\n\
-                     2. Propose a resolution based on best practices\n\
-                     3. Update spec.md with the resolution\n\
-                     4. Remove the [NEEDS CLARIFICATION] marker"
-                )
-            }
-            "plan" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/ and read spec.md for requirements.\n\n\
-                     Fill in the planning documents with real content:\n\
-                     1. plan.md — Architecture decisions, tech stack, project structure, constitution check\n\
-                     2. research.md — Technology investigation findings\n\
-                     3. data-model.md — Entity definitions and relationships\n\
-                     4. contracts/api.md — API contracts if applicable\n\
-                     5. quickstart.md — Key validation scenarios\n\n\
-                     Complete the Constitution Check in plan.md.\n\
-                     Fill all [NEEDS CLARIFICATION] and [To be filled] sections with concrete content."
-                )
-            }
-            "tasks" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/.\n\
-                     Read spec.md and plan.md.\n\n\
-                     Fill in tasks.md with concrete, actionable tasks:\n\
-                     1. Define specific tasks with clear deliverables\n\
-                     2. Organize by phases (Setup → Foundational → User Stories → Polish)\n\
-                     3. Mark parallel-safe tasks with [P]\n\
-                     4. Link tasks to user stories with [US1], [US2], etc.\n\
-                     5. Replace all placeholder text with real content"
-                )
-            }
-            "tests" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/.\n\
-                     Read spec.md for acceptance scenarios.\n\n\
-                     Review and enhance test scaffolds in the feature's tests/ directory:\n\
-                     1. Add concrete test implementations for each Given/When/Then scenario\n\
-                     2. Replace placeholder text with real test assertions\n\
-                     3. Add edge case tests based on the spec\n\
-                     4. Ensure tests are runnable with the project's test framework"
-                )
-            }
-            "analyze" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/.\n\n\
-                     Validate cross-artifact consistency:\n\
-                     1. Check that plan.md addresses all requirements from spec.md\n\
-                     2. Check that tasks.md covers all planned work\n\
-                     3. Check that tests cover all acceptance scenarios\n\
-                     4. Report any gaps or inconsistencies"
-                )
-            }
-            "review" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md.\n\n\
-                     Feature ID: {arg}\n\
-                     Find the matching directory under specs/.\n\n\
-                     Perform a comprehensive spec quality review:\n\
-                     1. Check for placeholder text and incomplete sections\n\
-                     2. Validate requirement quality and testability\n\
-                     3. Check cross-artifact consistency (spec → plan → tasks)\n\
-                     4. Assess security, performance, and maintainability concerns\n\
-                     5. Write findings to {arg}/review-report.md"
-                )
-            }
-            "apex" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md, then launch the APEX \
-                     implementation workflow for the feature.\n\n\
-                     The feature ID is: {arg}\n\
-                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
-                     SolidSpec context is in: .solidspec/apex-context.md\n\
-                     (Pre-loaded requirements, architecture plan, and pending tasks.)\n\n\
-                     APEX workflow (Analyze-Plan-Execute-eXamine):\n\
-                     1. Analyze: Read spec.md, plan.md, and tasks.md — context file has summaries\n\
-                     2. Plan: Create a file-by-file implementation strategy\n\
-                     3. Execute: Implement each task from tasks.md one at a time\n\
-                        - After each task, update tasks.md: change `- [ ]` to `- [x]`\n\
-                        - Tasks marked [P] can be done in parallel\n\
-                     4. Validate: Run type checking and tests; verify acceptance criteria\n\
-                     5. eXamine (optional): Adversarial review for security and quality\n\n\
-                     If the /apex skill is installed in this agent, invoke it directly:\n\
-                     /apex -a -s implement feature: <feature-slug>\n\n\
-                     When all tasks are done, run /solidspec-analyze to validate."
-                )
-            }
-            "tdd-tests" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md, then execute the TDD RED phase \
-                     using VERTICAL SLICES — not horizontal batching.\n\n\
-                     The feature ID is: {arg}\n\
-                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\
-                     Read tdd-red-report.md — it contains your interface design template.\n\n\
-                     STEP 1 — INTERFACE DESIGN (before writing any test code):\n\
-                     Read spec.md and plan.md. For each public API that tests will call:\n\
-                     - Accept external dependencies as parameters (do not create them internally)\n\
-                     - Prefer functions that return results over functions that produce side effects\n\
-                     - Keep interfaces small: fewer public methods = fewer tests needed\n\
-                     Identify MOCK BOUNDARIES — mock ONLY:\n\
-                     - External APIs and HTTP clients\n\
-                     - Databases (prefer a real test DB over mocks when practical)\n\
-                     - Clocks, random sources, file I/O\n\
-                     DO NOT mock your own modules or internal collaborators — those are implementation details.\n\
-                     If framework auto-detection fails (no Cargo.toml / package.json / pyproject.toml / go.mod), \
-                     STOP and report the failure in tdd-red-report.md — do not guess.\n\n\
-                     STEP 2 — TRACER BULLET (first cycle):\n\
-                     Pick the single most critical acceptance criterion. Write ONE test for it.\n\
-                     Run it. The test must FAIL for the right reason — a missing implementation, \
-                     not a compile error or wrong assertion. Fix setup issues until the failure \
-                     reason is correct before writing more tests.\n\n\
-                     STEP 3 — REMAINING TESTS (one behavior at a time):\n\
-                     Each acceptance criterion may describe multiple behaviors. Decompose each \
-                     criterion into individual behaviors. For each behavior:\n\
-                     - Test name describes WHAT: 'user_can_log_in_with_email' not 'calls_verify_password'\n\
-                     - Calls public APIs only — no private methods, no direct DB queries to verify\n\
-                     - Write the test, confirm it compiles and fails, then move to the next\n\n\
-                     STEP 4 — QUALITY CHECK before filling the report:\n\
-                     Every test must: describe observable behavior (not HOW), use public interface only, \
-                     survive a complete internal refactor, have one logical assertion or coherent group.\n\
-                     If a test mocks an internal collaborator, rewrite it.\n\n\
-                     STEP 5 — Fill in tdd-red-report.md:\n\
-                     Record interface decisions, framework, cycle table (one row per behavior), \
-                     total tests written, total failing, and any unexpectedly passing tests \
-                     (those signal already-implemented behavior — list them by name, they will be \
-                     excluded from the implement phase).\n\n\
-                     FORBIDDEN: Writing any real implementation logic. Tests must fail because \
-                     the production code does not yet exist."
-                )
-            }
-            "tdd-refactor" => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md, then execute the TDD REFACTOR phase.\n\n\
-                     The feature ID is: {arg}\n\
-                     Find the matching directory under specs/ (e.g. specs/001-feature-name/).\n\n\
-                     PRE-CONDITION: Run the full test suite. Every test must be GREEN before starting.\n\
-                     If any test is failing, STOP and return to the implement phase.\n\n\
-                     REFACTOR candidates — work through in this priority order:\n\
-                     1. Duplication → extract to a shared function or class\n\
-                     2. Long methods → extract private helpers \
-                     (keep tests targeting the public interface, not the extracted helpers)\n\
-                     3. Shallow modules → deepen: reduce public methods, hide more complexity inside\n\
-                     4. Feature envy → move logic to where the data lives\n\
-                     5. Primitive obsession → introduce value objects for domain concepts\n\
-                     6. Existing code that the new code reveals as problematic\n\n\
-                     INTERFACE RULE: the public surface area must stay the same size or shrink. \
-                     Do not add new public methods during refactor.\n\n\
-                     After EVERY individual change: run the full test suite. \
-                     Every test must remain GREEN. If any test goes RED, revert the change.\n\n\
-                     Fill in tdd-refactor-report.md: for each change, record the file, \
-                     the refactor type (from the list above), a before/after description, \
-                     and the test run result (must be GREEN).\n\n\
-                     FORBIDDEN: Changing test code. FORBIDDEN: Adding new behavior. \
-                     FORBIDDEN: Expanding the public interface."
-                )
-            }
-            _ => {
-                format!(
-                    "Read the project context from .solidspec/AGENT.md, then execute the '{}' workflow for the feature specified by {arg}.",
-                    cmd_name
-                )
-            }
-        };
-
+        let body = command_body(cmd_name, project_root);
         let mut body = formats::translate_placeholder(&body, agent.arg_placeholder);
         body.push('\n');
         body.push_str(&guardrails::compliance_footer());
@@ -386,6 +223,11 @@ pub fn register_apex_skill(agent_id: &str, project_root: &Path) -> Result<bool> 
 }
 
 /// Remove the APEX skill directory for the given agent (if supported).
+///
+/// Tested (see `mod tests` below) but only called internally by
+/// `unregister_commands` — no CLI command unregisters an agent yet
+/// (candidate for a future `solidspec agent remove <id>`).
+#[allow(dead_code)]
 pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> {
     if let Some(dir) = apex_skill_dir(agent_id, project_root)
         && dir.exists()
@@ -396,6 +238,10 @@ pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> 
 }
 
 /// Unregister all SolidSpec commands for a specific agent.
+///
+/// Tested (see `mod tests` below) but not yet called from any CLI command —
+/// candidate for a future `solidspec agent remove <id>`.
+#[allow(dead_code)]
 pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -484,21 +330,6 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
     Ok(registered)
 }
 
-fn check_cli_available(agent_id: &str) -> bool {
-    let agent = find_agent(agent_id);
-    match agent {
-        Some(a) if !a.cli_binary.is_empty() => find_binary(a.cli_binary).is_some(),
-        _ => {
-            let exe_name = match agent_id {
-                "kiro-cli" => "kiro",
-                "qodercli" => "qodercli",
-                _ => agent_id,
-            };
-            which::which(exe_name).is_ok()
-        }
-    }
-}
-
 /// Resolve a CLI binary by name, checking PATH first then common npm/nvm install locations.
 pub fn find_binary(name: &str) -> Option<PathBuf> {
     // 1. Standard PATH lookup
@@ -583,6 +414,44 @@ mod tests {
         assert!(content.starts_with("---\n"));
         assert!(content.contains("description:"));
         assert!(content.contains("$ARGUMENTS"));
+    }
+
+    #[test]
+    fn command_body_generic_fallback_for_unknown_phase() {
+        let dir = TempDir::new().unwrap();
+        let body = command_body("checklist", dir.path());
+        assert!(body.contains("'checklist' workflow"));
+        assert!(body.contains("$ARGUMENTS"));
+    }
+
+    #[test]
+    fn project_local_override_wins_over_embedded_command_body() {
+        let dir = TempDir::new().unwrap();
+        let overrides_dir = dir.path().join(".solidspec/templates/overrides/commands");
+        std::fs::create_dir_all(&overrides_dir).unwrap();
+        std::fs::write(overrides_dir.join("specify.md"), "CUSTOM SPECIFY BODY").unwrap();
+
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let content =
+            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-specify.md"))
+                .unwrap();
+        assert!(content.contains("CUSTOM SPECIFY BODY"));
+        // Guardrails footer must still be appended to the override.
+        assert!(content.contains("Before You Skip Any Step"));
+    }
+
+    #[test]
+    fn no_override_falls_back_to_embedded_default() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let content =
+            std::fs::read_to_string(dir.path().join(".claude/commands/solidspec-specify.md"))
+                .unwrap();
+        assert!(content.contains("Replace [Brief Title] with a descriptive story title"));
     }
 
     #[test]

@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::path::Path;
 use std::sync::LazyLock;
 
@@ -26,15 +25,6 @@ pub enum IntentStatus {
     Active,
     Satisfied,
     Drifted,
-}
-
-/// A single evidence criterion from `intent.md`, annotated with satisfaction status.
-#[derive(Debug, Clone, PartialEq)]
-pub struct EvidenceCriterion {
-    /// Raw text of the criterion (as written in `intent.md`).
-    pub text: String,
-    /// `true` when at least one implemented test scaffold covers this criterion.
-    pub satisfied: bool,
 }
 
 /// Result of cross-referencing evidence criteria against implemented test scaffolds.
@@ -68,6 +58,14 @@ impl IntentStatus {
 }
 
 /// Parsed representation of an `intent.md` file (ICE model).
+///
+/// Only `status` and `evidence` are consulted today (by
+/// `review/checks.rs::review_intent_alignment` and `analyzer.rs`/`evidence.rs`'s
+/// drift computation) — the remaining fields capture the rest of the ICE
+/// template's content (title, ID, feature link, creation date, risks, open
+/// questions, raw source) for potential future use (e.g. richer `solidspec
+/// status`/`analyze` output) but aren't read anywhere yet.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct IntentSpec {
     pub title: String,

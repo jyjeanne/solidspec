@@ -1,23 +1,9 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
-use tempfile::TempDir;
+
+mod common;
+use common::{first_feature_dir, init_project, solidspec};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-fn solidspec() -> Command {
-    Command::cargo_bin("solidspec").unwrap()
-}
-
-/// Initialise a bare SolidSpec project and return its TempDir.
-fn init_project() -> TempDir {
-    let dir = TempDir::new().unwrap();
-    solidspec()
-        .args(["init", "--here", "--no-git"])
-        .current_dir(dir.path())
-        .assert()
-        .success();
-    dir
-}
 
 /// Create a minimal feature with spec.md, plan.md, tasks.md.
 fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
@@ -27,13 +13,7 @@ fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
         .assert()
         .success();
 
-    let specs = dir.join("specs");
-    let feature_dir = std::fs::read_dir(&specs)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("feature dir")
-        .path();
+    let feature_dir = first_feature_dir(dir);
 
     // Write plan.md and tasks.md so the feature is not empty.
     std::fs::write(
@@ -123,13 +103,7 @@ fn ship_lane_filter_runs_subset() {
         .stdout(predicate::str::contains("Launching 2 review lanes"));
     // "Test Coverage" and "Performance" must NOT appear in progress output.
     // (They may appear in other text, so we check the report instead.)
-    let specs = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .unwrap()
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
     let report = std::fs::read_to_string(feature_dir.join("ship-report.md")).unwrap();
     // Report table should have exactly 2 lane rows (Code Review + Security Audit).
     let code_rows = report.matches("Code Review").count();

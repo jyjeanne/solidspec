@@ -15,7 +15,6 @@ use super::artifact_graph::{ArtifactGraph, ArtifactNode};
 
 /// A workflow schema deserialized from YAML.
 #[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
 pub struct WorkflowSchema {
     pub name: String,
     pub version: String,
@@ -47,6 +46,8 @@ pub mod builtin {
     pub const INTENT_APEX: &str = include_str!("../../schemas/intent-apex/schema.yaml");
     pub const TDD_DRIVEN: &str = include_str!("../../schemas/tdd-driven/schema.yaml");
 
+    /// Used by `list_available_schemas` below, which is tested but not yet
+    /// wired to a CLI command (candidate for a future `solidspec schema list`).
     #[allow(dead_code)]
     pub fn names() -> Vec<&'static str> {
         vec![
@@ -144,6 +145,10 @@ pub fn is_intent_schema(name: &str) -> bool {
 }
 
 /// List all available schema names (built-in + project-local).
+///
+/// Fully implemented and tested (`list_available_schemas_includes_builtins`,
+/// `list_available_schemas_includes_apex_schemas`) but not yet called from
+/// any CLI command — candidate for a future `solidspec schema list`.
 #[allow(dead_code)]
 pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
     let mut schemas = Vec::new();
@@ -193,7 +198,8 @@ pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
     schemas
 }
 
-/// Summary info about an available schema.
+/// Summary info about an available schema. Return type of
+/// `list_available_schemas` — see its doc comment for status.
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct SchemaInfo {

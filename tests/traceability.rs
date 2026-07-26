@@ -8,10 +8,16 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
+mod common;
+use common::first_feature_dir;
+
 // ── Shared helpers ───────────────────────────────────────────────────────────
 
+/// Local convenience wrapper binding `current_dir` upfront (this file calls
+/// it with an explicit `dir` at every site, unlike the no-arg
+/// `common::solidspec()`).
 fn solidspec(dir: &std::path::Path) -> Command {
-    let mut cmd = Command::cargo_bin("solidspec").unwrap();
+    let mut cmd = common::solidspec();
     cmd.current_dir(dir);
     cmd
 }
@@ -195,13 +201,7 @@ fn idsd_pipeline_scaffold_creates_all_artifacts() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("no feature directory")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     // IDSD-specific artifacts
     assert!(
@@ -337,13 +337,7 @@ fn sdd_pipeline_produces_no_idsd_artifacts() {
         .assert()
         .success();
 
-    let specs_dir = dir.path().join("specs");
-    let feature_dir = std::fs::read_dir(&specs_dir)
-        .unwrap()
-        .flatten()
-        .find(|e| e.file_type().unwrap().is_dir())
-        .expect("no feature directory")
-        .path();
+    let feature_dir = first_feature_dir(dir.path());
 
     assert!(
         !feature_dir.join("intent.md").exists(),

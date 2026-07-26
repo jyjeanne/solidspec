@@ -8,6 +8,9 @@ use regex::Regex;
 use crate::config::FanOutConfig;
 use crate::core::review::{self, Dimension, Severity};
 
+mod report;
+pub use report::format_ship_report;
+
 // ── Regex statics ────────────────────────────────────────────────────────────
 
 /// Matches `SCORE: N` in agent output (1–3 digits).
@@ -95,7 +98,6 @@ pub struct FanOutFinding {
 /// dimension cluster, then applies the standard penalty formula.
 /// Returns `Err` when the heuristic cannot run (e.g. `spec.md` missing) so
 /// the caller can surface [`LaneStatus::Failed`].
-#[allow(dead_code)]
 pub(crate) fn score_from_heuristics(
     lane: &ReviewLane,
     feature_dir: &Path,
@@ -113,23 +115,10 @@ pub(crate) fn score_from_heuristics(
 pub fn run_lane_no_agent(lane: &ReviewLane, feature_dir: &Path, project_root: &Path) -> LaneResult {
     let start = Instant::now();
 
-    let report = match review::preflight_review(feature_dir, project_root) {
-        Ok(r) => r,
-        Err(e) => {
-            return LaneResult {
-                lane_id: lane.id,
-                lane_label: lane.label,
-                agent_id: lane.agent_id.clone(),
-                score: 0,
-                findings: vec![],
-                duration_ms: start.elapsed().as_millis() as u64,
-                status: LaneStatus::Failed(format!("{e}")),
-                threshold: lane.threshold,
-            };
-        }
+    let (score, findings, status) = match score_from_heuristics(lane, feature_dir, project_root) {
+        Ok((score, findings)) => (score, findings, LaneStatus::Done),
+        Err(e) => (0, vec![], LaneStatus::Failed(format!("{e}"))),
     };
-
-    let (score, findings) = lane_findings_from_report(lane.id, &report);
 
     LaneResult {
         lane_id: lane.id,
@@ -138,7 +127,7 @@ pub fn run_lane_no_agent(lane: &ReviewLane, feature_dir: &Path, project_root: &P
         score,
         findings,
         duration_ms: start.elapsed().as_millis() as u64,
-        status: LaneStatus::Done,
+        status,
         threshold: lane.threshold,
     }
 }
@@ -187,24 +176,164 @@ fn lane_covers_dimension(lane_id: &str, dim: &Dimension) -> bool {
     )
 }
 
+/// Penalty weight deducted from a lane's 0–100 score per finding severity.
+/// Single source of truth for the scoring rubric — also quoted verbatim in
+/// each lane prompt (`Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.`)
+/// so the AI agent scores consistently with the local heuristic fallback.
+fn penalty_weight(severity: &Severity) -> f64 {
+    match severity {
+        Severity::Critical => 10.0,
+        Severity::High => 5.0,
+        Severity::Medium => 2.0,
+        Severity::Low => 0.5,
+        Severity::Info => 0.0,
+    }
+}
+
 /// Apply the fan-out penalty formula to a set of lane findings.
 ///
-/// Base score 100; deduct 10×CRITICAL, 5×HIGH, 2×MEDIUM, 0.5×LOW. Clamped to [0, 100].
+/// Base score 100; deduct per `penalty_weight`. Clamped to [0, 100].
 fn apply_penalty_formula(findings: &[FanOutFinding]) -> u8 {
-    let penalty: f64 = findings
-        .iter()
-        .map(|f| match f.severity {
-            Severity::Critical => 10.0,
-            Severity::High => 5.0,
-            Severity::Medium => 2.0,
-            Severity::Low => 0.5,
-            Severity::Info => 0.0,
-        })
-        .sum();
+    let penalty: f64 = findings.iter().map(|f| penalty_weight(&f.severity)).sum();
     (100.0_f64 - penalty).max(0.0).round() as u8
 }
 
 // ── Phase 3: agent-based lane execution ─────────────────────────────────────
+
+/// Static metadata for one review lane's prompt. The four lane prompts share
+/// one frame (context preamble, focus bullets, SEVERITY/LOCATION/PROBLEM/FIX
+/// block, scoring rubric) and differ only in these fields — see `lane_prompt`.
+struct LaneSpec {
+    id: &'static str,
+    label: &'static str,
+    /// Phrase completing "You are performing a {title}." (e.g. "CODE REVIEW").
+    title: &'static str,
+    focus_bullets: &'static [&'static str],
+    /// Comma-joined phrase completing "DO NOT assess {not_assessed}."
+    not_assessed: &'static str,
+    /// "issue" or "gap" — completes "For each {finding_noun} found, state:"
+    finding_noun: &'static str,
+    /// Completes "PROBLEM: <{problem_hint}>"
+    problem_hint: &'static str,
+    /// Completes "FIX: <{fix_hint}>"
+    fix_hint: &'static str,
+    /// Completes "Score the feature 0-100 on {score_aspect}."
+    score_aspect: &'static str,
+}
+
+const LANE_SPECS: &[LaneSpec] = &[
+    LaneSpec {
+        id: "code",
+        label: "Code Review",
+        title: "CODE REVIEW",
+        focus_bullets: &[
+            "Requirement completeness: every FR-### in spec.md is addressed in plan.md and tasks.md",
+            "Clarity: no placeholder text remains in any artifact",
+            "Consistency: entity names, FR-IDs, US-labels are consistent across spec/plan/tasks",
+            "Maintainability: plan decisions are justified; tasks are each independently deliverable",
+        ],
+        not_assessed: "security, performance, or test coverage",
+        finding_noun: "issue",
+        problem_hint: "what is wrong",
+        fix_hint: "what to change",
+        score_aspect: "code quality",
+    },
+    LaneSpec {
+        id: "security",
+        label: "Security Audit",
+        title: "SECURITY AUDIT",
+        focus_bullets: &[
+            "Authentication and authorization: are constraints explicit in spec and plan?",
+            "PII handling: identified entities with personal data have a stated storage/transmission policy",
+            "API contract security: no internal IDs exposed, no sensitive data in URLs",
+            "OWASP Top 10 coverage for user-facing requirements",
+            "Hardcoded credentials or secrets in any artifact",
+            "Rate limiting for unauthenticated endpoints",
+        ],
+        not_assessed: "code quality, test coverage, or performance",
+        finding_noun: "issue",
+        problem_hint: "what is wrong",
+        fix_hint: "what to change",
+        score_aspect: "security posture",
+    },
+    LaneSpec {
+        id: "tests",
+        label: "Test Coverage",
+        title: "TEST COVERAGE review",
+        focus_bullets: &[
+            "Every Given/When/Then scenario in spec.md has a test scaffold in tests/",
+            "Test scaffolds are not all STATUS: NOT IMPLEMENTED for completed features",
+            "Tasks reference user stories ([US1], [US2], etc.) for traceability",
+            "Edge cases from spec.md appear in test scaffolds",
+            "Test descriptions match the acceptance criteria they verify",
+        ],
+        not_assessed: "code quality, security, or performance",
+        finding_noun: "gap",
+        problem_hint: "what is missing or wrong",
+        fix_hint: "what to add or change",
+        score_aspect: "test coverage",
+    },
+    LaneSpec {
+        id: "perf",
+        label: "Performance",
+        title: "PERFORMANCE review",
+        focus_bullets: &[
+            "Pagination strategy for any entity collection in spec.md and plan.md",
+            "Measurable performance targets in success criteria addressed in plan",
+            "Data model access patterns justified for expected load",
+            "Caching strategy for read-heavy requirements",
+            "Chunking/streaming for bulk import or export operations",
+            "Unbounded queries (list all X with no page size) flagged",
+        ],
+        not_assessed: "code quality, security, or test coverage",
+        finding_noun: "issue",
+        problem_hint: "what is missing or risky",
+        fix_hint: "what to add to plan.md or data-model.md",
+        score_aspect: "performance readiness",
+    },
+];
+
+/// Assemble one lane's deep-focus prompt from its `LaneSpec`.
+fn lane_prompt(feat: &str, spec: &LaneSpec) -> String {
+    let bullets: String = spec
+        .focus_bullets
+        .iter()
+        .map(|b| format!("- {b}\n"))
+        .collect();
+
+    format!(
+        "Read the project context from .solidspec/AGENT.md.\n\
+         Feature: {feat} — find specs/{feat}/\n\n\
+         You are performing a {title}. Focus ONLY on:\n\
+         {bullets}\n\
+         DO NOT assess {not_assessed}.\n\n\
+         For each {noun} found, state:\n\
+         SEVERITY: CRITICAL | HIGH | MEDIUM | LOW\n\
+         LOCATION: <file and section>\n\
+         PROBLEM: <{problem_hint}>\n\
+         FIX: <{fix_hint}>\n\n\
+         Score the feature 0-100 on {score_aspect}.\n\
+         Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.\n\
+         End your response with exactly: SCORE: N",
+        title = spec.title,
+        not_assessed = spec.not_assessed,
+        noun = spec.finding_noun,
+        problem_hint = spec.problem_hint,
+        fix_hint = spec.fix_hint,
+        score_aspect = spec.score_aspect,
+    )
+}
+
+/// Per-lane agent override and score threshold from `FanOutConfig`.
+fn lane_config<'a>(config: &'a FanOutConfig, lane_id: &str) -> (Option<&'a str>, u8) {
+    match lane_id {
+        "code" => (config.code_agent.as_deref(), config.code_threshold),
+        "security" => (config.security_agent.as_deref(), config.security_threshold),
+        "tests" => (config.tests_agent.as_deref(), config.tests_threshold),
+        "perf" => (config.perf_agent.as_deref(), config.perf_threshold),
+        _ => (None, 70),
+    }
+}
 
 /// Build the 4 review lanes with specialised prompts and per-lane agent/threshold config.
 ///
@@ -221,141 +350,19 @@ pub fn build_lanes(
         .to_string_lossy()
         .into_owned();
 
-    vec![
-        ReviewLane {
-            id: "code",
-            label: "Code Review",
-            agent_id: config
-                .code_agent
-                .as_deref()
-                .unwrap_or(default_agent)
-                .to_string(),
-            prompt: code_review_prompt(&feat),
-            threshold: config.code_threshold,
-        },
-        ReviewLane {
-            id: "security",
-            label: "Security Audit",
-            agent_id: config
-                .security_agent
-                .as_deref()
-                .unwrap_or(default_agent)
-                .to_string(),
-            prompt: security_audit_prompt(&feat),
-            threshold: config.security_threshold,
-        },
-        ReviewLane {
-            id: "tests",
-            label: "Test Coverage",
-            agent_id: config
-                .tests_agent
-                .as_deref()
-                .unwrap_or(default_agent)
-                .to_string(),
-            prompt: test_coverage_prompt(&feat),
-            threshold: config.tests_threshold,
-        },
-        ReviewLane {
-            id: "perf",
-            label: "Performance",
-            agent_id: config
-                .perf_agent
-                .as_deref()
-                .unwrap_or(default_agent)
-                .to_string(),
-            prompt: performance_prompt(&feat),
-            threshold: config.perf_threshold,
-        },
-    ]
-}
-
-fn code_review_prompt(feat: &str) -> String {
-    format!(
-        "Read the project context from .solidspec/AGENT.md.\n\
-         Feature: {feat} — find specs/{feat}/\n\n\
-         You are performing a CODE REVIEW. Focus ONLY on:\n\
-         - Requirement completeness: every FR-### in spec.md is addressed in plan.md and tasks.md\n\
-         - Clarity: no placeholder text remains in any artifact\n\
-         - Consistency: entity names, FR-IDs, US-labels are consistent across spec/plan/tasks\n\
-         - Maintainability: plan decisions are justified; tasks are each independently deliverable\n\n\
-         DO NOT assess security, performance, or test coverage.\n\n\
-         For each issue found, state:\n\
-           SEVERITY: CRITICAL | HIGH | MEDIUM | LOW\n\
-           LOCATION: <file and section>\n\
-           PROBLEM: <what is wrong>\n\
-           FIX: <what to change>\n\n\
-         Score the feature 0-100 on code quality.\n\
-         Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.\n\
-         End your response with exactly: SCORE: N"
-    )
-}
-
-fn security_audit_prompt(feat: &str) -> String {
-    format!(
-        "Read the project context from .solidspec/AGENT.md.\n\
-         Feature: {feat} — find specs/{feat}/\n\n\
-         You are performing a SECURITY AUDIT. Focus ONLY on:\n\
-         - Authentication and authorization: are constraints explicit in spec and plan?\n\
-         - PII handling: identified entities with personal data have a stated storage/transmission policy\n\
-         - API contract security: no internal IDs exposed, no sensitive data in URLs\n\
-         - OWASP Top 10 coverage for user-facing requirements\n\
-         - Hardcoded credentials or secrets in any artifact\n\
-         - Rate limiting for unauthenticated endpoints\n\n\
-         DO NOT assess code quality, test coverage, or performance.\n\n\
-         For each issue found, state:\n\
-           SEVERITY: CRITICAL | HIGH | MEDIUM | LOW\n\
-           LOCATION: <file and section>\n\
-           PROBLEM: <what is wrong>\n\
-           FIX: <what to change>\n\n\
-         Score the feature 0-100 on security posture.\n\
-         Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.\n\
-         End your response with exactly: SCORE: N"
-    )
-}
-
-fn test_coverage_prompt(feat: &str) -> String {
-    format!(
-        "Read the project context from .solidspec/AGENT.md.\n\
-         Feature: {feat} — find specs/{feat}/\n\n\
-         You are performing a TEST COVERAGE review. Focus ONLY on:\n\
-         - Every Given/When/Then scenario in spec.md has a test scaffold in tests/\n\
-         - Test scaffolds are not all STATUS: NOT IMPLEMENTED for completed features\n\
-         - Tasks reference user stories ([US1], [US2], etc.) for traceability\n\
-         - Edge cases from spec.md appear in test scaffolds\n\
-         - Test descriptions match the acceptance criteria they verify\n\n\
-         DO NOT assess code quality, security, or performance.\n\n\
-         For each gap found, state:\n\
-           SEVERITY: CRITICAL | HIGH | MEDIUM | LOW\n\
-           LOCATION: <file and section>\n\
-           PROBLEM: <what is missing or wrong>\n\
-           FIX: <what to add or change>\n\n\
-         Score the feature 0-100 on test coverage.\n\
-         Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.\n\
-         End your response with exactly: SCORE: N"
-    )
-}
-
-fn performance_prompt(feat: &str) -> String {
-    format!(
-        "Read the project context from .solidspec/AGENT.md.\n\
-         Feature: {feat} — find specs/{feat}/\n\n\
-         You are performing a PERFORMANCE review. Focus ONLY on:\n\
-         - Pagination strategy for any entity collection in spec.md and plan.md\n\
-         - Measurable performance targets in success criteria addressed in plan\n\
-         - Data model access patterns justified for expected load\n\
-         - Caching strategy for read-heavy requirements\n\
-         - Chunking/streaming for bulk import or export operations\n\
-         - Unbounded queries (list all X with no page size) flagged\n\n\
-         DO NOT assess code quality, security, or test coverage.\n\n\
-         For each issue found, state:\n\
-           SEVERITY: CRITICAL | HIGH | MEDIUM | LOW\n\
-           LOCATION: <file and section>\n\
-           PROBLEM: <what is missing or risky>\n\
-           FIX: <what to add to plan.md or data-model.md>\n\n\
-         Score the feature 0-100 on performance readiness.\n\
-         Deduct: 10 per CRITICAL, 5 per HIGH, 2 per MEDIUM, 0.5 per LOW.\n\
-         End your response with exactly: SCORE: N"
-    )
+    LANE_SPECS
+        .iter()
+        .map(|spec| {
+            let (agent_override, threshold) = lane_config(config, spec.id);
+            ReviewLane {
+                id: spec.id,
+                label: spec.label,
+                agent_id: agent_override.unwrap_or(default_agent).to_string(),
+                prompt: lane_prompt(&feat, spec),
+                threshold,
+            }
+        })
+        .collect()
 }
 
 /// Extract a 0–100 score from agent stdout.
@@ -376,16 +383,11 @@ pub(crate) fn extract_score(stdout: &str) -> u8 {
 
 /// Fallback scorer: counts `SEVERITY: LEVEL` lines and applies penalty formula.
 fn derive_score_from_keywords(output: &str) -> u8 {
-    let mut penalty = 0.0_f64;
-    for caps in SEVERITY_RE.captures_iter(output) {
-        penalty += match &caps[1] {
-            "CRITICAL" => 10.0,
-            "HIGH" => 5.0,
-            "MEDIUM" => 2.0,
-            "LOW" => 0.5,
-            _ => 0.0,
-        };
-    }
+    let penalty: f64 = SEVERITY_RE
+        .captures_iter(output)
+        .filter_map(|caps| parse_severity(&caps[1]))
+        .map(|sev| penalty_weight(&sev))
+        .sum();
     (100.0_f64 - penalty).max(0.0).round() as u8
 }
 
@@ -691,70 +693,6 @@ pub fn aggregate_results(
         lanes: results,
         blocking_findings,
     }
-}
-
-/// Render a `ShipReport` as Markdown with a machine-readable `<!-- ship: bool -->` header.
-pub fn format_ship_report(report: &ShipReport) -> String {
-    let is_ship = report.decision == ShipDecision::Ship;
-    let decision_str = if is_ship { "SHIP" } else { "HOLD" };
-    let generated = chrono::Utc::now().to_rfc3339();
-
-    let mut out = format!(
-        "# Ship Report: {feature}\n\n\
-         <!-- ship: {is_ship} -->\n\
-         <!-- generated: {generated} -->\n\n\
-         **Decision**: {decision_str}\n\n\
-         ## Lane Scores\n\n\
-         | Lane | Agent | Score | Threshold | Status |\n\
-         |------|-------|-------|-----------|--------|\n",
-        feature = report.feature_id,
-    );
-
-    for result in &report.lanes {
-        let status_cell = match &result.status {
-            LaneStatus::Done if result.score >= result.threshold => "✓ Pass",
-            LaneStatus::Done => "✗ Fail",
-            LaneStatus::TimedOut => "⏱ Timed Out",
-            LaneStatus::Failed(_) => "✗ Failed",
-        };
-        out.push_str(&format!(
-            "| {} | {} | {}/100 | {} | {} |\n",
-            result.lane_label, result.agent_id, result.score, result.threshold, status_cell
-        ));
-    }
-
-    if !report.blocking_findings.is_empty() {
-        out.push_str("\n## Blocking Findings\n");
-
-        // Group findings by lane for readable output.
-        let mut by_lane: std::collections::BTreeMap<&str, Vec<&FanOutFinding>> =
-            std::collections::BTreeMap::new();
-        for f in &report.blocking_findings {
-            by_lane.entry(f.lane).or_default().push(f);
-        }
-        for (lane_id, findings) in &by_lane {
-            let label = report
-                .lanes
-                .iter()
-                .find(|r| r.lane_id == *lane_id)
-                .map(|r| r.lane_label)
-                .unwrap_or(lane_id);
-            out.push_str(&format!("\n### {label}\n\n"));
-            for f in findings {
-                out.push_str(&format!(
-                    "- **[{}]** {}\n  *Fix*: {}\n\n",
-                    f.severity, f.message, f.remediation
-                ));
-            }
-        }
-    }
-
-    out.push_str(&format!(
-        "\n## Re-run\n\n```bash\nsolidspec ship {}\n```\n",
-        report.feature_id
-    ));
-
-    out
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
