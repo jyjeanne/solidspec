@@ -60,6 +60,24 @@ pub const PHASES_TDD: &[&str] = &[
     "review",
 ];
 
+/// Pipeline phase names for the `minimal` schema (`schemas/minimal/schema.yaml`):
+/// only spec/plan/tasks/implement — no clarify, tests, analyze, or review artifacts.
+pub const PHASES_MINIMAL: &[&str] = &["specify", "plan", "tasks", "implement"];
+
+/// Pipeline phase names for the `security-first` schema
+/// (`schemas/security-first/schema.yaml`): adds `security-review` between
+/// plan and tasks; no clarify, tests, analyze, or review artifacts.
+///
+/// Note: `execute_phase` (`cli/pipeline.rs`) has no executor for
+/// `security-review` yet, so a live (non-dry-run) run of this schema bails
+/// with "Unknown phase: security-review" once it reaches that step. That's
+/// a known, separate gap (no `solidspec security-review` command exists) —
+/// preferable to the previous silent behavior of running spec-driven's
+/// generic clarify/tests/analyze/review phases, which don't exist in this
+/// schema at all.
+pub const PHASES_SECURITY_FIRST: &[&str] =
+    &["specify", "plan", "security-review", "tasks", "implement"];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PhaseType {
     Auto,
@@ -196,7 +214,9 @@ pub fn filter_phases(
         "apex-driven" => PHASES_APEX,
         "intent-apex" => PHASES_APEX_IDSD,
         "tdd-driven" => PHASES_TDD,
-        _ => PHASES, // spec-driven, minimal, security-first, custom, unknown
+        "minimal" => PHASES_MINIMAL,
+        "security-first" => PHASES_SECURITY_FIRST,
+        _ => PHASES, // spec-driven, custom, unknown
     };
     let from_idx = if let Some(f) = from {
         all.iter().position(|p| *p == f).ok_or_else(|| {
@@ -310,6 +330,21 @@ mod tests {
         assert_eq!(phases[1], "specify");
         assert_eq!(phases[7], "evidence");
         assert_eq!(phases[9], "review");
+    }
+
+    #[test]
+    fn filter_minimal_phases_excludes_tests_and_review() {
+        let phases = filter_phases("minimal", None, None).unwrap();
+        assert_eq!(phases, vec!["specify", "plan", "tasks", "implement"]);
+    }
+
+    #[test]
+    fn filter_security_first_phases_includes_security_review() {
+        let phases = filter_phases("security-first", None, None).unwrap();
+        assert_eq!(
+            phases,
+            vec!["specify", "plan", "security-review", "tasks", "implement"]
+        );
     }
 
     #[test]
@@ -669,5 +704,41 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let graph = graph_for("spec-driven");
         assert!(!should_skip("nonexistent-phase", dir.path(), false, &graph));
+    }
+
+    #[test]
+    fn should_skip_security_review_when_report_exists() {
+        // Regression test: security-review is a real artifact id in the
+        // security-first schema's graph, so the schema-driven default arm
+        // must correctly detect security-review.md and skip.
+        let dir = TempDir::new().unwrap();
+        let graph = graph_for("security-first");
+        assert!(!should_skip("security-review", dir.path(), false, &graph));
+        std::fs::write(dir.path().join("security-review.md"), "# Security Review").unwrap();
+        assert!(should_skip("security-review", dir.path(), false, &graph));
+    }
+
+    #[test]
+    fn filter_phases_minimal_and_security_first_never_include_undeclared_phases() {
+        // Regression test: filter_phases must route each schema to its own
+        // phase list rather than falling back to the generic 8-phase
+        // spec-driven list, which would include phases (tests, review,
+        // clarify, analyze) these schemas don't declare as artifacts —
+        // and which should_skip's schema-driven default can never skip,
+        // since graph.get() returns None for them on these schemas.
+        for phase in ["clarify", "tests", "analyze", "review"] {
+            assert!(
+                !filter_phases("minimal", None, None)
+                    .unwrap()
+                    .contains(&phase),
+                "minimal schema must not include phase '{phase}'"
+            );
+            assert!(
+                !filter_phases("security-first", None, None)
+                    .unwrap()
+                    .contains(&phase),
+                "security-first schema must not include phase '{phase}'"
+            );
+        }
     }
 }
