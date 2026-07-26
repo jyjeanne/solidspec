@@ -80,9 +80,9 @@
     "semantic_hash": "f827937ced452f1d4d7b6507f1ea2656"
   },
   "src/agents/invoker.rs": {
-    "mtime": 1785076024.7822745,
-    "ast_hash": "6777a5fea057ba347b5c575a935959d5",
-    "semantic_hash": "6777a5fea057ba347b5c575a935959d5"
+    "mtime": 1785079500.0016212,
+    "ast_hash": "2c650731160f599c210ef7c3d50e58f5",
+    "semantic_hash": "2c650731160f599c210ef7c3d50e58f5"
   },
   "src/agents/mod.rs": {
     "mtime": 1785076024.7822745,
@@ -100,9 +100,9 @@
     "semantic_hash": "ef3525ed742394feca40b079fc06baab"
   },
   "src/agents/registry.rs": {
-    "mtime": 1785078456.109367,
-    "ast_hash": "920ea2e1977a8082b1358cdc004c3a6f",
-    "semantic_hash": "920ea2e1977a8082b1358cdc004c3a6f"
+    "mtime": 1785079352.5254202,
+    "ast_hash": "0a1b566a0d18edd1386c61b55ae8797c",
+    "semantic_hash": "0a1b566a0d18edd1386c61b55ae8797c"
   },
   "src/cli/analyze.rs": {
     "mtime": 1785076024.7822745,

@@ -61,10 +61,17 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 
 **Not done:** the "slice of fn pointers" check registry. The 10 checks have genuinely heterogeneous signatures (`fn(&str) -> Vec<ReviewFinding>`, `fn(&ParsedSpec) -> Vec<ReviewFinding>`, `fn(&ParsedSpec, &str, &str) -> Vec<ReviewFinding>`, and `review_intent_alignment` returns a different type entirely, `(Vec<ReviewFinding>, f64)`). Forcing them into one dynamic-dispatch registry would mean wrapping every call site in a boxed closure inside `preflight_review` purely to satisfy a uniform signature — more indirection for a fixed, small set of checks that isn't a plugin surface today. The file split already delivers the stated discoverability goal (each check is now easy to find, read, and unit-test in isolation); the registry is deferred as a genuine future item if/when checks need to become pluggable via `src/extensions/`.
 
-### 7. Duplicated agent-binary resolution between registry and invoker
-`check_cli_available` (`src/agents/registry.rs:487`) and `supports_cli` / binary lookup in `src/agents/invoker.rs` both resolve agent CLIs via `find_binary`; the graph shows 19 INFERRED edges converging on `find_agent()` from both modules (flagged in the analysis's "verify inferred" questions). `invoke_agent` and `invoke_agent_with_prompt` also duplicate the spawn/poll/timeout loop.
+### 7. ✅ FIXED — duplicated agent-binary resolution between registry and invoker
+`check_cli_available` (`src/agents/registry.rs`) and `supports_cli` / binary lookup in `src/agents/invoker.rs` both resolved agent CLIs via `find_binary`. `invoke_agent` and `invoke_agent_with_prompt` also duplicated the spawn/poll/timeout loop.
 
-**Action:** single `resolve_agent_cli(agent) -> Option<PathBuf>` used by both modules; collapse the two invoke variants into one with a timeout parameter.
+**Investigation turned up more than expected:** `check_cli_available` had **zero callers anywhere in the codebase** — not even its own tests. It was pure dead code, invisible to clippy's `dead_code` lint only because `registry.rs` has a blanket `#![allow(dead_code)]`. Deleted outright rather than merged.
+
+**Fix applied:**
+- `invoker.rs` gained `resolve_agent_cli(agent_id) -> Result<(&AgentConfig, PathBuf), String>`, consolidating the unknown-agent / no-CLI-support / binary-not-found checks that were previously repeated verbatim in both `invoke_agent` and `invoke_agent_with_prompt`. `supports_cli` now is just `resolve_agent_cli(agent_id).is_ok()`.
+- `run_agent_cli` (interactive, stdio-inherited so the agent's output streams live to the terminal) and `run_agent_cli_capture` (used by parallel fan-out lanes, which pipe+buffer stdout in a reader thread specifically to avoid interleaving concurrent agents' output and to let the caller parse SCORE/SEVERITY from it) were **not** collapsed into one function — they have a genuinely different, deliberate stdio strategy for different call contexts (foreground single agent vs. background parallel lanes), confirmed by reading how each is invoked. Instead, the two pieces that actually were identical — building the per-agent argument list (codex/kimi/default cases) and the spawn-poll-timeout loop — were extracted into shared `build_agent_args()` and `wait_with_timeout()` helpers used by both.
+- Removed a stale `#[allow(dead_code)]` on `invoke_agent_with_prompt` left over from before `ship`/fan-out was wired into the binary — it's genuinely called now.
+
+Net: -64 lines across `invoker.rs` + `registry.rs`. All 649 tests pass unchanged.
 
 ---
 
@@ -81,7 +88,7 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 **Action:** add a `shellcheck` step to CI and at least one integration test that runs a copied script.
 
 ### 10. `#[allow(dead_code)]` accumulation
-11+ `#[allow(dead_code)]` markers (`src/core/change.rs`, `src/config/mod.rs`, `src/agents/invoker.rs:378`, `src/core/artifact_graph.rs:24`, …). Each one hides a field/function the graph also sees as low-degree. Periodically remove the allow and delete what no longer compiles.
+11+ `#[allow(dead_code)]` markers (`src/core/change.rs`, `src/config/mod.rs`, `src/core/artifact_graph.rs`, …). Each one hides a field/function the graph also sees as low-degree. Periodically remove the allow and delete what no longer compiles. Two instances were removed opportunistically while fixing P2.7: a stale allow on `invoker::invoke_agent_with_prompt` (genuinely used now) and the `#[allow(dead_code)]` on `ArtifactGraph::get` (used by P1.1's `should_skip` default arm) — the rest are still open.
 
 ### 11. Keep the graph fresh
 `docs/graph/GRAPH_REPORT.md` records the commit it was built from. Regenerate with `./scripts/generate-graph.sh` after structural changes, or install git hooks (`graphify hook install`) to update automatically. A stale graph gives stale review signals.
@@ -98,5 +105,5 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 | 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | ✅ Fixed |
 | 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | ✅ Fixed |
 | 6 | Split review.rs (P2.6) | M | Extensible check registry | ✅ Fixed (file split done; fn-pointer registry deferred, see note) |
-| 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | |
+| 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | ✅ Fixed |
 | 8+ | P3 items | S each | Opportunistic | |

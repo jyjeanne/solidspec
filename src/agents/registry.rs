@@ -322,21 +322,6 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
     Ok(registered)
 }
 
-fn check_cli_available(agent_id: &str) -> bool {
-    let agent = find_agent(agent_id);
-    match agent {
-        Some(a) if !a.cli_binary.is_empty() => find_binary(a.cli_binary).is_some(),
-        _ => {
-            let exe_name = match agent_id {
-                "kiro-cli" => "kiro",
-                "qodercli" => "qodercli",
-                _ => agent_id,
-            };
-            which::which(exe_name).is_ok()
-        }
-    }
-}
-
 /// Resolve a CLI binary by name, checking PATH first then common npm/nvm install locations.
 pub fn find_binary(name: &str) -> Option<PathBuf> {
     // 1. Standard PATH lookup

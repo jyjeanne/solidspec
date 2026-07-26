@@ -164,6 +164,29 @@ pub enum InvokeResult {
     Failed { error: String },
 }
 
+/// Resolve an agent ID to its config and CLI binary path.
+///
+/// Shared by [`invoke_agent`], [`invoke_agent_with_prompt`], and [`supports_cli`]
+/// so the unknown-agent / no-CLI-support / binary-not-found checks live in one
+/// place instead of being repeated at each call site.
+fn resolve_agent_cli(agent_id: &str) -> Result<(&'static AgentConfig, std::path::PathBuf), String> {
+    let agent = find_agent(agent_id).ok_or_else(|| format!("Unknown agent '{agent_id}'"))?;
+
+    if agent.cli_binary.is_empty() {
+        return Err(format!("{} does not support CLI invocation", agent.name));
+    }
+
+    // Checks PATH and common npm/nvm install locations.
+    let binary_path = find_binary(agent.cli_binary).ok_or_else(|| {
+        format!(
+            "'{}' CLI not found. Install {} or add it to PATH.",
+            agent.cli_binary, agent.name
+        )
+    })?;
+
+    Ok((agent, binary_path))
+}
+
 /// Invoke an AI agent's CLI to process a pipeline phase.
 ///
 /// Returns `InvokeResult::NotAvailable` if the agent doesn't support CLI invocation,
@@ -176,33 +199,9 @@ pub fn invoke_agent(
     description: Option<&str>,
     project_context: Option<&str>,
 ) -> InvokeResult {
-    let agent = match find_agent(agent_id) {
-        Some(a) => a,
-        None => {
-            return InvokeResult::NotAvailable {
-                reason: format!("Unknown agent '{agent_id}'"),
-            };
-        }
-    };
-
-    // Check if agent has CLI support
-    if agent.cli_binary.is_empty() {
-        return InvokeResult::NotAvailable {
-            reason: format!("{} does not support CLI invocation", agent.name),
-        };
-    }
-
-    // Check if CLI binary is available (checks PATH and common npm/nvm locations)
-    let binary_path = match find_binary(agent.cli_binary) {
-        Some(p) => p,
-        None => {
-            return InvokeResult::NotAvailable {
-                reason: format!(
-                    "'{}' CLI not found. Install {} or add it to PATH.",
-                    agent.cli_binary, agent.name
-                ),
-            };
-        }
+    let (agent, binary_path) = match resolve_agent_cli(agent_id) {
+        Ok(v) => v,
+        Err(reason) => return InvokeResult::NotAvailable { reason },
     };
 
     let prompt = build_phase_prompt(phase, feature_dir_name, description, project_context);
@@ -224,8 +223,35 @@ fn run_agent_cli(
 ) -> Result<String> {
     let mut cmd = Command::new(binary_path);
     cmd.current_dir(working_dir);
+    build_agent_args(&mut cmd, agent, prompt);
 
-    // Special handling for agents with non-standard invocation
+    log::info!(
+        "Invoking {} CLI: {} {} ...",
+        agent.name,
+        agent.cli_binary,
+        agent.cli_prompt_flag
+    );
+    log::debug!("Prompt length: {} chars", prompt.len());
+
+    let child = cmd
+        .spawn()
+        .with_context(|| format!("Failed to spawn '{}' CLI", agent.cli_binary))?;
+
+    let exit_status = wait_with_timeout(child, agent.name, AGENT_TIMEOUT_SECS)?;
+
+    if exit_status.success() {
+        log::info!("{} CLI completed successfully", agent.name);
+        Ok(String::new())
+    } else {
+        let code = exit_status.code().unwrap_or(-1);
+        anyhow::bail!("{} CLI exited with code {code}", agent.name)
+    }
+}
+
+/// Add the agent's arguments (prompt + extra flags) to `cmd`. Some agents use
+/// non-standard invocation (a subcommand, or a specific flag before the
+/// prompt) instead of the default `<prompt_flag> "<prompt>"` shape.
+fn build_agent_args(cmd: &mut Command, agent: &AgentConfig, prompt: &str) {
     match agent.id {
         "codex" => {
             // codex uses subcommand: `codex exec "prompt"`
@@ -240,49 +266,31 @@ fn run_agent_cli(
             cmd.arg(agent.cli_prompt_flag).arg(prompt);
         }
     }
-
-    // Add extra flags
     for flag in agent.cli_extra_flags {
         cmd.arg(flag);
     }
+}
 
-    log::info!(
-        "Invoking {} CLI: {} {} ...",
-        agent.name,
-        agent.cli_binary,
-        agent.cli_prompt_flag
-    );
-    log::debug!("Prompt length: {} chars", prompt.len());
-
-    let mut child = cmd
-        .spawn()
-        .with_context(|| format!("Failed to spawn '{}' CLI", agent.cli_binary))?;
-
+/// Poll a spawned child process until it exits or `timeout_secs` elapses.
+/// On timeout, kills the child and returns an error naming `agent_name`.
+fn wait_with_timeout(
+    mut child: std::process::Child,
+    agent_name: &str,
+    timeout_secs: u64,
+) -> Result<std::process::ExitStatus> {
     let poll = Duration::from_millis(AGENT_POLL_INTERVAL_MS);
-    let deadline = Instant::now() + Duration::from_secs(AGENT_TIMEOUT_SECS);
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
 
-    let exit_status = loop {
+    loop {
         match child.try_wait()? {
-            Some(status) => break status,
+            Some(status) => return Ok(status),
             None if Instant::now() >= deadline => {
                 child.kill()?;
                 child.wait()?;
-                anyhow::bail!(
-                    "{} CLI timed out after {} seconds",
-                    agent.name,
-                    AGENT_TIMEOUT_SECS
-                );
+                anyhow::bail!("{agent_name} CLI timed out after {timeout_secs} seconds");
             }
             None => thread::sleep(poll),
         }
-    };
-
-    if exit_status.success() {
-        log::info!("{} CLI completed successfully", agent.name);
-        Ok(String::new())
-    } else {
-        let code = exit_status.code().unwrap_or(-1);
-        anyhow::bail!("{} CLI exited with code {code}", agent.name)
     }
 }
 
@@ -304,21 +312,7 @@ fn run_agent_cli_capture(
     let mut cmd = Command::new(binary_path);
     cmd.current_dir(working_dir);
     cmd.stdout(Stdio::piped());
-
-    match agent.id {
-        "codex" => {
-            cmd.arg("exec").arg(prompt);
-        }
-        "kimi" => {
-            cmd.arg("--yolo").arg(prompt);
-        }
-        _ => {
-            cmd.arg(agent.cli_prompt_flag).arg(prompt);
-        }
-    }
-    for flag in agent.cli_extra_flags {
-        cmd.arg(flag);
-    }
+    build_agent_args(&mut cmd, agent, prompt);
 
     let mut child = cmd
         .spawn()
@@ -333,24 +327,7 @@ fn run_agent_cli_capture(
         })
     });
 
-    let poll = Duration::from_millis(AGENT_POLL_INTERVAL_MS);
-    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
-
-    let exit_status = loop {
-        match child.try_wait()? {
-            Some(status) => break status,
-            None if Instant::now() >= deadline => {
-                child.kill()?;
-                child.wait()?;
-                anyhow::bail!(
-                    "{} CLI timed out after {} seconds",
-                    agent.name,
-                    timeout_secs
-                );
-            }
-            None => thread::sleep(poll),
-        }
-    };
+    let exit_status = wait_with_timeout(child, agent.name, timeout_secs)?;
 
     let output = stdout_reader
         .and_then(|h| h.join().ok())
@@ -374,39 +351,15 @@ fn run_agent_cli_capture(
 /// Unlike [`invoke_agent`], this captures the agent's stdout so the fan-out
 /// engine can extract scores and findings from it. Uses the same
 /// binary-discovery and error paths as [`invoke_agent`].
-// Allow dead_code until fan_out is wired into the binary (Phase 5+).
-#[allow(dead_code)]
 pub fn invoke_agent_with_prompt(
     agent_id: &str,
     prompt: &str,
     project_root: &Path,
     timeout_secs: u64,
 ) -> InvokeResult {
-    let agent = match find_agent(agent_id) {
-        Some(a) => a,
-        None => {
-            return InvokeResult::NotAvailable {
-                reason: format!("Unknown agent '{agent_id}'"),
-            };
-        }
-    };
-
-    if agent.cli_binary.is_empty() {
-        return InvokeResult::NotAvailable {
-            reason: format!("{} does not support CLI invocation", agent.name),
-        };
-    }
-
-    let binary_path = match find_binary(agent.cli_binary) {
-        Some(p) => p,
-        None => {
-            return InvokeResult::NotAvailable {
-                reason: format!(
-                    "'{}' CLI not found. Install {} or add it to PATH.",
-                    agent.cli_binary, agent.name
-                ),
-            };
-        }
+    let (agent, binary_path) = match resolve_agent_cli(agent_id) {
+        Ok(v) => v,
+        Err(reason) => return InvokeResult::NotAvailable { reason },
     };
 
     match run_agent_cli_capture(agent, &binary_path, prompt, project_root, timeout_secs) {
@@ -419,9 +372,7 @@ pub fn invoke_agent_with_prompt(
 
 /// Check if an agent supports CLI invocation.
 pub fn supports_cli(agent_id: &str) -> bool {
-    find_agent(agent_id)
-        .map(|a| !a.cli_binary.is_empty() && find_binary(a.cli_binary).is_some())
-        .unwrap_or(false)
+    resolve_agent_cli(agent_id).is_ok()
 }
 
 #[cfg(test)]
