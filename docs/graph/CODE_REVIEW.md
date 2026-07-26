@@ -54,10 +54,12 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 
 `create_feature()` was deliberately **not** unified — each suite's fixture content differs (different `plan.md`/`tasks.md`/`spec.md` bodies with suite-specific markers like `[US1]` or acceptance-criteria sections that other tests assert against), so merging them risked silently changing fixtures other tests depend on.
 
-### 6. `src/core/review.rs` (1,392 lines): monolithic check pipeline
-`preflight_review` (hub, 22 edges) drives ten independent `check_*` functions plus scoring plus report formatting in one file. Checks are self-contained (each returns `Vec<ReviewFinding>`), which is good — but they're not discoverable or extensible, even though the project has an extensions system (`src/extensions/`).
+### 6. ✅ FIXED (partial) — `src/core/review.rs` was a monolithic check pipeline
+`preflight_review` (hub, 22 edges) drove ten independent `check_*` functions plus scoring plus report formatting all in one 1,392-line file.
 
-**Action:** split into `review/checks.rs` + `review/report.rs`; register checks in a slice of fn pointers so adding one is a one-line change (and a future extension point).
+**Fix applied:** split into `src/core/review/checks.rs` (the 10 heuristic checks + their regexes, `pub(crate)`) and `src/core/review/report.rs` (`format_review_report`, re-exported so `crate::core::review::format_review_report` — used by `cli/review.rs` — is unchanged). `review.rs` itself now holds only the type definitions, `preflight_review` orchestration, and `score_dimensions`. Tests were split alongside their functions (checks.rs's own suite grew from 0 to 12 tests moved from the old monolithic test module; report.rs got 1; review.rs kept the 9 orchestration/integration tests). All 22 tests still pass, same count as before — pure relocation, no behavior change. Net: 1 file (1,392 lines) → 3 files (533 + 799 + 160 lines), each with a single, obvious responsibility.
+
+**Not done:** the "slice of fn pointers" check registry. The 10 checks have genuinely heterogeneous signatures (`fn(&str) -> Vec<ReviewFinding>`, `fn(&ParsedSpec) -> Vec<ReviewFinding>`, `fn(&ParsedSpec, &str, &str) -> Vec<ReviewFinding>`, and `review_intent_alignment` returns a different type entirely, `(Vec<ReviewFinding>, f64)`). Forcing them into one dynamic-dispatch registry would mean wrapping every call site in a boxed closure inside `preflight_review` purely to satisfy a uniform signature — more indirection for a fixed, small set of checks that isn't a plugin surface today. The file split already delivers the stated discoverability goal (each check is now easy to find, read, and unit-test in isolation); the registry is deferred as a genuine future item if/when checks need to become pluggable via `src/extensions/`.
 
 ### 7. Duplicated agent-binary resolution between registry and invoker
 `check_cli_available` (`src/agents/registry.rs:487`) and `supports_cli` / binary lookup in `src/agents/invoker.rs` both resolve agent CLIs via `find_binary`; the graph shows 19 INFERRED edges converging on `find_agent()` from both modules (flagged in the analysis's "verify inferred" questions). `invoke_agent` and `invoke_agent_with_prompt` also duplicate the spawn/poll/timeout loop.
@@ -95,6 +97,6 @@ The graph's #1 and #2 god nodes were **test helpers**, not production code: `ini
 | 3 | Shared test helpers (P2.5) | S | Removes the two biggest god nodes in the graph | ✅ Fixed |
 | 4 | Command bodies → templates (P2.3) | M | Unlocks user-overridable prompts, shrinks registry.rs | ✅ Fixed |
 | 5 | Fan-out prompt/scoring dedup (P2.4) | M | Single source of truth for scoring rubric | ✅ Fixed |
-| 6 | Split review.rs (P2.6) | M | Extensible check registry | |
+| 6 | Split review.rs (P2.6) | M | Extensible check registry | ✅ Fixed (file split done; fn-pointer registry deferred, see note) |
 | 7 | Agent CLI resolution dedup (P2.7) | S | Removes inferred-edge ambiguity the graph flagged | |
 | 8+ | P3 items | S each | Opportunistic | |
