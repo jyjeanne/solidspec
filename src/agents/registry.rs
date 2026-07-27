@@ -20,6 +20,7 @@ mod command_bodies {
     pub const TESTS: &str = include_str!("../../templates/commands/tests.md");
     pub const ANALYZE: &str = include_str!("../../templates/commands/analyze.md");
     pub const REVIEW: &str = include_str!("../../templates/commands/review.md");
+    pub const SECURITY_REVIEW: &str = include_str!("../../templates/commands/security-review.md");
     pub const APEX: &str = include_str!("../../templates/commands/apex.md");
     pub const TDD_TESTS: &str = include_str!("../../templates/commands/tdd-tests.md");
     pub const TDD_REFACTOR: &str = include_str!("../../templates/commands/tdd-refactor.md");
@@ -46,6 +47,7 @@ fn command_body(cmd_name: &str, project_root: &Path) -> String {
         "tests" => command_bodies::TESTS.to_string(),
         "analyze" => command_bodies::ANALYZE.to_string(),
         "review" => command_bodies::REVIEW.to_string(),
+        "security-review" => command_bodies::SECURITY_REVIEW.to_string(),
         "apex" => command_bodies::APEX.to_string(),
         "tdd-tests" => command_bodies::TDD_TESTS.to_string(),
         "tdd-refactor" => command_bodies::TDD_REFACTOR.to_string(),
@@ -76,6 +78,10 @@ const COMMANDS: &[(&str, &str)] = &[
     ("tests", "Generate test scaffolds from acceptance scenarios"),
     ("analyze", "Validate cross-artifact consistency"),
     ("review", "Review spec quality with preflight heuristics"),
+    (
+        "security-review",
+        "Deepen the OWASP Top 10 heuristic audit of plan.md (security-first workflow)",
+    ),
     ("checklist", "Generate a quality validation checklist"),
     (
         "apex",

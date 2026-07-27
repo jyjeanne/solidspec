@@ -12,6 +12,7 @@ pub mod intent_parser;
 pub mod pipeline;
 pub mod review;
 pub mod schema;
+pub mod security_review;
 pub mod spec_parser;
 pub mod task_generator;
 pub mod tdd;

@@ -14,6 +14,7 @@ pub mod pipeline;
 pub mod plan;
 pub mod preset;
 pub mod review;
+pub mod security_review;
 pub mod ship;
 pub mod specify;
 pub mod status;
@@ -94,6 +95,16 @@ pub enum Commands {
     Plan {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
+    },
+
+    /// Run an OWASP Top 10 heuristic security audit of plan.md (security-first workflow)
+    SecurityReview {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Preview without writing files
+        #[arg(long)]
+        dry_run: bool,
     },
 
     /// Generate a story-driven task breakdown from the plan
@@ -348,6 +359,10 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Specify { feature_name } => specify::run(&feature_name),
         Commands::Clarify { feature_id } => clarify::run(feature_id.as_deref()),
         Commands::Plan { feature_id } => plan::run(feature_id.as_deref(), None),
+        Commands::SecurityReview {
+            feature_id,
+            dry_run,
+        } => security_review::run(feature_id.as_deref(), dry_run),
         Commands::Tasks { feature_id } => tasks::run(feature_id.as_deref()),
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
         Commands::Apex {

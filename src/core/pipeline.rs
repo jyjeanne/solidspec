@@ -68,13 +68,11 @@ pub const PHASES_MINIMAL: &[&str] = &["specify", "plan", "tasks", "implement"];
 /// (`schemas/security-first/schema.yaml`): adds `security-review` between
 /// plan and tasks; no clarify, tests, analyze, or review artifacts.
 ///
-/// Note: `execute_phase` (`cli/pipeline.rs`) has no executor for
-/// `security-review` yet, so a live (non-dry-run) run of this schema bails
-/// with "Unknown phase: security-review" once it reaches that step. That's
-/// a known, separate gap (no `solidspec security-review` command exists) —
-/// preferable to the previous silent behavior of running spec-driven's
-/// generic clarify/tests/analyze/review phases, which don't exist in this
-/// schema at all.
+/// `execute_phase` (`cli/pipeline.rs`) runs `security-review` via
+/// `solidspec security-review`, which performs an OWASP Top 10 heuristic
+/// audit of `plan.md` (`core::security_review`) and writes
+/// `security-review.md` — no AI agent required, so `--no-agent` runs of
+/// this schema complete end to end.
 pub const PHASES_SECURITY_FIRST: &[&str] =
     &["specify", "plan", "security-review", "tasks", "implement"];
 
