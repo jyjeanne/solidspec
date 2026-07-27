@@ -63,13 +63,19 @@ static AUTHZ_MITIGATION: LazyLock<Regex> = LazyLock::new(|| {
         .expect("invalid authz mitigation regex")
 });
 
+// Word-boundary note: truncated stems (e.g. "parameteriz") must NOT be
+// followed by a bare `\b` — that requires a boundary immediately after the
+// stem, which never occurs in the actual inflected words ("parameterized",
+// "sanitize"). Use `\w*` after the stem instead so the boundary lands after
+// the real word. Verified against the `regex` crate for every pattern below
+// (see the `matches`/`does_not_match` unit tests).
 static INJECTION_TRIGGER: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(sql|query|database|db\b|orm|raw\s+query|shell\s+command|exec\()")
+    Regex::new(r"(?i)\b(sql\b|quer(y|ies|ying)|database|db|orm|raw\s+query|shell\s+command|exec\()")
         .expect("invalid injection trigger regex")
 });
 static INJECTION_MITIGATION: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"(?i)\b(parameteriz|prepared\s+statement|sanitiz|input\s+valid|escap(e|ing)|orm\b)\b",
+        r"(?i)\b(parameteriz\w*|prepared\s+statement|saniti[sz]\w*|input\s+valid\w*|escap(e|ing)|orm)\b",
     )
     .expect("invalid injection mitigation regex")
 });
@@ -79,7 +85,7 @@ static SENSITIVE_DATA_TRIGGER: LazyLock<Regex> = LazyLock::new(|| {
         .expect("invalid sensitive data trigger regex")
 });
 static SENSITIVE_DATA_MITIGATION: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(encrypt|tls|https|at\s+rest|hashing|tokeniz|pci[- ]dss|redact)\b")
+    Regex::new(r"(?i)\b(encrypt\w*|tls|https|at\s+rest|hash\w*|tokeniz\w*|pci[- ]dss|redact\w*)\b")
         .expect("invalid sensitive data mitigation regex")
 });
 
@@ -88,7 +94,7 @@ static RATE_LIMIT_TRIGGER: LazyLock<Regex> = LazyLock::new(|| {
         .expect("invalid rate limit trigger regex")
 });
 static RATE_LIMIT_MITIGATION: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(rate\s+limit|throttl|quota|backoff)\b")
+    Regex::new(r"(?i)\b(rate\s+limit\w*|throttl\w*|quota|backoff)\b")
         .expect("invalid rate limit mitigation regex")
 });
 
@@ -98,7 +104,7 @@ static LOGGING_TRIGGER: LazyLock<Regex> = LazyLock::new(|| {
 });
 static LOGGING_MITIGATION: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"(?i)\b(audit\s+log|structured\s+log|log\s+retention|no\s+sensitive\s+data\s+in\s+logs)\b",
+        r"(?i)\b(audit\s+log\w*|structured\s+logg?ing|log\s+retention|no\s+sensitive\s+data\s+in\s+logs)\b",
     )
     .expect("invalid logging mitigation regex")
 });
@@ -182,12 +188,15 @@ pub fn run_security_review(feature_dir: &Path) -> Result<SecurityReviewReport> {
     let spec_path = feature_dir.join("spec.md");
     let spec_content = std::fs::read_to_string(&spec_path).unwrap_or_default();
 
+    // Trigger scans spec+plan (a feature can be described as sensitive in
+    // spec.md before plan.md restates it); mitigation only scans plan.md,
+    // since that's where a documented control belongs. Both regex sets are
+    // `(?i)`, so no case-folding allocation is needed here.
     let combined = format!("{spec_content}\n{plan_content}");
-    let plan_lower = plan_content.to_lowercase();
 
     let mut findings = Vec::new();
     for check in &*OWASP_CHECKS {
-        if check.trigger.is_match(&combined) && !check.mitigation.is_match(&plan_lower) {
+        if check.trigger.is_match(&combined) && !check.mitigation.is_match(&plan_content) {
             findings.push(SecurityFinding {
                 category: check.category,
                 severity: check.severity.clone(),
@@ -373,6 +382,88 @@ mod tests {
                 .findings
                 .iter()
                 .any(|f| f.category.contains("Cryptographic") && f.severity == Severity::Critical)
+        );
+    }
+
+    #[test]
+    fn sql_with_documented_parameterization_has_no_injection_finding() {
+        // Regression: a truncated-stem mitigation regex (`parameteriz\b`) used
+        // to require a word boundary right after the stem, which never occurs
+        // in "parameterized"/"sanitize" — so a plan that explicitly documents
+        // the mitigation still raised a false-positive Critical finding.
+        let dir = TempDir::new().unwrap();
+        write_feature(
+            dir.path(),
+            "# Spec\nSearch products by name.\n",
+            "# Plan\nWe use parameterized queries and sanitize all user input against the database.\n",
+        );
+
+        let report = run_security_review(dir.path()).unwrap();
+        assert!(
+            !report
+                .findings
+                .iter()
+                .any(|f| f.category.contains("Injection"))
+        );
+    }
+
+    #[test]
+    fn sqlite_mention_alone_does_not_trigger_injection_finding() {
+        // Regression: INJECTION_TRIGGER had no closing `\b` after "sql", so it
+        // matched as a substring inside "SQLite".
+        let dir = TempDir::new().unwrap();
+        write_feature(
+            dir.path(),
+            "# Spec\nA static marketing page with no user data.\n",
+            "# Plan\nWe use SQLite for local caching.\n",
+        );
+
+        let report = run_security_review(dir.path()).unwrap();
+        assert!(
+            !report
+                .findings
+                .iter()
+                .any(|f| f.category.contains("Injection"))
+        );
+    }
+
+    #[test]
+    fn tokenized_payment_data_has_no_cryptographic_finding() {
+        // Regression: SENSITIVE_DATA_MITIGATION's `tokeniz\b` never matched
+        // "tokenized" for the same truncated-stem reason.
+        let dir = TempDir::new().unwrap();
+        write_feature(
+            dir.path(),
+            "# Spec\nAccept credit card payment for checkout.\n",
+            "# Plan\nCredit card numbers are tokenized via the payment processor and never stored.\n",
+        );
+
+        let report = run_security_review(dir.path()).unwrap();
+        assert!(
+            !report
+                .findings
+                .iter()
+                .any(|f| f.category.contains("Cryptographic"))
+        );
+    }
+
+    #[test]
+    fn structured_logging_documented_has_no_logging_finding() {
+        // Regression: LOGGING_MITIGATION's `structured\s+log\b` didn't match
+        // "structured logging" (only the bare noun "log"/"logs").
+        let dir = TempDir::new().unwrap();
+        write_feature(
+            dir.path(),
+            "# Spec\nAdmin dashboard with audit trail.\n",
+            "# Plan\nWe use structured logging with retention policies.\n",
+        );
+
+        let report = run_security_review(dir.path()).unwrap();
+        assert!(
+            !report
+                .findings
+                .iter()
+                .any(|f| f.category.contains("Logging"))
         );
     }
 

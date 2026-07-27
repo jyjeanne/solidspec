@@ -137,6 +137,27 @@ pub fn build_phase_prompt(
                  5. Write findings to {specs_path}/review-report.md"
             )
         }
+        "security-review" => {
+            format!(
+                "Read the project context from .solidspec/AGENT.md.\n\n\
+                 Feature: {specs_path}\n\n\
+                 `solidspec security-review` has already written a baseline \
+                 {specs_path}/security-review.md using deterministic OWASP Top 10 \
+                 heuristics (pattern-matching plan.md for authentication, authorization, \
+                 injection, sensitive-data, rate-limiting, and logging concerns). \
+                 Read it first, then go deeper than the heuristics can:\n\
+                 1. Read {specs_path}/spec.md and {specs_path}/plan.md in full\n\
+                 2. For each OWASP Top 10 category, assess whether the heuristic findings \
+                 are accurate and complete\n\
+                 3. Add any Critical/High/Medium/Low findings the heuristics missed, with \
+                 a concrete remediation for each\n\
+                 4. Remove or downgrade any heuristic finding that doesn't actually apply, \
+                 with a one-line justification\n\
+                 5. Update {specs_path}/security-review.md with the final findings by severity\n\n\
+                 Every Critical or High finding MUST be resolved or explicitly accepted with \
+                 justification before {specs_path}/tasks.md is generated."
+            )
+        }
         _ => {
             format!(
                 "Read the project context from .solidspec/AGENT.md, then execute the '{phase}' workflow for feature {specs_path}."
@@ -422,6 +443,14 @@ mod tests {
     fn build_analyze_prompt_mentions_consistency() {
         let prompt = build_phase_prompt("analyze", "001-auth", None, None);
         assert!(prompt.contains("consistency"));
+    }
+
+    #[test]
+    fn build_security_review_prompt_mentions_owasp_and_gate() {
+        let prompt = build_phase_prompt("security-review", "001-payments", None, None);
+        assert!(prompt.contains("OWASP"));
+        assert!(prompt.contains("security-review.md"));
+        assert!(prompt.contains("tasks.md"));
     }
 
     #[test]

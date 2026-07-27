@@ -21,6 +21,7 @@ pub fn persona_for_phase(phase: &str) -> &'static Persona {
         "tests" => &TEST_ENGINEER,
         "analyze" => &CONSISTENCY_CHECKER,
         "review" => &CODE_REVIEWER,
+        "security-review" => &SECURITY_AUDITOR,
         _ => &DEFAULT_PERSONA,
     }
 }
@@ -136,6 +137,19 @@ pub const CODE_REVIEWER: Persona = Persona {
     ],
 };
 
+/// **Security Auditor**: Adversarial, OWASP-focused. Gates `tasks` in the security-first schema.
+pub const SECURITY_AUDITOR: Persona = Persona {
+    name: "Security Auditor",
+    role_summary: "You are an application security engineer performing an OWASP Top 10 audit of the architecture plan before implementation begins. A deterministic heuristic pass has already written a baseline security-review.md — verify it, correct false positives/negatives, and add anything context-dependent the heuristics can't see.",
+    output_format: "## Output: Findings by severity (CRITICAL/HIGH/MEDIUM/LOW), each mapped to an OWASP Top 10 category with a concrete remediation. Written to security-review.md.",
+    verification: &[
+        "Every OWASP Top 10 category relevant to the feature is assessed",
+        "Each finding has a concrete, actionable remediation (not 'be careful')",
+        "Heuristic false positives are downgraded or removed with justification",
+        "Every Critical/High finding is resolvable as a mitigation task in tasks.md",
+    ],
+};
+
 /// **Default Persona**: Used for unknown phases. Constructive, task-oriented.
 pub const DEFAULT_PERSONA: Persona = Persona {
     name: "SolidSpec Agent",
@@ -227,5 +241,12 @@ mod tests {
     fn implement_persona_emphasizes_incremental() {
         let persona = persona_for_phase("implement");
         assert!(persona.role_summary.contains("one task at a time"));
+    }
+
+    #[test]
+    fn security_review_persona_is_owasp_focused() {
+        let persona = persona_for_phase("security-review");
+        assert_eq!(persona.name, "Security Auditor");
+        assert!(persona.role_summary.contains("OWASP"));
     }
 }
