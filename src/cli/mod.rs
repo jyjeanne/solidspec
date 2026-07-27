@@ -111,6 +111,10 @@ pub enum Commands {
     Tasks {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
+
+        /// Workflow schema to use for DAG gate checks (default: spec-driven)
+        #[arg(long, default_value = "spec-driven")]
+        schema: String,
     },
 
     /// Execute tasks from the task breakdown
@@ -363,7 +367,7 @@ pub fn run(cli: Cli) -> Result<()> {
             feature_id,
             dry_run,
         } => security_review::run(feature_id.as_deref(), dry_run),
-        Commands::Tasks { feature_id } => tasks::run(feature_id.as_deref()),
+        Commands::Tasks { feature_id, schema } => tasks::run(feature_id.as_deref(), &schema),
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
         Commands::Apex {
             feature_id,

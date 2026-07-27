@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
 
 use crate::config;
-use crate::core::{feature, spec_parser, task_generator};
+use crate::core::artifact_graph::ArtifactState;
+use crate::core::{feature, schema, spec_parser, task_generator};
 use crate::extensions;
 
-pub fn run(feature_id: Option<&str>) -> Result<()> {
+pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let project_root = config::find_project_root(&cwd)
         .context("Not inside a SolidSpec project. Run 'solidspec init' first.")?;
@@ -27,6 +28,23 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
         );
     }
     let plan_content = std::fs::read_to_string(&plan_path)?;
+
+    // Enforce the schema's DAG dependency for `tasks` (e.g. security-first
+    // requires security-review.md before tasks.md can be generated). This is
+    // the same graph `solidspec status` displays, now actually consulted
+    // here instead of only shown for information.
+    let (graph, _source) = schema::load_graph(schema_name, &project_root)?;
+    if graph.get("tasks").is_some() {
+        let completed = graph.detect_completion(&feature_dir);
+        let mut states = graph.compute_states(&completed);
+        if let Some(ArtifactState::Blocked { missing_deps }) = states.remove("tasks") {
+            anyhow::bail!(
+                "'tasks' is blocked in the '{schema_name}' schema: missing {}.\n\
+                 Run the missing artifact command(s) first (see 'solidspec status {feature_dir_name} --schema {schema_name}').",
+                missing_deps.join(", ")
+            );
+        }
+    }
 
     // Check optional supporting docs
     let has_data_model = feature_dir.join("data-model.md").exists();

@@ -763,9 +763,11 @@ solidspec plan 001
 # Plan is reviewed by AI for OWASP Top 10 issues
 solidspec pipeline 001 --from security-review --schema security-first --no-agent
 # Now check security-review.md: Critical/High findings must be resolved
-solidspec tasks 001   # Only available after security-review.md is written
+solidspec tasks 001 --schema security-first   # Blocked until security-review.md exists
 solidspec implement 001
 ```
+
+`--schema security-first` is required on `solidspec tasks` for the gate to apply — without it, `tasks` defaults to the `spec-driven` schema (no security-review dependency) and will generate `tasks.md` regardless of whether `security-review.md` exists.
 
 ---
 
@@ -1122,7 +1124,7 @@ review = "Check for placeholders, ambiguous language, traceability gaps."
 | `solidspec specify <desc>` | Create feature spec with user stories and quality checklist |
 | `solidspec clarify [id]` | Resolve `[NEEDS CLARIFICATION]` markers |
 | `solidspec plan [id]` | Generate plan + research + data model + contracts |
-| `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers |
+| `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers (`--schema` enforces DAG gates, e.g. security-first's security-review requirement) |
 | `solidspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
 | `solidspec implement [id]` | Execute tasks with hook support |
 | `solidspec analyze [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode |

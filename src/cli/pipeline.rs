@@ -374,7 +374,7 @@ fn execute_phase(
             Ok("security-review.md created".into())
         }
         "tasks" => {
-            crate::cli::tasks::run(Some(feature_dir_name))?;
+            crate::cli::tasks::run(Some(feature_dir_name), schema)?;
 
             if *agent_mode != AgentMode::Disabled {
                 invoke_or_handoff(agent, phase, feature_dir_name, project_root, None, auto)?;

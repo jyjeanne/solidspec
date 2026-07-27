@@ -202,6 +202,87 @@ fn security_first_tasks_blocked_until_security_review_md_exists() {
     );
 }
 
+#[test]
+fn tasks_command_itself_blocks_without_security_review_md() {
+    // Regression: `solidspec tasks` used to only check plan.md's existence
+    // and never consulted the schema DAG, so a user calling it directly
+    // (bypassing `solidspec pipeline`) could generate tasks.md on a
+    // security-first project before security-review.md existed — silently
+    // skipping the gate the schema and README describe as non-skippable.
+    // `solidspec tasks` now accepts `--schema` and enforces the same DAG
+    // `solidspec status` displays.
+    let dir = init_project();
+
+    solidspec()
+        .args(["specify", "Stripe payment integration"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let feature_dir = first_feature_dir(dir.path());
+    let feature_name = feature_dir.file_name().unwrap().to_str().unwrap();
+
+    solidspec()
+        .args(["plan", feature_name])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    // Blocked: no security-review.md yet.
+    solidspec()
+        .args(["tasks", feature_name, "--schema", "security-first"])
+        .current_dir(dir.path())
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("blocked"))
+        .stderr(predicate::str::contains("security-review"));
+    assert!(!feature_dir.join("tasks.md").exists());
+
+    // Unblocked once security-review.md exists.
+    solidspec()
+        .args(["security-review", feature_name])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    solidspec()
+        .args(["tasks", feature_name, "--schema", "security-first"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+    assert!(feature_dir.join("tasks.md").exists());
+}
+
+#[test]
+fn tasks_without_schema_flag_defaults_to_spec_driven_and_is_unaffected() {
+    // No --schema passed anywhere in the codebase before this change ever
+    // called `solidspec tasks` with a non-default schema, so the default
+    // (spec-driven, no security-review gate) must behave exactly as before.
+    let dir = init_project();
+
+    solidspec()
+        .args(["specify", "Quick tool"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    let feature_dir = first_feature_dir(dir.path());
+    let feature_name = feature_dir.file_name().unwrap().to_str().unwrap();
+
+    solidspec()
+        .args(["plan", feature_name])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    solidspec()
+        .args(["tasks", feature_name])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+    assert!(feature_dir.join("tasks.md").exists());
+}
+
 // ── security-first: live pipeline runs end-to-end (README Use Case 3) ───────
 
 #[test]
