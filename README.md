@@ -591,6 +591,7 @@ solidspec init --here
 | `/solidspec-specify` | Create a new feature spec from a description |
 | `/solidspec-clarify` | Resolve ambiguities in a spec |
 | `/solidspec-plan` | Generate architecture plan + supporting docs |
+| `/solidspec-security-review` | Deepen the OWASP Top 10 heuristic audit of plan.md (security-first workflow) |
 | `/solidspec-tasks` | Generate phased task breakdown |
 | `/solidspec-tests` | Generate test scaffolds from acceptance scenarios |
 | `/solidspec-tdd-tests` | Write real failing tests — TDD RED phase |
@@ -1124,6 +1125,7 @@ review = "Check for placeholders, ambiguous language, traceability gaps."
 | `solidspec specify <desc>` | Create feature spec with user stories and quality checklist |
 | `solidspec clarify [id]` | Resolve `[NEEDS CLARIFICATION]` markers |
 | `solidspec plan [id]` | Generate plan + research + data model + contracts |
+| `solidspec security-review [id]` | Run a no-agent OWASP Top 10 heuristic audit of plan.md/spec.md; writes `security-review.md` (`security-first` schema, `--dry-run`) |
 | `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers (`--schema` enforces DAG gates, e.g. security-first's security-review requirement) |
 | `solidspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
 | `solidspec implement [id]` | Execute tasks with hook support |

@@ -1,8 +1,17 @@
 # SolidSpec Roadmap
 
-## Current: v0.3.0
+## Current: v0.3.1
 
 SolidSpec has evolved from a single-methodology SDD tool into a **multi-methodology AI development platform**. Seven built-in schemas cover the full spectrum from lightweight spikes to fully-traced, intent-anchored, TDD-enforced production workflows.
+
+### v0.3.1 — Security-First Fixes
+
+| Fix | Description |
+|-----|-------------|
+| `security-review` executor | `solidspec pipeline --schema security-first --no-agent` previously failed with `Unknown phase: security-review` — no executor existed for the phase. Added `solidspec security-review`, backed by a no-agent OWASP Top 10 heuristic audit of `plan.md`/`spec.md` (`core::security_review`). |
+| Heuristic false positives fixed | Several OWASP heuristic regexes had a truncated-stem word boundary bug (e.g. `tokeniz\b` never matched "tokenized") that produced false-positive Critical findings on plans that already documented the mitigation. Verified fixes against the `regex` crate directly; added regression tests. |
+| Agent-mode prompt parity | Live-agent (non-`--no-agent`) `security-review` runs were falling through to a generic prompt instead of the detailed OWASP-audit instructions; added a dedicated `security-review` prompt arm and `Security Auditor` persona. |
+| `tasks` DAG gate now enforced | `solidspec tasks` previously only checked `plan.md`'s existence and never consulted the schema graph, so calling it directly (bypassing `pipeline`) could silently skip the security-first schema's `security-review` → `tasks` dependency. `solidspec tasks` now accepts `--schema` and blocks with a clear error until the required artifact exists — same behavior `solidspec status` already displayed. |
 
 ---
 
@@ -50,7 +59,9 @@ Workflow: `security-first` (5 artifacts)
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Security-First Schema | ✅ | Mandatory OWASP Top 10 security review as DAG dependency before tasks can be generated |
+| `security-review` Command | ✅ | `solidspec security-review [id] [--dry-run]` runs a no-agent OWASP Top 10 heuristic audit of `plan.md`/`spec.md` and writes `security-review.md`; wired into `solidspec pipeline`'s `security-review` phase and registered as a slash command per agent. |
 | OWASP Audit Gate | ✅ | Security findings by severity (Critical/High/Medium/Low); every finding becomes a mitigation task |
+| DAG Gate Enforcement | ✅ | `solidspec tasks --schema security-first` consults the schema graph and blocks until `security-review.md` exists (previously only `solidspec status` displayed the gate; `tasks` itself didn't enforce it) |
 
 ---
 
