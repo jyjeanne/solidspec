@@ -76,7 +76,7 @@ pub mod scripts {
 /// Render a template string with the given variables.
 pub fn render(template_str: &str, vars: &HashMap<String, String>) -> Result<String> {
     let mut tera = Tera::default();
-    tera.autoescape_on(vec![]); // Disable HTML auto-escaping — we generate markdown, not HTML
+    tera.autoescape_on(Vec::<&str>::new()); // Disable HTML auto-escaping — we generate markdown, not HTML
     tera.add_raw_template("template", template_str)
         .map_err(|e| SolidSpecError::Template {
             template: "inline".into(),
@@ -86,7 +86,7 @@ pub fn render(template_str: &str, vars: &HashMap<String, String>) -> Result<Stri
 
     let mut context = Context::new();
     for (key, value) in vars {
-        context.insert(key.as_str(), value);
+        context.insert(key.clone(), value);
     }
 
     tera.render("template", &context)
