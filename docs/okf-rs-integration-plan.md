@@ -23,28 +23,47 @@ Reste à faire côté étape 1 (mineur, non bloquant) :
   (parité avec l'intention documentée dans l'étude, non implémenté ici pour rester dans le périmètre
   "outillage contributeur, aucun changement produit").
 
-## Étape 2 — Preset `okf` optionnel (scaffolding, pas de branchement pipeline)
+## Étape 2 — Extension `okf` optionnelle (scaffolding, pas de branchement pipeline) — fait ✅
 
-Objectif : permettre à un projet **scaffoldé par SolidSpec** (pas SolidSpec lui-même) d'avoir son propre
-bundle OKF, sans toucher au comportement par défaut de `solidspec init`.
+**Commit à venir.** Objectif : permettre à un projet **scaffoldé par SolidSpec** (pas SolidSpec lui-même)
+d'avoir son propre bundle OKF, sans toucher au comportement par défaut de `solidspec init`.
 
-- Nouveau module `src/presets/` catalog entry `okf`, suivant le même contrat que les presets existants
-  (`src/presets/manifest.rs`, `registry.rs`) : un manifest déclarant les fichiers à écrire et les commandes
-  post-init à proposer (jamais à exécuter silencieusement).
-- `solidspec preset add okf` (ou équivalent existant) :
-  - écrit un `okf.toml` minimal dans le projet cible (bundle output = `.solidspec/knowledge/` — hors de
-    `specs/`, pour ne pas polluer les artefacts de features) ;
-  - ajoute une entrée dans `.gitignore` pour `.okf-cache.json` ;
-  - n'installe ni n'exécute `okf-rs` — juste la détection (`which okf-rs`) et un message si absent, sur le
-    modèle de `src/agents/config.rs`/`which` déjà utilisé pour la détection d'agents.
-- Documentation (README section "Extensions"/"Presets") : le preset est opt-in, explicitement optionnel,
-  pour ne pas alourdir le chemin `minimal`.
-- Pas de MCP à ce stade : juste le scaffolding statique. Réduit le risque et donne un point d'arrêt propre
-  si l'étape 3 n'est pas retenue.
+Écart par rapport à la formulation initiale du plan : implémenté comme **extension** (`src/extensions/`),
+pas comme **preset** (`src/presets/`). Après lecture du code des deux systèmes, le système de presets sert
+exclusivement à *surcharger les templates d'artefacts SDD* (`spec-template.md`, etc. via `provides.templates`
++ résolution par priorité) — pas à scaffolder des fichiers de config arbitraires ni à réagir à un événement
+de cycle de vie. Le système d'extensions, lui, a exactement ce qu'il faut : `provides.commands` (fichiers
+associés à un id de commande) + `hooks` (déclenchés à des points de cycle de vie précis, dont `after_init`,
+via `src/extensions/hooks.rs::fire_hooks`, exécuté en sous-processus `sh`). Aucun des deux systèmes n'a de
+catalogue intégré au binaire — `solidspec preset add`/`extension add` exigent un répertoire source local
+avec un manifest — donc l'extension est livrée comme code source dans le repo (`extensions/okf/`), à
+installer avec `solidspec extension add extensions/okf --dev`.
 
-**Livrable de test** : `tests/pipeline.rs` — un test d'intégration qui vérifie que
-`solidspec init --preset okf` (ou la commande équivalente) écrit `okf.toml` et met à jour `.gitignore`, sans
-exiger que le binaire `okf-rs` soit présent dans l'environnement de test.
+Contenu livré (`extensions/okf/`) :
+- `extension.yml` — manifest déclarant une commande `solidspec.okf.init` et un hook `after_init` (marqué
+  `optional: true`).
+- `hooks/after-init.sh` — script best-effort : si `okf-rs` est absent du `PATH`, affiche l'instruction
+  d'installation et sort en succès (n'échoue jamais `solidspec init`) ; sinon lance
+  `okf-rs init --output .solidspec/knowledge --no-agent-files` (le `--no-agent-files` évite qu'okf-rs
+  touche CLAUDE.md/AGENTS.md, déjà gérés par `src/agents/registry.rs`) et ajoute `.okf-cache.json` au
+  `.gitignore` du projet cible s'il existe.
+- `README.md` — usage, y compris la limite connue : le hook `after_init` ne peut pas se déclencher sur le
+  tout premier `solidspec init` qui crée le projet (`extension add` exige que `.solidspec/` existe déjà) ;
+  il faut soit réexécuter `solidspec init` après avoir ajouté l'extension (idempotent, vérifié), soit lancer
+  les deux commandes du hook à la main.
+- Pas de MCP à ce stade — juste le scaffolding. Pas de dépendance Rust ajoutée à `Cargo.toml` : `okf-rs`
+  reste détecté via `command -v` dans le script, jamais un binaire requis.
+
+**Tests** (`tests/okf_extension.rs`, passent) :
+- `okf_extension_installs_and_registers_hook` — `extension add --dev` réussit, `extension info` montre le
+  hook enregistré.
+- `okf_extension_hook_never_fails_init_regardless_of_okf_rs_availability` — un second `init` (qui déclenche
+  le hook) réussit que `okf-rs` soit sur le `PATH` ou non ; si présent, vérifie le contenu de `okf.toml`
+  généré.
+
+Vérifié manuellement en plus des tests automatisés : `cargo build`, `cargo clippy --all-targets -- -D
+warnings`, `cargo fmt --check` propres ; installation réelle + double `init` dans un projet temporaire avec
+`okf-rs` réellement installé, et avec `PATH` restreint pour simuler son absence.
 
 ## Étape 3 — Registration MCP pour les agents qui le supportent
 

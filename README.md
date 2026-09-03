@@ -1170,6 +1170,10 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 
 Feature ID is auto-detected from git branch or latest spec if omitted.
 
+A bundled example extension lives at [`extensions/okf/`](extensions/okf/): scaffolds an `okf.toml` so a
+project built with SolidSpec can generate its own [okf-rs](https://github.com/jyjeanne/okf-rs) knowledge-graph
+bundle for AI agents to query. Install into a project with `solidspec extension add extensions/okf --dev`.
+
 ---
 
 ## Supported AI Agents (20)
