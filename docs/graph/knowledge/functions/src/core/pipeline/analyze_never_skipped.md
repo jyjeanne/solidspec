@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: analyze_never_skipped
-resource: src/core/pipeline.rs#L428-L432
+resource: src/core/pipeline.rs#L479-L483
 visibility: private
 generated:
   by: okf-rs/0.7.0

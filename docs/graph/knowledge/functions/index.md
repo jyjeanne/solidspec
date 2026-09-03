@@ -318,6 +318,7 @@
 - [duplicate_artifact_id_errors](../functions/src/core/artifact_graph/duplicate_artifact_id_errors.md) — Rust Function
 - [extracts_fr_ids_from_spec](../functions/src/core/artifact_graph/extracts_fr_ids_from_spec.md) — Rust Function
 - [first_ready_advances_as_artifacts_complete](../functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete.md) — Rust Function
+- [first_ready_is_deterministic_across_multiple_roots](../functions/src/core/artifact_graph/first_ready_is_deterministic_across_multiple_roots.md) — Rust Function
 - [first_ready_is_none_when_everything_is_done](../functions/src/core/artifact_graph/first_ready_is_none_when_everything_is_done.md) — Rust Function
 - [first_ready_on_fresh_project_is_the_root_artifact](../functions/src/core/artifact_graph/first_ready_on_fresh_project_is_the_root_artifact.md) — Rust Function
 - [format_tree_contains_fr_ids](../functions/src/core/artifact_graph/format_tree_contains_fr_ids.md) — Rust Function
@@ -331,7 +332,9 @@
 - [task_to_test_link_when_test_mentions_task_id](../functions/src/core/artifact_graph/task_to_test_link_when_test_mentions_task_id.md) — Rust Function
 - [tasks_requires_spec_and_plan](../functions/src/core/artifact_graph/tasks_requires_spec_and_plan.md) — Rust Function
 - [tasks_without_fr_refs_produce_orphaned_frs](../functions/src/core/artifact_graph/tasks_without_fr_refs_produce_orphaned_frs.md) — Rust Function
+- [topological_order_is_deterministic_across_multiple_roots](../functions/src/core/artifact_graph/topological_order_is_deterministic_across_multiple_roots.md) — Rust Function
 - [topological_order_starts_with_no_dependency_artifacts](../functions/src/core/artifact_graph/topological_order_starts_with_no_dependency_artifacts.md) — Rust Function
+- [two_root_graph](../functions/src/core/artifact_graph/two_root_graph.md) — Rust Function
 - [unknown_dependency_errors](../functions/src/core/artifact_graph/unknown_dependency_errors.md) — Rust Function
 - [write](../functions/src/core/artifact_graph/write.md) — Rust Function
 - [load](../functions/src/core/change/ChangeMetadata/load.md) — Rust Method
@@ -510,6 +513,7 @@
 - [write_sample_project](../functions/src/core/okf/write_sample_project.md) — Rust Function
 - [fmt](../functions/src/core/pipeline/PhaseStatus/std-fmt-display/fmt.md) — Rust Method
 - [analyze_never_skipped](../functions/src/core/pipeline/analyze_never_skipped.md) — Rust Function
+- [falls_back_to_ship_when_nothing_is_ready](../functions/src/core/pipeline/falls_back_to_ship_when_nothing_is_ready.md) — Rust Function
 - [filter_all_phases](../functions/src/core/pipeline/filter_all_phases.md) — Rust Function
 - [filter_apex_driven_apex_at_correct_position](../functions/src/core/pipeline/filter_apex_driven_apex_at_correct_position.md) — Rust Function
 - [filter_apex_driven_from_tasks_to_analyze](../functions/src/core/pipeline/filter_apex_driven_from_tasks_to_analyze.md) — Rust Function
@@ -530,8 +534,12 @@
 - [format_log_entry](../functions/src/core/pipeline/format_log_entry.md) — Rust Function
 - [format_log_has_table_and_totals](../functions/src/core/pipeline/format_log_has_table_and_totals.md) — Rust Function
 - [graph_for](../functions/src/core/pipeline/graph_for.md) — Rust Function
+- [next_step_hint](../functions/src/core/pipeline/next_step_hint.md) — Rust Function
+- [node](../functions/src/core/pipeline/node.md) — Rust Function
 - [phase_type](../functions/src/core/pipeline/phase_type.md) — Rust Function
 - [phase_types_correct](../functions/src/core/pipeline/phase_types_correct.md) — Rust Function
+- [points_at_continue_for_a_regular_phase](../functions/src/core/pipeline/points_at_continue_for_a_regular_phase.md) — Rust Function
+- [points_at_ship_directly_instead_of_continue](../functions/src/core/pipeline/points_at_ship_directly_instead_of_continue.md) — Rust Function
 - [schema_artifact_id](../functions/src/core/pipeline/schema_artifact_id.md) — Rust Function
 - [should_not_skip_clarify_when_markers_present](../functions/src/core/pipeline/should_not_skip_clarify_when_markers_present.md) — Rust Function
 - [should_not_skip_evidence_when_absent](../functions/src/core/pipeline/should_not_skip_evidence_when_absent.md) — Rust Function

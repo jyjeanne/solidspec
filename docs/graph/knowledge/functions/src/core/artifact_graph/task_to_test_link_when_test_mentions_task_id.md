@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: task_to_test_link_when_test_mentions_task_id
-resource: src/core/artifact_graph.rs#L934-L949
+resource: src/core/artifact_graph.rs#L1000-L1015
 visibility: private
 generated:
   by: okf-rs/0.7.0

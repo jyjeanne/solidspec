@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write
-resource: src/core/artifact_graph.rs#L834-L839
+resource: src/core/artifact_graph.rs#L900-L905
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_intent_when_intent_exists
-resource: src/core/pipeline.rs#L479-L485
+resource: src/core/pipeline.rs#L530-L536
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: analyze
-resource: src/cli/analyze.rs#L1-L52
+resource: src/cli/analyze.rs#L1-L64
 generated:
   by: okf-rs/0.7.0
 relationships:

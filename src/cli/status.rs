@@ -3,7 +3,7 @@ use anyhow::Result;
 use crate::config;
 use crate::core::artifact_graph::ArtifactState;
 use crate::core::schema;
-use crate::core::{analyzer, feature};
+use crate::core::{analyzer, feature, pipeline};
 
 pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     let project_root = config::find_project_root(&std::env::current_dir()?)
@@ -82,10 +82,7 @@ pub fn run(feature_id: Option<&str>, schema_name: &str) -> Result<()> {
     }
 
     println!();
-    match graph.first_ready(&states) {
-        Some(next) => println!("Next: solidspec continue   (next phase: {})", next.id),
-        None => println!("Next: solidspec ship   (all phases done)"),
-    }
+    println!("{}", pipeline::next_step_hint(graph.first_ready(&states)));
 
     // IDSD: show intent drift score when the schema is intent-based and intent.md exists
     if schema::is_intent_schema(schema_name)

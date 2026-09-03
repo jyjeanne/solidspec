@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: format_tree
-resource: src/core/artifact_graph.rs#L295-L367
+resource: src/core/artifact_graph.rs#L305-L377
 generated:
   by: okf-rs/0.7.0
 relationships:

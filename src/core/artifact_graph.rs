@@ -101,11 +101,21 @@ impl ArtifactGraph {
             *in_degree.get_mut(dependent.as_str()).unwrap() += 1;
         }
 
-        let mut queue: VecDeque<&str> = in_degree
+        // Seed the queue with every zero-in-degree ("root") node, sorted by
+        // id for determinism: `in_degree` is a HashMap, whose iteration
+        // order is randomized per process, so an unsorted seed would make
+        // `first_ready`'s tie-break among several simultaneously-ready root
+        // artifacts (a custom multi-root schema) flip between runs with no
+        // state change on disk. Every built-in schema has a single root, so
+        // this only matters for project-local `.solidspec/workflows/`
+        // schemas with more than one no-`requires` artifact.
+        let mut roots: Vec<&str> = in_degree
             .iter()
             .filter(|(_, deg)| **deg == 0)
             .map(|(&id, _)| id)
             .collect();
+        roots.sort_unstable();
+        let mut queue: VecDeque<&str> = roots.into_iter().collect();
 
         let mut order = Vec::new();
         while let Some(id) = queue.pop_front() {
@@ -618,6 +628,62 @@ mod tests {
         let graph = spec_driven_graph();
         let order = graph.topological_order().unwrap();
         assert_eq!(order[0].id, "spec");
+    }
+
+    /// A schema with two independent root artifacts (neither `requires`s
+    /// anything) — e.g. a project-local `.solidspec/workflows/` override
+    /// could define this. Regression test for the root-seeding queue being
+    /// built from `HashMap` iteration order (randomized per process): the
+    /// first two elements must come back in the same (sorted-by-id) order
+    /// every time, not flip between calls with no state change on disk.
+    fn two_root_graph() -> ArtifactGraph {
+        ArtifactGraph::new(vec![
+            ArtifactNode {
+                id: "spec".into(),
+                generates: vec!["spec.md".into()],
+                requires: vec![],
+                instruction: "".into(),
+                template: None,
+            },
+            ArtifactNode {
+                id: "notes".into(),
+                generates: vec!["notes.md".into()],
+                requires: vec![],
+                instruction: "".into(),
+                template: None,
+            },
+            ArtifactNode {
+                id: "plan".into(),
+                generates: vec!["plan.md".into()],
+                requires: vec!["spec".into(), "notes".into()],
+                instruction: "".into(),
+                template: None,
+            },
+        ])
+        .expect("valid graph")
+    }
+
+    #[test]
+    fn topological_order_is_deterministic_across_multiple_roots() {
+        // Sorted by id: "notes" < "spec" — this must hold on every call.
+        for _ in 0..50 {
+            let graph = two_root_graph();
+            let order = graph.topological_order().unwrap();
+            assert_eq!(
+                (order[0].id.as_str(), order[1].id.as_str()),
+                ("notes", "spec"),
+                "root ordering must not depend on HashMap iteration order"
+            );
+        }
+    }
+
+    #[test]
+    fn first_ready_is_deterministic_across_multiple_roots() {
+        for _ in 0..50 {
+            let graph = two_root_graph();
+            let states = graph.compute_states(&HashSet::new());
+            assert_eq!(graph.first_ready(&states).unwrap().id, "notes");
+        }
     }
 
     #[test]

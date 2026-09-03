@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: filter_minimal_phases_excludes_tests_and_review
-resource: src/core/pipeline.rs#L334-L337
+resource: src/core/pipeline.rs#L385-L388
 visibility: private
 generated:
   by: okf-rs/0.7.0

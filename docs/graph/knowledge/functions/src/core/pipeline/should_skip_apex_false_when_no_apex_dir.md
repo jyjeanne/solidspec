@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_apex_false_when_no_apex_dir
-resource: src/core/pipeline.rs#L628-L632
+resource: src/core/pipeline.rs#L679-L683
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: TraceGraph
-resource: src/core/artifact_graph.rs#L267-L275
+resource: src/core/artifact_graph.rs#L277-L285
 generated:
   by: okf-rs/0.7.0
 ---

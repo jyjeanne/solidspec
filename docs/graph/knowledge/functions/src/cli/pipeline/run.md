@@ -60,9 +60,6 @@ relationships:
   - target: functions/src/core/artifact_graph/ArtifactGraph/compute_states
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/core/artifact_graph/ArtifactGraph/first_ready
-    resolved_by: tree-sitter
-    confidence: exact
 ---
 
 # Signature
@@ -89,4 +86,3 @@ relationships:
 - [write_log](../../../../functions/src/core/pipeline/write_log.md)
 - [detect_completion](../../../../functions/src/core/artifact_graph/ArtifactGraph/detect_completion.md)
 - [compute_states](../../../../functions/src/core/artifact_graph/ArtifactGraph/compute_states.md)
-- [first_ready](../../../../functions/src/core/artifact_graph/ArtifactGraph/first_ready.md)

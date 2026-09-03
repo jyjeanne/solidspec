@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: filter_security_first_phases_includes_security_review
-resource: src/core/pipeline.rs#L340-L346
+resource: src/core/pipeline.rs#L391-L397
 visibility: private
 generated:
   by: okf-rs/0.7.0

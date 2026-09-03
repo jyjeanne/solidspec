@@ -263,10 +263,10 @@ pub fn run(
 
     let completed = artifact_graph.detect_completion(&feature_dir);
     let states = artifact_graph.compute_states(&completed);
-    match artifact_graph.first_ready(&states) {
-        Some(next) => println!("Next: solidspec continue   (next phase: {})", next.id),
-        None => println!("Next: solidspec ship"),
-    }
+    println!(
+        "{}",
+        pipeline::next_step_hint(artifact_graph.first_ready(&states))
+    );
 
     Ok(())
 }

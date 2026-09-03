@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: filter_from_after_to_errors
-resource: src/core/pipeline.rs#L361-L365
+resource: src/core/pipeline.rs#L412-L416
 visibility: private
 generated:
   by: okf-rs/0.7.0

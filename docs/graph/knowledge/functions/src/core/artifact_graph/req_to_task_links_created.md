@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: req_to_task_links_created
-resource: src/core/artifact_graph.rs#L901-L911
+resource: src/core/artifact_graph.rs#L967-L977
 visibility: private
 generated:
   by: okf-rs/0.7.0

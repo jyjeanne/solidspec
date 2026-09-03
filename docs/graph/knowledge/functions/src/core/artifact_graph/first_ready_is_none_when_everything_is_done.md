@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: first_ready_is_none_when_everything_is_done
-resource: src/core/artifact_graph.rs#L649-L654
+resource: src/core/artifact_graph.rs#L715-L720
 visibility: private
 generated:
   by: okf-rs/0.7.0

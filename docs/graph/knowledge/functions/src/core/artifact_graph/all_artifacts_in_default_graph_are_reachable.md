@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: all_artifacts_in_default_graph_are_reachable
-resource: src/core/artifact_graph.rs#L724-L737
+resource: src/core/artifact_graph.rs#L790-L803
 visibility: private
 generated:
   by: okf-rs/0.7.0

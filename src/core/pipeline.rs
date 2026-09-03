@@ -201,6 +201,57 @@ pub fn phase_type(phase: &str) -> PhaseType {
     }
 }
 
+/// Renders the "Next: solidspec ..." hint from an `ArtifactGraph::first_ready`
+/// result. `ship` is deliberately excluded from every `PHASES*` list above —
+/// it's always a separate top-level command, never a phase `solidspec
+/// continue`/`pipeline` executes — so a `first_ready` hit on `ship` must be
+/// pointed at `solidspec ship` directly rather than `solidspec continue`
+/// (which would silently skip every already-done phase and never invoke
+/// ship, leaving the user stuck re-running `continue` forever).
+pub fn next_step_hint(next: Option<&super::artifact_graph::ArtifactNode>) -> String {
+    match next {
+        Some(node) if node.id == "ship" => "Next: solidspec ship".to_string(),
+        Some(node) => format!("Next: solidspec continue   (next phase: {})", node.id),
+        None => "Next: solidspec ship".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod next_step_hint_tests {
+    use super::*;
+    use crate::core::artifact_graph::ArtifactNode;
+
+    fn node(id: &str) -> ArtifactNode {
+        ArtifactNode {
+            id: id.to_string(),
+            generates: vec![],
+            requires: vec![],
+            instruction: String::new(),
+            template: None,
+        }
+    }
+
+    #[test]
+    fn points_at_ship_directly_instead_of_continue() {
+        let n = node("ship");
+        assert_eq!(next_step_hint(Some(&n)), "Next: solidspec ship");
+    }
+
+    #[test]
+    fn points_at_continue_for_a_regular_phase() {
+        let n = node("plan");
+        assert_eq!(
+            next_step_hint(Some(&n)),
+            "Next: solidspec continue   (next phase: plan)"
+        );
+    }
+
+    #[test]
+    fn falls_back_to_ship_when_nothing_is_ready() {
+        assert_eq!(next_step_hint(None), "Next: solidspec ship");
+    }
+}
+
 /// Filter phases by --from and --to range for the given schema.
 pub fn filter_phases(
     schema: &str,

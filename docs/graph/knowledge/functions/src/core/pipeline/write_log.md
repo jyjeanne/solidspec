@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_log
-resource: src/core/pipeline.rs#L289-L302
+resource: src/core/pipeline.rs#L340-L353
 generated:
   by: okf-rs/0.7.0
 relationships:

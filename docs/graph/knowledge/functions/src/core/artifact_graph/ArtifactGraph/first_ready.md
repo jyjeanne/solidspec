@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: first_ready
-resource: src/core/artifact_graph.rs#L138-L143
+resource: src/core/artifact_graph.rs#L148-L153
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -10,12 +10,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
-  - target: functions/src/cli/pipeline/run
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/cli/status/run
-    resolved_by: tree-sitter
-    confidence: exact
   - target: functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete
     resolved_by: tree-sitter
     confidence: exact
@@ -31,6 +25,4 @@ relationships:
 
 # Called by
 
-- [run](../../../../../functions/src/cli/pipeline/run.md)
-- [run](../../../../../functions/src/cli/status/run.md)
 - [first_ready_advances_as_artifacts_complete](../../../../../functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete.md)

@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: pipeline
-resource: src/core/pipeline.rs#L1-L742
+resource: src/core/pipeline.rs#L1-L793
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -19,6 +19,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: external/super
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: external/crate-core-artifact-graph-artifactnode
     resolved_by: tree-sitter
     confidence: exact
   - target: external/tempfile-tempdir
@@ -39,6 +42,11 @@ relationships:
 - [schema_artifact_id](../../../functions/src/core/pipeline/schema_artifact_id.md)
 - [should_skip](../../../functions/src/core/pipeline/should_skip.md)
 - [phase_type](../../../functions/src/core/pipeline/phase_type.md)
+- [next_step_hint](../../../functions/src/core/pipeline/next_step_hint.md)
+- [node](../../../functions/src/core/pipeline/node.md)
+- [points_at_ship_directly_instead_of_continue](../../../functions/src/core/pipeline/points_at_ship_directly_instead_of_continue.md)
+- [points_at_continue_for_a_regular_phase](../../../functions/src/core/pipeline/points_at_continue_for_a_regular_phase.md)
+- [falls_back_to_ship_when_nothing_is_ready](../../../functions/src/core/pipeline/falls_back_to_ship_when_nothing_is_ready.md)
 - [filter_phases](../../../functions/src/core/pipeline/filter_phases.md)
 - [format_log_entry](../../../functions/src/core/pipeline/format_log_entry.md)
 - [write_log](../../../functions/src/core/pipeline/write_log.md)
@@ -92,6 +100,7 @@ relationships:
 - `super::artifact_graph::ArtifactGraph`
 - `super::spec_parser`
 - `super::*`
+- `crate::core::artifact_graph::ArtifactNode`
 - `tempfile::TempDir`
 
 # Member of

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/analyze.rs#L6-L52
+resource: src/cli/analyze.rs#L6-L64
 generated:
   by: okf-rs/0.7.0
 relationships:

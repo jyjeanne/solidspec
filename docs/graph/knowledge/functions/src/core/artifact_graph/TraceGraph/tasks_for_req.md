@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: tasks_for_req
-resource: src/core/artifact_graph.rs#L278-L284
+resource: src/core/artifact_graph.rs#L288-L294
 generated:
   by: okf-rs/0.7.0
 relationships:

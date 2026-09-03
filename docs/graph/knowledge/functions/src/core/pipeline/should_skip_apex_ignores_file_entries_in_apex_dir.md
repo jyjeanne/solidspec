@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_apex_ignores_file_entries_in_apex_dir
-resource: src/core/pipeline.rs#L673-L681
+resource: src/core/pipeline.rs#L724-L732
 visibility: private
 generated:
   by: okf-rs/0.7.0

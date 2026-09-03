@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_log_creates_file
-resource: src/core/pipeline.rs#L520-L533
+resource: src/core/pipeline.rs#L571-L584
 visibility: private
 generated:
   by: okf-rs/0.7.0

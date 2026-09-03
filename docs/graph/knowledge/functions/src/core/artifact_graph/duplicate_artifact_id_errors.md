@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: duplicate_artifact_id_errors
-resource: src/core/artifact_graph.rs#L800-L818
+resource: src/core/artifact_graph.rs#L866-L884
 visibility: private
 generated:
   by: okf-rs/0.7.0

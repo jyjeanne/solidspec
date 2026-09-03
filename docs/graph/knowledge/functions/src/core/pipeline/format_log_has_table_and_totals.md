@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: format_log_has_table_and_totals
-resource: src/core/pipeline.rs#L495-L517
+resource: src/core/pipeline.rs#L546-L568
 visibility: private
 generated:
   by: okf-rs/0.7.0

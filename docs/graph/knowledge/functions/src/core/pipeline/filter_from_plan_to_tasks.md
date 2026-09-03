@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: filter_from_plan_to_tasks
-resource: src/core/pipeline.rs#L349-L352
+resource: src/core/pipeline.rs#L400-L403
 visibility: private
 generated:
   by: okf-rs/0.7.0

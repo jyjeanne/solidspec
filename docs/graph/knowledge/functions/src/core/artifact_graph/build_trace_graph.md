@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: build_trace_graph
-resource: src/core/artifact_graph.rs#L389-L541
+resource: src/core/artifact_graph.rs#L399-L551
 generated:
   by: okf-rs/0.7.0
 relationships:

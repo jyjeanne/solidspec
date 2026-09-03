@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: detect_completion
-resource: src/core/artifact_graph.rs#L174-L180
+resource: src/core/artifact_graph.rs#L184-L190
 generated:
   by: okf-rs/0.7.0
 relationships:

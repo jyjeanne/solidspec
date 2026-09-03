@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spec_driven_graph
-resource: src/core/artifact_graph.rs#L548-L608
+resource: src/core/artifact_graph.rs#L558-L618
 visibility: private
 generated:
   by: okf-rs/0.7.0

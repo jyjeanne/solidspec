@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: format_tree_contains_fr_ids
-resource: src/core/artifact_graph.rs#L952-L961
+resource: src/core/artifact_graph.rs#L1018-L1027
 visibility: private
 generated:
   by: okf-rs/0.7.0

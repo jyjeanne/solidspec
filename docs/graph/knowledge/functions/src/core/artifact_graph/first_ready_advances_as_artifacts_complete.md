@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: first_ready_advances_as_artifacts_complete
-resource: src/core/artifact_graph.rs#L631-L646
+resource: src/core/artifact_graph.rs#L697-L712
 visibility: private
 generated:
   by: okf-rs/0.7.0

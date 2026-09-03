@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: extracts_fr_ids_from_spec
-resource: src/core/artifact_graph.rs#L862-L869
+resource: src/core/artifact_graph.rs#L928-L935
 visibility: private
 generated:
   by: okf-rs/0.7.0

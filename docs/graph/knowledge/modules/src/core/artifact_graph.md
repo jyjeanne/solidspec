@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: artifact_graph
-resource: src/core/artifact_graph.rs#L1-L962
+resource: src/core/artifact_graph.rs#L1-L1028
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -53,6 +53,9 @@ relationships:
 - [spec_driven_graph](../../../functions/src/core/artifact_graph/spec_driven_graph.md)
 - [default_graph_has_eight_artifacts](../../../functions/src/core/artifact_graph/default_graph_has_eight_artifacts.md)
 - [topological_order_starts_with_no_dependency_artifacts](../../../functions/src/core/artifact_graph/topological_order_starts_with_no_dependency_artifacts.md)
+- [two_root_graph](../../../functions/src/core/artifact_graph/two_root_graph.md)
+- [topological_order_is_deterministic_across_multiple_roots](../../../functions/src/core/artifact_graph/topological_order_is_deterministic_across_multiple_roots.md)
+- [first_ready_is_deterministic_across_multiple_roots](../../../functions/src/core/artifact_graph/first_ready_is_deterministic_across_multiple_roots.md)
 - [first_ready_on_fresh_project_is_the_root_artifact](../../../functions/src/core/artifact_graph/first_ready_on_fresh_project_is_the_root_artifact.md)
 - [first_ready_advances_as_artifacts_complete](../../../functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete.md)
 - [first_ready_is_none_when_everything_is_done](../../../functions/src/core/artifact_graph/first_ready_is_none_when_everything_is_done.md)

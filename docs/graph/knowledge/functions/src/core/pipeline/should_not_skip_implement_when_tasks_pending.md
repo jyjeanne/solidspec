@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_not_skip_implement_when_tasks_pending
-resource: src/core/pipeline.rs#L416-L425
+resource: src/core/pipeline.rs#L467-L476
 visibility: private
 generated:
   by: okf-rs/0.7.0

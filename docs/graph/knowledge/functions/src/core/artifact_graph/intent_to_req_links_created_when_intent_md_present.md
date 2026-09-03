@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: intent_to_req_links_created_when_intent_md_present
-resource: src/core/artifact_graph.rs#L914-L931
+resource: src/core/artifact_graph.rs#L980-L997
 visibility: private
 generated:
   by: okf-rs/0.7.0

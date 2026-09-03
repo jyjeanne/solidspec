@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: tests_for_task
-resource: src/core/artifact_graph.rs#L286-L292
+resource: src/core/artifact_graph.rs#L296-L302
 generated:
   by: okf-rs/0.7.0
 relationships:

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unknown_dependency_errors
-resource: src/core/artifact_graph.rs#L821-L830
+resource: src/core/artifact_graph.rs#L887-L896
 visibility: private
 generated:
   by: okf-rs/0.7.0

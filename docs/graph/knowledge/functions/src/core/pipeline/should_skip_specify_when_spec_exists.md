@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_specify_when_spec_exists
-resource: src/core/pipeline.rs#L375-L381
+resource: src/core/pipeline.rs#L426-L432
 visibility: private
 generated:
   by: okf-rs/0.7.0

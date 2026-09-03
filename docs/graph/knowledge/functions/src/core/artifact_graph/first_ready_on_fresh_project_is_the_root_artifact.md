@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: first_ready_on_fresh_project_is_the_root_artifact
-resource: src/core/artifact_graph.rs#L624-L628
+resource: src/core/artifact_graph.rs#L690-L694
 visibility: private
 generated:
   by: okf-rs/0.7.0
