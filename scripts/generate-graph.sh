@@ -1,37 +1,48 @@
 #!/usr/bin/env bash
-# Regenerate the codebase knowledge graph in docs/graph/ using graphify
-# (https://github.com/Graphify-Labs/graphify).
+# Regenerate the codebase knowledge graph in docs/graph/ using okf-rs
+# (https://github.com/jyjeanne/okf-rs).
 #
-# Extraction is pure local tree-sitter AST parsing (--code-only): no LLM
-# calls, no API key, nothing leaves the machine.
+# Extraction is pure local tree-sitter AST parsing: no LLM calls, no API
+# key, nothing leaves the machine. The bundle is ordinary Markdown files
+# with YAML frontmatter, so regeneration diffs are readable in a PR like
+# any other file change.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/docs/graph"
+BUNDLE="$OUT/knowledge"
 
-if ! command -v graphify >/dev/null 2>&1; then
-  echo "error: graphify not found on PATH." >&2
-  echo "Install it with: uv tool install graphifyy   (or: pipx install graphifyy)" >&2
+if ! command -v okf-rs >/dev/null 2>&1; then
+  echo "error: okf-rs not found on PATH." >&2
+  echo "Install it with: cargo install --git https://github.com/jyjeanne/okf-rs okf-cli" >&2
   exit 1
 fi
 
-STAGING="$(mktemp -d)"
-trap 'rm -rf "$STAGING"' EXIT
-
-graphify extract "$ROOT" --code-only --cargo --out "$STAGING"
-graphify cluster-only "$STAGING" --no-label
+okf-rs generate "$ROOT" -o "$BUNDLE"
+okf-rs validate "$BUNDLE" --ci
 
 mkdir -p "$OUT"
-# The report header names the staging dir; rewrite it to the repo name.
-sed -i "s|$STAGING|solidspec|g" "$STAGING/graphify-out/GRAPH_REPORT.md"
-cp "$STAGING/graphify-out/graph.json" \
-   "$STAGING/graphify-out/graph.html" \
-   "$STAGING/graphify-out/GRAPH_REPORT.md" \
-   "$STAGING/graphify-out/manifest.json" \
-   "$STAGING/graphify-out/.graphify_analysis.json" \
-   "$OUT/"
+{
+  echo "# Graph Report - solidspec ($(date -u +%Y-%m-%d))"
+  echo
+  echo "Built from commit: \`$(git -C "$ROOT" rev-parse --short HEAD)\`"
+  echo
+  echo '## Topology (`okf-rs graph stats`)'
+  echo
+  echo '```'
+  okf-rs graph stats "$BUNDLE"
+  echo '```'
+  echo
+  echo '## Coverage (`okf-rs coverage`)'
+  echo
+  echo '```'
+  okf-rs coverage "$BUNDLE"
+  echo '```'
+} > "$OUT/GRAPH_REPORT.md"
 
 echo "Knowledge graph regenerated in docs/graph/"
-echo "  - docs/graph/graph.json        queryable graph (graphify query/explain/affected --graph docs/graph/graph.json)"
-echo "  - docs/graph/graph.html        interactive visualization (open in a browser)"
-echo "  - docs/graph/GRAPH_REPORT.md   summary report"
+echo "  - docs/graph/knowledge/       OKF bundle: one Markdown+YAML file per concept, cross-linked"
+echo "  - docs/graph/GRAPH_REPORT.md  topology + coverage summary"
+echo
+echo "Query it with okf-rs search/explore/graph/diff/impact --output docs/graph/knowledge"
+echo "(or just -o/positional bundle arg — see 'okf-rs <subcommand> --help')."

@@ -1,0 +1,21 @@
+---
+type: Rust Function
+title: extract_skill_is_idempotent
+resource: src/core/apex.rs#L532-L539
+visibility: private
+generated:
+  by: okf-rs/0.7.0
+relationships:
+  calls:
+  - target: functions/src/core/apex/extract_skill
+    resolved_by: tree-sitter
+    confidence: exact
+---
+
+# Signature
+
+`fn extract_skill_is_idempotent()`
+
+# Calls
+
+- [extract_skill](../../../../functions/src/core/apex/extract_skill.md)

@@ -1,0 +1,12 @@
+---
+type: Rust Method
+title: fmt
+resource: src/core/review.rs#L29-L40
+visibility: private
+generated:
+  by: okf-rs/0.7.0
+---
+
+# Signature
+
+`fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result`
