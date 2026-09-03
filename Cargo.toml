@@ -46,6 +46,16 @@ which = "8"
 # Time
 chrono = "0.4"
 
+# Knowledge graph (docs/okf-rs-integration-plan.md step 2): vendored as
+# library crates rather than shelling out to a separately-installed
+# `okf-rs` binary. Pinned to a tagged release, not a branch, so the
+# resolved commit only moves when this Cargo.toml is deliberately bumped.
+okf-core = { git = "https://github.com/jyjeanne/okf-rs", tag = "v0.7.0" }
+okf-analyzer = { git = "https://github.com/jyjeanne/okf-rs", tag = "v0.7.0" }
+okf-generator = { git = "https://github.com/jyjeanne/okf-rs", tag = "v0.7.0" }
+okf-validator = { git = "https://github.com/jyjeanne/okf-rs", tag = "v0.7.0" }
+okf-parser = { git = "https://github.com/jyjeanne/okf-rs", tag = "v0.7.0" }
+
 [lints.rust]
 future-incompatible = { level = "warn", priority = -1 }
 nonstandard_style = { level = "deny", priority = -2 }

@@ -149,6 +149,9 @@
 - [run](../functions/src/cli/init/run.md) — Rust Function
 - [build_template_vars](../functions/src/cli/intent/build_template_vars.md) — Rust Function
 - [run](../functions/src/cli/intent/run.md) — Rust Function
+- [generate](../functions/src/cli/okf/generate.md) — Rust Function
+- [run](../functions/src/cli/okf/run.md) — Rust Function
+- [validate](../functions/src/cli/okf/validate.md) — Rust Function
 - [check_agent_availability](../functions/src/cli/pipeline/check_agent_availability.md) — Rust Function
 - [execute_phase](../functions/src/cli/pipeline/execute_phase.md) — Rust Function
 - [invoke_or_handoff](../functions/src/cli/pipeline/invoke_or_handoff.md) — Rust Function
@@ -491,6 +494,13 @@
 - [raw_field_preserved](../functions/src/core/intent_parser/raw_field_preserved.md) — Rust Function
 - [status_as_str_roundtrip](../functions/src/core/intent_parser/status_as_str_roundtrip.md) — Rust Function
 - [status_from_str_variants](../functions/src/core/intent_parser/status_from_str_variants.md) — Rust Function
+- [generate](../functions/src/core/okf/generate.md) — Rust Function
+- [generate_is_incremental_on_a_second_run](../functions/src/core/okf/generate_is_incremental_on_a_second_run.md) — Rust Function
+- [generate_writes_a_bundle_with_expected_concepts](../functions/src/core/okf/generate_writes_a_bundle_with_expected_concepts.md) — Rust Function
+- [validate](../functions/src/core/okf/validate.md) — Rust Function
+- [validate_reports_no_issues_for_a_freshly_generated_bundle](../functions/src/core/okf/validate_reports_no_issues_for_a_freshly_generated_bundle.md) — Rust Function
+- [validation_should_fail](../functions/src/core/okf/validation_should_fail.md) — Rust Function
+- [write_sample_project](../functions/src/core/okf/write_sample_project.md) — Rust Function
 - [fmt](../functions/src/core/pipeline/PhaseStatus/std-fmt-display/fmt.md) — Rust Method
 - [analyze_never_skipped](../functions/src/core/pipeline/analyze_never_skipped.md) — Rust Function
 - [filter_all_phases](../functions/src/core/pipeline/filter_all_phases.md) — Rust Function
@@ -955,6 +965,13 @@
 - [status_shows_evidence_artifact_in_idsd_schema](../functions/tests/evidence/status_shows_evidence_artifact_in_idsd_schema.md) — Rust Function
 - [write_implemented_test](../functions/tests/evidence/write_implemented_test.md) — Rust Function
 - [write_intent](../functions/tests/evidence/write_intent.md) — Rust Function
+- [install_okf_extension](../functions/tests/okf_extension/install_okf_extension.md) — Rust Function
+- [okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path](../functions/tests/okf_extension/okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path.md) — Rust Function
+- [okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path](../functions/tests/okf_extension/okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path.md) — Rust Function
+- [okf_extension_installs_and_registers_hook](../functions/tests/okf_extension/okf_extension_installs_and_registers_hook.md) — Rust Function
+- [okf_extension_source](../functions/tests/okf_extension/okf_extension_source.md) — Rust Function
+- [path_with_solidspec_on_it](../functions/tests/okf_extension/path_with_solidspec_on_it.md) — Rust Function
+- [solidspec_bin_dir](../functions/tests/okf_extension/solidspec_bin_dir.md) — Rust Function
 - [full_pipeline_scaffold_generates_all_artifacts](../functions/tests/pipeline/full_pipeline_scaffold_generates_all_artifacts.md) — Rust Function
 - [pipeline_dry_run_output_contains_dry_run_marker](../functions/tests/pipeline/pipeline_dry_run_output_contains_dry_run_marker.md) — Rust Function
 - [pipeline_dry_run_respects_custom_schema_generates_override](../functions/tests/pipeline/pipeline_dry_run_respects_custom_schema_generates_override.md) — Rust Function

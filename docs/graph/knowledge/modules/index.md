@@ -22,6 +22,7 @@
 - [implement](../modules/src/cli/implement.md) — Rust Module
 - [init](../modules/src/cli/init.md) — Rust Module
 - [intent](../modules/src/cli/intent.md) — Rust Module
+- [okf](../modules/src/cli/okf.md) — Rust Module
 - [pipeline](../modules/src/cli/pipeline.md) — Rust Module
 - [plan](../modules/src/cli/plan.md) — Rust Module
 - [preset](../modules/src/cli/preset.md) — Rust Module
@@ -50,6 +51,7 @@
 - [feature](../modules/src/core/feature.md) — Rust Module
 - [git](../modules/src/core/git.md) — Rust Module
 - [intent_parser](../modules/src/core/intent_parser.md) — Rust Module
+- [okf](../modules/src/core/okf.md) — Rust Module
 - [pipeline](../modules/src/core/pipeline.md) — Rust Module
 - [review](../modules/src/core/review.md) — Rust Module
 - [checks](../modules/src/core/review/checks.md) — Rust Module
@@ -80,6 +82,7 @@
 - [common](../modules/tests/common.md) — Rust Module
 - [completions](../modules/tests/completions.md) — Rust Module
 - [evidence](../modules/tests/evidence.md) — Rust Module
+- [okf_extension](../modules/tests/okf_extension.md) — Rust Module
 - [pipeline](../modules/tests/pipeline.md) — Rust Module
 - [security_first_minimal](../modules/tests/security_first_minimal.md) — Rust Module
 - [ship](../modules/tests/ship.md) — Rust Module

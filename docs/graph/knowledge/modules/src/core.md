@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: core
-resource: src/core/mod.rs#L1-L22
+resource: src/core/mod.rs#L1-L23
 generated:
   by: okf-rs/0.7.0
 relationships:

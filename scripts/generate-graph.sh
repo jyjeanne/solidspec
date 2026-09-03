@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# Regenerate the codebase knowledge graph in docs/graph/ using okf-rs
-# (https://github.com/jyjeanne/okf-rs).
+# Regenerate the codebase knowledge graph in docs/graph/ using SolidSpec's
+# own native `solidspec okf generate`/`validate` commands (src/core/okf.rs)
+# — okf-rs's generator/validator crates are vendored as pinned git
+# dependencies (Cargo.toml), so no external okf-rs binary is involved.
 #
 # Extraction is pure local tree-sitter AST parsing: no LLM calls, no API
 # key, nothing leaves the machine. The bundle is ordinary Markdown files
@@ -12,14 +14,12 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/docs/graph"
 BUNDLE="$OUT/knowledge"
 
-if ! command -v okf-rs >/dev/null 2>&1; then
-  echo "error: okf-rs not found on PATH." >&2
-  echo "Install it with: cargo install --git https://github.com/jyjeanne/okf-rs okf-cli" >&2
-  exit 1
-fi
+cargo build --quiet --manifest-path "$ROOT/Cargo.toml"
+SOLIDSPEC="$ROOT/target/debug/solidspec"
 
-okf-rs generate "$ROOT" -o "$BUNDLE"
-okf-rs validate "$BUNDLE" --ci
+generate_output="$("$SOLIDSPEC" okf generate "$ROOT" --output "$BUNDLE")"
+echo "$generate_output"
+"$SOLIDSPEC" okf validate "$BUNDLE" --ci
 
 mkdir -p "$OUT"
 {
@@ -27,22 +27,17 @@ mkdir -p "$OUT"
   echo
   echo "Built from commit: \`$(git -C "$ROOT" rev-parse --short HEAD)\`"
   echo
-  echo '## Topology (`okf-rs graph stats`)'
+  echo '## Topology (`solidspec okf generate`)'
   echo
   echo '```'
-  okf-rs graph stats "$BUNDLE"
-  echo '```'
-  echo
-  echo '## Coverage (`okf-rs coverage`)'
-  echo
-  echo '```'
-  okf-rs coverage "$BUNDLE"
+  echo "$generate_output"
   echo '```'
 } > "$OUT/GRAPH_REPORT.md"
 
 echo "Knowledge graph regenerated in docs/graph/"
 echo "  - docs/graph/knowledge/       OKF bundle: one Markdown+YAML file per concept, cross-linked"
-echo "  - docs/graph/GRAPH_REPORT.md  topology + coverage summary"
+echo "  - docs/graph/GRAPH_REPORT.md  topology summary"
 echo
-echo "Query it with okf-rs search/explore/graph/diff/impact --output docs/graph/knowledge"
-echo "(or just -o/positional bundle arg — see 'okf-rs <subcommand> --help')."
+echo "search/explore/graph/diff/impact queries still need the external okf-rs CLI"
+echo "(cargo install --git https://github.com/jyjeanne/okf-rs okf-cli) — see"
+echo "docs/okf-rs-integration-plan.md for what's vendored natively so far."

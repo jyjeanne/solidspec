@@ -1164,15 +1164,18 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 | `solidspec change <cmd>` | Manage changes: `propose "Title"`, `list`, `archive <slug>` (`--feature-id`) |
 | `solidspec preset <cmd>` | Manage presets (`add`, `remove`, `list`, `search`, `info`) |
 | `solidspec extension <cmd>` | Manage extensions (`add`, `remove`, `enable`, `disable`, `list`) |
+| `solidspec okf <cmd>` | Generate/validate an OKF knowledge-graph bundle natively (`generate`, `validate`) — see [`extensions/okf/`](extensions/okf/) |
 | `solidspec upgrade` | Refresh templates + agent commands after update |
 | `solidspec completions <shell>` | Generate shell completions (bash, zsh, fish, powershell) |
 | `solidspec check` | Verify system prerequisites |
 
 Feature ID is auto-detected from git branch or latest spec if omitted.
 
-A bundled example extension lives at [`extensions/okf/`](extensions/okf/): scaffolds an `okf.toml` so a
-project built with SolidSpec can generate its own [okf-rs](https://github.com/jyjeanne/okf-rs) knowledge-graph
-bundle for AI agents to query. Install into a project with `solidspec extension add extensions/okf --dev`.
+A bundled example extension lives at [`extensions/okf/`](extensions/okf/): generates an
+[OKF](https://github.com/jyjeanne/okf-rs) knowledge-graph bundle for a project built with SolidSpec, via the
+native `solidspec okf generate`/`validate` commands (vendored library crates — no external binary) so AI
+agents can query it instead of re-reading files cold. Install into a project with
+`solidspec extension add extensions/okf --dev`.
 
 ---
 

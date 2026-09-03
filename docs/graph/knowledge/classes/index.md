@@ -9,6 +9,7 @@
 - [Commands](../classes/src/cli/Commands.md) — Rust Enum
 - [ChangeCommands](../classes/src/cli/change/ChangeCommands.md) — Rust Enum
 - [ExtensionCommands](../classes/src/cli/extension/ExtensionCommands.md) — Rust Enum
+- [OkfCommands](../classes/src/cli/okf/OkfCommands.md) — Rust Enum
 - [AgentMode](../classes/src/cli/pipeline/AgentMode.md) — Rust Enum
 - [PresetCommands](../classes/src/cli/preset/PresetCommands.md) — Rust Enum
 - [Step](../classes/src/cli/ux/Step.md) — Rust Struct
@@ -58,6 +59,7 @@
 - [IntentDrift](../classes/src/core/intent_parser/IntentDrift.md) — Rust Struct
 - [IntentSpec](../classes/src/core/intent_parser/IntentSpec.md) — Rust Struct
 - [IntentStatus](../classes/src/core/intent_parser/IntentStatus.md) — Rust Enum
+- [GenerateReport](../classes/src/core/okf/GenerateReport.md) — Rust Struct
 - [PhaseResult](../classes/src/core/pipeline/PhaseResult.md) — Rust Struct
 - [PhaseStatus](../classes/src/core/pipeline/PhaseStatus.md) — Rust Enum
 - [PhaseType](../classes/src/core/pipeline/PhaseType.md) — Rust Enum

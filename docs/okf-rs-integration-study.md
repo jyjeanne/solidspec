@@ -160,3 +160,16 @@ for it:
 
 Steps 2–3 are a meaningful feature addition, not a drive-by change — worth scoping as its own spec (fittingly,
 via SolidSpec's own `spec-driven` workflow) rather than doing ad hoc, if you want to proceed.
+
+## Addendum — Option B (workspace crate reuse) was chosen, and worked out fine
+
+Section 5 above flagged library reuse as "not recommended as a first step." When actually asked for, it was
+prototyped before committing to it: `okf-core`/`okf-analyzer`/`okf-generator`/`okf-validator` turned out to
+expose a clean, composable public API (`Project::load` → `analyze_with_cache_lsp` → `write_bundle`) lifted
+directly from `okf-cli`'s own `cmd_generate` — not an unstable internal surface reverse-engineered from
+scratch. Measured cost of vendoring that subset (pinned to `tag = "v0.7.0"`, not a branch): about a minute of
+additional cold compile time and a `solidspec` release binary roughly 3× its prior size (~8.6 MB → ~25-30 MB)
+— acceptable for a CLI installed once, and it eliminates the external-binary dependency entirely for
+`generate`/`validate`. See `docs/okf-rs-integration-plan.md`'s "Mise à jour" section and steps 1–2 for what
+shipped. The caution in section 5 still holds for the *other* okf-rs crates (search/graph/analysis-diff),
+which pull in tantivy/a full graph-algorithms surface and haven't been prototyped the same way yet.

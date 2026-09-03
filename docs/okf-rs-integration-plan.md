@@ -4,29 +4,59 @@ Suite à [`docs/okf-rs-integration-study.md`](okf-rs-integration-study.md). Ce d
 dans l'ordre, pour intégrer `okf-rs` — de la simple substitution d'outil interne jusqu'à une fonctionnalité
 produit exploitée par les workflows SDD que SolidSpec scaffold.
 
-## Étape 1 — Substituer `graphify` (fait ✅)
+## Mise à jour — passage à l'intégration native (Option B)
 
-**Commit `c5e2193`.** Remplace le graphe de connaissances interne (`docs/graph/`, utilisé par les
-contributeurs et par Claude Code lui-même via CLAUDE.md) : `graphify` (Python/`uv`) → `okf-rs` (Rust).
+Choix explicite : plutôt que de dépendre d'un binaire `okf-rs` externe (installé séparément, détecté via
+`which`/`command -v`), SolidSpec **vendorise** les crates bibliothèque d'okf-rs (`okf-core`, `okf-analyzer`,
+`okf-generator`, `okf-validator`, `okf-parser`) comme dépendances git épinglées (`tag = "v0.7.0"`) dans
+`Cargo.toml`, et les appelle en process via un nouveau module `src/core/okf.rs` + une nouvelle commande
+`solidspec okf generate`/`solidspec okf validate`. Zéro binaire externe pour ces deux opérations : ni
+détection PATH, ni sous-processus, ni installation séparée pour l'utilisateur.
 
-- `scripts/generate-graph.sh` appelle `okf-rs generate` + `okf-rs validate --ci`, écrit un
-  `GRAPH_REPORT.md` à partir de `graph stats`/`coverage`.
-- `docs/graph/knowledge/` (bundle OKF, 1258 fichiers Markdown+YAML) remplace `graph.json`/`graph.html`/
+Vérifié avant d'adopter cette approche (voir historique de session pour le détail) :
+- L'API exposée par ces crates est propre et composable (`Project::load` → `analyze_with_cache_lsp` →
+  `write_bundle`), directement extraite de l'implémentation réelle d'`okf-cli`'s `cmd_generate` — pas de
+  réécriture de logique, juste réutilisation.
+- Coût mesuré : ~1 min de compilation supplémentaire à froid pour ce sous-ensemble de crates (tree-sitter ×11
+  langages, pas de tantivy/PDF/LSP-actif/DITA/MCP/enrich — ces derniers restent hors du périmètre vendorisé),
+  binaire `solidspec` release passant d'environ 8,6 Mo à un ordre de grandeur plus proche de 25-30 Mo.
+  Acceptable pour un CLI installé une fois, pas pour un outil qu'on retélécharge à chaque run.
+- Portée volontairement limitée à `generate`/`validate` : ce sont les deux seules opérations dont les crates
+  sous-jacentes (`okf-analyzer`/`okf-generator`/`okf-validator`) n'entraînent pas tantivy (recherche),
+  un client LSP actif, un rendu PDF, ou un client HTTP OpenAI-compatible. `search`/`explore`/`graph`/`diff`/
+  `impact`/`review`/le serveur `okf-mcp` restent donc, pour l'instant, derrière le CLI externe — vendoriser
+  ce sous-ensemble reste une extension possible du même principe, pas un changement d'approche.
+
+Conséquence sur les étapes ci-dessous : partout où une étape mentionnait "shell out vers `okf-rs`", lire
+désormais "appel natif à `src/core/okf::generate`/`validate`" quand l'opération concernée est l'une de ces
+deux-là ; le reste (recherche, exploration, impact) attend encore soit un vendoring futur du même style, soit
+l'appel au CLI externe / `okf-mcp` comme décrit précédemment.
+
+## Étape 1 — Substituer `graphify` (fait ✅, mis à niveau vers l'intégration native)
+
+**Commits `c5e2193` (swap initial vers le CLI externe) puis mise à jour native.** Remplace le graphe de
+connaissances interne (`docs/graph/`, utilisé par les contributeurs et par Claude Code lui-même via
+CLAUDE.md) : `graphify` (Python/`uv`) → d'abord `okf-rs` CLI externe, puis `solidspec okf generate`/`validate`
+natifs (voir mise à jour ci-dessus).
+
+- `scripts/generate-graph.sh` compile `solidspec` (`cargo build --quiet`) puis appelle
+  `solidspec okf generate` + `solidspec okf validate --ci` — plus aucun outil à installer séparément pour
+  régénérer `docs/graph/`. `GRAPH_REPORT.md` reprend directement la sortie de `generate` (répartition par
+  type de concept) ; les sections "topology"/"coverage" plus riches de l'ancien `okf-rs graph stats`/
+  `coverage` ne sont pas reproduites (pas vendorisées — voir ci-dessus), et restent accessibles via le CLI
+  externe si besoin ponctuel.
+- `docs/graph/knowledge/` (bundle OKF, ~1275 fichiers Markdown+YAML) remplace `graph.json`/`graph.html`/
   `manifest.json`/`.graphify_analysis.json`.
-- CLAUDE.md documente les commandes de requête (`search`, `explore`, `graph callers/path/stats`, `impact`).
+- CLAUDE.md documente à la fois la régénération native (`./scripts/generate-graph.sh`, zéro dépendance) et
+  les commandes de requête qui nécessitent encore le CLI externe (`search`, `explore`, `graph`, `impact`).
 - Aucun changement de comportement produit — outillage contributeur uniquement.
-
-Reste à faire côté étape 1 (mineur, non bloquant) :
-- Vérifier en CI que `./scripts/generate-graph.sh` s'exécute sans `okf-rs` préinstallé échoue proprement
-  (déjà le cas : message d'erreur explicite avec la commande d'installation).
-- Envisager un job CI optionnel `okf-rs generate --check-fresh` pour détecter un bundle périmé avant merge
-  (parité avec l'intention documentée dans l'étude, non implémenté ici pour rester dans le périmètre
-  "outillage contributeur, aucun changement produit").
 
 ## Étape 2 — Extension `okf` optionnelle (scaffolding, pas de branchement pipeline) — fait ✅
 
-**Commit à venir.** Objectif : permettre à un projet **scaffoldé par SolidSpec** (pas SolidSpec lui-même)
-d'avoir son propre bundle OKF, sans toucher au comportement par défaut de `solidspec init`.
+**Commits `7ccbfc7` (v0.1.0, détection du binaire externe) puis mise à niveau v0.2.0 (intégration native,
+Option B choisie explicitement).** Objectif : permettre à un projet **scaffoldé par SolidSpec** (pas
+SolidSpec lui-même) d'avoir son propre bundle OKF, sans toucher au comportement par défaut de
+`solidspec init`.
 
 Écart par rapport à la formulation initiale du plan : implémenté comme **extension** (`src/extensions/`),
 pas comme **preset** (`src/presets/`). Après lecture du code des deux systèmes, le système de presets sert
@@ -39,31 +69,39 @@ catalogue intégré au binaire — `solidspec preset add`/`extension add` exigen
 avec un manifest — donc l'extension est livrée comme code source dans le repo (`extensions/okf/`), à
 installer avec `solidspec extension add extensions/okf --dev`.
 
+**v0.1.0 → v0.2.0 :** la première version détectait un binaire `okf-rs` externe (`command -v okf-rs`) et
+lançait `okf-rs init`. Suite à un choix explicite d'éviter toute dépendance à un binaire externe (Option B
+de l'étude), le hook a été réécrit pour appeler `solidspec okf generate` — la commande native ajoutée à
+l'étape 1 — au lieu de shell-out vers un outil séparé. Nouvelle limite en échange : le hook a besoin que
+`solidspec` lui-même soit résoluble sur le `PATH` du sous-shell qui l'exécute (vrai pour toute installation
+normale — `cargo install`/binaire prébuilt ; pas garanti pour un `cargo run`/binaire de dev non installé,
+cas couvert par le test `okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path`).
+
 Contenu livré (`extensions/okf/`) :
 - `extension.yml` — manifest déclarant une commande `solidspec.okf.init` et un hook `after_init` (marqué
-  `optional: true`).
-- `hooks/after-init.sh` — script best-effort : si `okf-rs` est absent du `PATH`, affiche l'instruction
-  d'installation et sort en succès (n'échoue jamais `solidspec init`) ; sinon lance
-  `okf-rs init --output .solidspec/knowledge --no-agent-files` (le `--no-agent-files` évite qu'okf-rs
-  touche CLAUDE.md/AGENTS.md, déjà gérés par `src/agents/registry.rs`) et ajoute `.okf-cache.json` au
-  `.gitignore` du projet cible s'il existe.
+  `optional: true`). Plus de `requires.tools` (aucun outil externe requis).
+- `hooks/after-init.sh` — script best-effort : si `solidspec` est absent du `PATH`, affiche un message et
+  sort en succès (n'échoue jamais `solidspec init`) ; sinon lance
+  `solidspec okf generate . --output .solidspec/knowledge` et ajoute `.okf-cache.json` au `.gitignore` du
+  projet cible s'il existe.
 - `README.md` — usage, y compris la limite connue : le hook `after_init` ne peut pas se déclencher sur le
   tout premier `solidspec init` qui crée le projet (`extension add` exige que `.solidspec/` existe déjà) ;
   il faut soit réexécuter `solidspec init` après avoir ajouté l'extension (idempotent, vérifié), soit lancer
-  les deux commandes du hook à la main.
-- Pas de MCP à ce stade — juste le scaffolding. Pas de dépendance Rust ajoutée à `Cargo.toml` : `okf-rs`
-  reste détecté via `command -v` dans le script, jamais un binaire requis.
+  la commande du hook à la main.
+- Pas de MCP à ce stade — juste le scaffolding.
 
 **Tests** (`tests/okf_extension.rs`, passent) :
 - `okf_extension_installs_and_registers_hook` — `extension add --dev` réussit, `extension info` montre le
   hook enregistré.
-- `okf_extension_hook_never_fails_init_regardless_of_okf_rs_availability` — un second `init` (qui déclenche
-  le hook) réussit que `okf-rs` soit sur le `PATH` ou non ; si présent, vérifie le contenu de `okf.toml`
-  généré.
+- `okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path` — un second `init` (qui déclenche
+  le hook) avec le répertoire du binaire `solidspec` sous test ajouté au `PATH` produit un vrai bundle
+  (`.solidspec/knowledge/index.md` existe).
+- `okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path` — le même second `init` avec un `PATH`
+  ne contenant pas `solidspec` réussit quand même, sans générer de bundle.
 
 Vérifié manuellement en plus des tests automatisés : `cargo build`, `cargo clippy --all-targets -- -D
-warnings`, `cargo fmt --check` propres ; installation réelle + double `init` dans un projet temporaire avec
-`okf-rs` réellement installé, et avec `PATH` restreint pour simuler son absence.
+warnings`, `cargo fmt --check`, et `cargo test` (551 tests) propres ; `solidspec okf generate`/`validate`
+exécutés réellement sur le dépôt SolidSpec lui-même.
 
 ## Étape 3 — Registration MCP pour les agents qui le supportent
 
@@ -126,10 +164,16 @@ Aucune étape 2+ n'a été implémentée dans le présent travail ; seule l'éta
 
 ## Risques transverses à garder en tête
 
-- `okf-rs` n'est pas publié sur crates.io ; toute automatisation (CI, preset) doit épingler un tag/rev git
-  précis plutôt que `main`.
-- Ne jamais rendre `okf-rs` obligatoire pour un chemin critique (`init`, `plan`, `analyze`, `review`) —
-  toujours détection + dégradation silencieuse, pour ne pas casser le schéma `minimal` ni les environnements
-  CI qui n'ont pas le binaire.
+- `okf-rs` n'est pas publié sur crates.io ; les dépendances git dans `Cargo.toml` sont épinglées par
+  `tag = "v0.7.0"`, jamais une branche — un bump de version est un choix délibéré (édition manuelle du tag),
+  pas une dérive silencieuse. `Cargo.lock` fige de toute façon le commit résolu exact entre deux bumps.
+  Pour les capacités encore derrière le CLI externe (recherche/exploration/impact — voir la mise à jour en
+  tête de ce document), même logique de prudence si un preset/étape future automatise son installation.
+- Ne jamais rendre l'appel à `src/core/okf`/le CLI externe obligatoire pour un chemin critique (`init`,
+  `plan`, `analyze`, `review`) — toujours détection + dégradation silencieuse (best-effort), pour ne pas
+  casser le schéma `minimal` ni les environnements où le bundle n'existe pas.
 - Garder la séparation stricte entre les heuristiques déterministes existantes (`analyzer.rs`, `review.rs`)
-  et tout apport `okf-rs` : additif et clairement labellisé, jamais fusionné.
+  et tout apport `okf` : additif et clairement labellisé, jamais fusionné.
+- Le vendoring augmente le temps de compilation et la taille du binaire `solidspec` (voir la mise à jour en
+  tête de ce document pour les chiffres mesurés) — une considération à garder à l'esprit avant de vendoriser
+  d'autres crates okf-rs (recherche/graphe complet) pour les étapes 3+.

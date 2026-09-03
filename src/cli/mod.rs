@@ -10,6 +10,7 @@ pub mod extension;
 pub mod implement;
 pub mod init;
 pub mod intent;
+pub mod okf;
 pub mod pipeline;
 pub mod plan;
 pub mod preset;
@@ -275,6 +276,13 @@ pub enum Commands {
         command: extension::ExtensionCommands,
     },
 
+    /// Generate/validate an Open Knowledge Format (OKF) knowledge-graph
+    /// bundle for this project (native — no external `okf-rs` binary)
+    Okf {
+        #[command(subcommand)]
+        command: okf::OkfCommands,
+    },
+
     /// Refresh templates and scripts after a SolidSpec update
     Upgrade {
         /// Skip confirmation prompts
@@ -424,6 +432,7 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Preset { command } => preset::run(command),
         Commands::Change { command } => change::run(command),
         Commands::Extension { command } => extension::run(command),
+        Commands::Okf { command } => okf::run(command),
         Commands::Upgrade { force } => upgrade::run(force),
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
