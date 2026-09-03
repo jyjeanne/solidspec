@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: validate
-resource: src/core/okf.rs#L78-L81
+resource: src/core/okf.rs#L85-L88
 generated:
   by: okf-rs/0.7.0
 ---

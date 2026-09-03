@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate
-resource: src/core/okf.rs#L43-L72
+resource: src/core/okf.rs#L50-L79
 generated:
   by: okf-rs/0.7.0
 ---

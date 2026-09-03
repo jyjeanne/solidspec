@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: setup_feature
-resource: src/core/analyzer.rs#L445-L454
+resource: src/core/analyzer.rs#L603-L612
 visibility: private
 generated:
   by: okf-rs/0.7.0

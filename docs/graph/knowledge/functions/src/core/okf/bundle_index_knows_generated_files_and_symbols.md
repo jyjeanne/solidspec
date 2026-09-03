@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: generate_is_incremental_on_a_second_run
-resource: src/core/okf.rs#L196-L209
+title: bundle_index_knows_generated_files_and_symbols
+resource: src/core/okf.rs#L165-L177
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn generate_is_incremental_on_a_second_run()`
+`fn bundle_index_knows_generated_files_and_symbols()`
 
 # Calls
 

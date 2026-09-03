@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: validate_reports_no_issues_for_a_freshly_generated_bundle
-resource: src/core/okf.rs#L137-L150
+resource: src/core/okf.rs#L212-L225
 visibility: private
 generated:
   by: okf-rs/0.7.0

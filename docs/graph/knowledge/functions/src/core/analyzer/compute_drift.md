@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: compute_drift
-resource: src/core/analyzer.rs#L273-L379
+resource: src/core/analyzer.rs#L409-L515
 generated:
   by: okf-rs/0.7.0
 relationships:

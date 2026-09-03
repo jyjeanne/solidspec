@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: remediation_suggestions_present
-resource: src/core/analyzer.rs#L728-L741
+title: structural_cross_check_is_none_without_a_bundle
+resource: src/core/analyzer.rs#L908-L921
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn remediation_suggestions_present()`
+`fn structural_cross_check_is_none_without_a_bundle()`
 
 # Calls
 

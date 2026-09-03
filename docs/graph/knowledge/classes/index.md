@@ -60,6 +60,7 @@
 - [IntentDrift](../classes/src/core/intent_parser/IntentDrift.md) — Rust Struct
 - [IntentSpec](../classes/src/core/intent_parser/IntentSpec.md) — Rust Struct
 - [IntentStatus](../classes/src/core/intent_parser/IntentStatus.md) — Rust Enum
+- [BundleIndex](../classes/src/core/okf/BundleIndex.md) — Rust Struct
 - [GenerateReport](../classes/src/core/okf/GenerateReport.md) — Rust Struct
 - [PhaseResult](../classes/src/core/pipeline/PhaseResult.md) — Rust Struct
 - [PhaseStatus](../classes/src/core/pipeline/PhaseStatus.md) — Rust Enum

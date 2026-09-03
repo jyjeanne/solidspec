@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: orphan_tasks_medium_finding
-resource: src/core/analyzer.rs#L497-L515
+resource: src/core/analyzer.rs#L655-L673
 visibility: private
 generated:
   by: okf-rs/0.7.0

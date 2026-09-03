@@ -15,6 +15,9 @@ relationships:
   - target: functions/src/cli/upgrade/setup_project
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/core/analyzer/extract_symbol_name
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/artifact_graph/ArtifactGraph/generates_present
     resolved_by: tree-sitter
     confidence: exact
@@ -50,6 +53,7 @@ relationships:
 - [feature_slug](../../../functions/src/cli/apex/feature_slug.md)
 - [run](../../../functions/src/cli/upgrade/run.md)
 - [setup_project](../../../functions/src/cli/upgrade/setup_project.md)
+- [extract_symbol_name](../../../functions/src/core/analyzer/extract_symbol_name.md)
 - [generates_present](../../../functions/src/core/artifact_graph/ArtifactGraph/generates_present.md)
 - [aggregate_results](../../../functions/src/core/fan_out/aggregate_results.md)
 - [generate_branch_name](../../../functions/src/core/feature/generate_branch_name.md)

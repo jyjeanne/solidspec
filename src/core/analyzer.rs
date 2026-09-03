@@ -1,14 +1,26 @@
 use std::path::Path;
+use std::sync::LazyLock;
 
 use anyhow::Result;
+use regex::Regex;
 
 use super::artifact_graph::{self, TraceGraph};
 use super::constitution;
 use super::errors::SolidSpecError;
 use super::intent_parser::{self, IntentDrift};
+use super::okf::{BundleIndex, DEFAULT_BUNDLE_DIR};
 use super::spec_parser;
 
 const MAX_FINDINGS: usize = 50;
+
+/// Matches a backtick-quoted code span (`` `Foo.bar()` ``) — the convention
+/// AI-generated tasks.md content already uses for code identifiers,
+/// deliberately used as the signal for `structural_cross_check` below: it's
+/// specific enough to stay low-noise (bare English words in a task
+/// description aren't backtick-quoted) without needing full-language
+/// parsing to tell an identifier from prose.
+static BACKTICK_SPAN_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"`([^`\n]+)`").expect("invalid backtick span regex"));
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Severity {
@@ -48,6 +60,13 @@ pub struct AnalysisReport {
     /// Percentage of intent evidence criteria covered by implemented tests.
     /// `None` when `intent.md` is absent.
     pub intent_coverage: Option<f64>,
+    /// Findings from cross-checking tasks.md against the project's OKF
+    /// knowledge graph (`docs/okf-rs-integration-plan.md` step 5). `None`
+    /// when no bundle exists yet — nothing to check against, never a
+    /// failure; rendered as its own report section, never merged into
+    /// `findings` above, so it stays clearly attributable to the graph
+    /// rather than to SolidSpec's own textual heuristics.
+    pub structural_cross_check: Option<Vec<Finding>>,
 }
 
 /// Analyze cross-artifact consistency. Read-only — does NOT modify files.
@@ -145,6 +164,7 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
     }
 
     // Orphan task detection
+    let mut structural_cross_check_result = None;
     if has_tasks {
         let tasks_content = std::fs::read_to_string(&tasks_path)?;
         let task_count = tasks_content.matches("- [ ] T").count()
@@ -157,6 +177,8 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
                 remediation: "Run 'solidspec tasks' to regenerate.".into(),
             });
         }
+
+        structural_cross_check_result = structural_cross_check(&tasks_content, project_root);
     }
 
     // Terminology drift (simple check)
@@ -257,7 +279,121 @@ pub fn analyze_feature(feature_dir: &Path, project_root: &Path) -> Result<Analys
         intent_drift,
         trace_graph,
         intent_coverage,
+        structural_cross_check: structural_cross_check_result,
     })
+}
+
+/// Cross-checks tasks.md against the project's OKF knowledge-graph bundle
+/// (`okf::DEFAULT_BUNDLE_DIR`), catching two kinds of orphaned reference a
+/// purely textual read of tasks.md can't — see
+/// `docs/okf-rs-integration-plan.md` step 5 /
+/// `docs/kg-workflow-vision-gap-analysis.md`'s recommendation #1:
+///
+/// - a backtick-quoted symbol (`` `CombatSystem.calculate_damage()` ``)
+///   that matches no concept name anywhere in the graph;
+/// - an existing, recognized-language source file mentioned in tasks.md
+///   with zero concepts in the graph (usually a stale bundle — run
+///   `solidspec okf generate` — occasionally a language okf-rs doesn't
+///   extract).
+///
+/// Returns `None` when no bundle exists yet (nothing to check against,
+/// never a failure — a fresh/empty project or one that hasn't run
+/// `solidspec okf generate` behaves exactly as before this existed).
+/// Every finding is `Low`/`Medium`: a heuristic sanity check on top of a
+/// possibly-stale graph, never grounds to block `analyze` the way a
+/// constitution violation does.
+fn structural_cross_check(tasks_content: &str, project_root: &Path) -> Option<Vec<Finding>> {
+    let bundle_dir = project_root.join(DEFAULT_BUNDLE_DIR);
+    let index = BundleIndex::load(&bundle_dir).ok().flatten()?;
+
+    let mut findings = Vec::new();
+    let mut checked_symbols = std::collections::HashSet::new();
+    let mut checked_files = std::collections::HashSet::new();
+
+    for capture in BACKTICK_SPAN_RE.captures_iter(tasks_content) {
+        let raw = capture[1].trim();
+        let Some(symbol) = extract_symbol_name(raw) else {
+            continue;
+        };
+        if !checked_symbols.insert(symbol.clone()) || index.has_symbol(&symbol) {
+            continue;
+        }
+        findings.push(Finding {
+            severity: Severity::Medium,
+            message: format!(
+                "tasks.md references `{raw}` but no symbol named '{symbol}' exists in the knowledge graph"
+            ),
+            remediation: "Verify the symbol name, or run 'solidspec okf generate' if the codebase changed since the graph was last generated.".into(),
+        });
+    }
+
+    for word in tasks_content.split_whitespace() {
+        let trimmed = word.trim_matches(|c: char| !(c.is_alphanumeric() || "/.-_".contains(c)));
+        let Some(path) = extract_file_path(trimmed) else {
+            continue;
+        };
+        if !checked_files.insert(path.clone()) {
+            continue;
+        }
+        if project_root.join(&path).exists() && !index.has_file(&path) {
+            findings.push(Finding {
+                severity: Severity::Low,
+                message: format!(
+                    "'{path}' is referenced in tasks.md and exists on disk, but the knowledge graph has no concepts for it"
+                ),
+                remediation: "Run 'solidspec okf generate' to refresh the knowledge graph (or ignore if the file has no functions/classes to extract).".into(),
+            });
+        }
+    }
+
+    Some(findings)
+}
+
+/// Extracts a plausible bare symbol name from a backtick span's raw text:
+/// strips a trailing `(...)` call syntax, then takes the last segment of a
+/// qualified name (`Foo.bar`, `foo::bar`) — the graph indexes concepts by
+/// their own short name (`Concept::name`), not a qualified path. Returns
+/// `None` for anything that isn't a single bare identifier (multi-word
+/// text, an actual file path — handled separately by `extract_file_path`)
+/// so this stays a conservative, low-noise check.
+fn extract_symbol_name(raw: &str) -> Option<String> {
+    let without_call = raw.split('(').next().unwrap_or(raw).trim();
+    if without_call.is_empty()
+        || without_call.contains(char::is_whitespace)
+        || without_call.contains('/')
+    {
+        return None;
+    }
+    let last_segment = without_call
+        .rsplit(['.', ':'])
+        .next()
+        .unwrap_or(without_call);
+    let is_identifier = !last_segment.is_empty()
+        && last_segment
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_alphabetic() || c == '_')
+        && last_segment
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '_');
+    is_identifier.then(|| last_segment.to_string())
+}
+
+/// Extracts a project-relative file path from a token, if it looks like
+/// one: contains a `/` and ends in an extension `okf-rs` actually indexes
+/// (`okf_parser::Language::from_extension`) — narrow on purpose, since a
+/// broader "any word with a slash" match would also catch prose like
+/// "either/or" or a URL fragment.
+fn extract_file_path(token: &str) -> Option<String> {
+    if !token.contains('/') {
+        return None;
+    }
+    let ext = token.rsplit('.').next()?;
+    if ext == token {
+        return None; // no '.' at all
+    }
+    okf_parser::Language::from_extension(ext)?;
+    Some(token.trim_start_matches("./").to_string())
 }
 
 /// Compute intent drift by cross-referencing evidence criteria from `intent.md`
@@ -432,6 +568,28 @@ pub fn format_report(report: &AnalysisReport) -> String {
 
     if report.findings.is_empty() {
         output.push_str("No issues found. All artifacts are consistent.\n");
+    }
+
+    // Structural cross-check (okf-rs): a distinct section, never merged into
+    // the findings above — see docs/okf-rs-integration-plan.md step 5. Omitted
+    // entirely when no bundle exists (structural_cross_check is None); shown
+    // even when empty once a bundle *was* checked, so it's visible that the
+    // check actually ran.
+    if let Some(ref structural_findings) = report.structural_cross_check {
+        output.push_str("\n## Structural cross-check (okf-rs)\n\n");
+        if structural_findings.is_empty() {
+            output.push_str(
+                "No orphaned file/symbol references found against the knowledge graph.\n",
+            );
+        } else {
+            for finding in structural_findings {
+                output.push_str(&format!(
+                    "- **[{}]** {}\n",
+                    finding.severity, finding.message
+                ));
+                output.push_str(&format!("  *Remediation*: {}\n\n", finding.remediation));
+            }
+        }
     }
 
     output
@@ -691,5 +849,238 @@ Allow PDF export.
             "Uncovered criteria should produce drift > 0"
         );
         assert_eq!(drift.unsatisfied.len(), 2);
+    }
+
+    // ── extract_symbol_name() / extract_file_path() ─────────────────────────
+
+    #[test]
+    fn extract_symbol_name_strips_call_syntax_and_qualification() {
+        assert_eq!(
+            extract_symbol_name("CombatSystem.calculate_damage()"),
+            Some("calculate_damage".to_string())
+        );
+        assert_eq!(
+            extract_symbol_name("parse_intent"),
+            Some("parse_intent".to_string())
+        );
+        assert_eq!(
+            extract_symbol_name("okf_core::git::head_revision"),
+            Some("head_revision".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_symbol_name_rejects_non_identifiers() {
+        assert_eq!(extract_symbol_name("this is prose"), None);
+        assert_eq!(extract_symbol_name("src/foo.rs"), None);
+        assert_eq!(extract_symbol_name(""), None);
+        assert_eq!(extract_symbol_name("123abc"), None);
+    }
+
+    #[test]
+    fn extract_file_path_accepts_recognized_source_extensions() {
+        assert_eq!(
+            extract_file_path("src/combat/system.rs"),
+            Some("src/combat/system.rs".to_string())
+        );
+        assert_eq!(
+            extract_file_path("./src/lib.rs"),
+            Some("src/lib.rs".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_file_path_rejects_non_paths() {
+        assert_eq!(extract_file_path("README.md"), None); // no '/'
+        assert_eq!(extract_file_path("either/or"), None); // no recognized extension
+        assert_eq!(extract_file_path("no_dot_at_all/thing"), None);
+    }
+
+    // ── structural_cross_check() / analyze_feature() integration ────────────
+
+    fn generate_bundle_for(project_root: &Path) -> std::path::PathBuf {
+        let bundle_dir = project_root.join(DEFAULT_BUNDLE_DIR);
+        crate::core::okf::generate(project_root, &bundle_dir).unwrap();
+        bundle_dir
+    }
+
+    #[test]
+    fn structural_cross_check_is_none_without_a_bundle() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Implement `does_not_exist()`\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        assert!(report.structural_cross_check.is_none());
+    }
+
+    #[test]
+    fn structural_cross_check_flags_unknown_backtick_symbol() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        generate_bundle_for(dir.path());
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Call `totally_invented_symbol()` from the combat module\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let findings = report.structural_cross_check.unwrap();
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("totally_invented_symbol")),
+            "{findings:?}"
+        );
+    }
+
+    #[test]
+    fn structural_cross_check_accepts_a_real_symbol() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        generate_bundle_for(dir.path());
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Update `calculate_damage()` for critical hits\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let findings = report.structural_cross_check.unwrap();
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.message.contains("calculate_damage")),
+            "a real symbol must not be flagged: {findings:?}"
+        );
+    }
+
+    #[test]
+    fn structural_cross_check_flags_existing_file_missing_from_a_stale_bundle() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        // Bundle generated BEFORE this file is added — simulates the bundle
+        // going stale after new code lands, exactly the scenario
+        // docs/kg-workflow-vision-gap-analysis.md flags as unaddressed today
+        // (nothing regenerates the graph automatically after `implement`).
+        generate_bundle_for(dir.path());
+        std::fs::create_dir_all(dir.path().join("extra")).unwrap();
+        std::fs::write(
+            dir.path().join("extra/critical_hits.rs"),
+            "pub fn apply_crit() {}\n",
+        )
+        .unwrap();
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 See extra/critical_hits.rs for context\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let findings = report.structural_cross_check.unwrap();
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("extra/critical_hits.rs")),
+            "{findings:?}"
+        );
+    }
+
+    #[test]
+    fn structural_cross_check_ignores_files_that_do_not_exist_yet() {
+        // tasks.md routinely names files that don't exist YET (they're the
+        // deliverable) — must never be flagged as orphaned.
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        generate_bundle_for(dir.path());
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Create src/new_feature/critical_hits.rs\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let findings = report.structural_cross_check.unwrap();
+        assert!(findings.is_empty(), "{findings:?}");
+    }
+
+    #[test]
+    fn format_report_omits_structural_section_without_a_bundle() {
+        let dir = TempDir::new().unwrap();
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 x\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let output = format_report(&report);
+        assert!(!output.contains("Structural cross-check"));
+    }
+
+    #[test]
+    fn format_report_includes_structural_section_with_a_bundle() {
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        generate_bundle_for(dir.path());
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Update `calculate_damage()`\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let output = format_report(&report);
+        assert!(output.contains("Structural cross-check (okf-rs)"));
     }
 }

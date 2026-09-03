@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate_writes_a_bundle_with_expected_concepts
-resource: src/core/okf.rs#L105-L118
+resource: src/core/okf.rs#L180-L193
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: fmt
-resource: src/core/analyzer.rs#L22-L29
+resource: src/core/analyzer.rs#L34-L41
 visibility: private
 generated:
   by: okf-rs/0.7.0

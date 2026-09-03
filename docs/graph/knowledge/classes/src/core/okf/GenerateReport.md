@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: GenerateReport
-resource: src/core/okf.rs#L30-L35
+resource: src/core/okf.rs#L37-L42
 generated:
   by: okf-rs/0.7.0
 ---

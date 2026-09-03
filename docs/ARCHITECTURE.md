@@ -87,7 +87,7 @@ Pure business logic with no CLI dependency. Can be used as a library.
 | `task_generator.rs` | Generate `TaskList` from spec + plan, organize by phases |
 | `test_generator.rs` | Extract Given/When/Then scenarios, detect framework, generate test scaffolds |
 | `pipeline.rs` | Phase list constants (`PHASES` 8-phase SDD, `PHASES_IDSD` 10-phase), skip conditions, phase type (Auto/Handoff), filtering, log generation |
-| `analyzer.rs` | Cross-artifact consistency validation, severity heuristics. **[IDSD]** `compute_drift()` — intent evidence vs implemented tests; `AnalysisReport` gains `trace_graph: Option<TraceGraph>` and `intent_coverage: Option<f64>`; orphaned-FR findings when tasks.md exists but doesn't reference a spec requirement |
+| `analyzer.rs` | Cross-artifact consistency validation, severity heuristics. **[IDSD]** `compute_drift()` — intent evidence vs implemented tests; `AnalysisReport` gains `trace_graph: Option<TraceGraph>` and `intent_coverage: Option<f64>`; orphaned-FR findings when tasks.md exists but doesn't reference a spec requirement. `structural_cross_check()` — cross-checks tasks.md's backtick-quoted symbols and referenced source files against the project's OKF bundle (`okf::BundleIndex`, reads an already-generated bundle via `okf_parser::read_bundle` — no re-analysis, no `okf-rs search`/`explore`), rendered as its own `analysis-report.md` section; `None`/omitted entirely when no bundle exists |
 | `feature.rs` | Feature numbering, branch name generation, 4-level resolution |
 | `git.rs` | Git operations: init, branch creation, current branch detection |
 | `errors.rs` | Typed error enum `SolidSpecError` with what/where/fix |

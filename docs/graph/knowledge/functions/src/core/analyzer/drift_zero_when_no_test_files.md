@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: drift_zero_when_no_test_files
-resource: src/core/analyzer.rs#L639-L647
+resource: src/core/analyzer.rs#L797-L805
 visibility: private
 generated:
   by: okf-rs/0.7.0

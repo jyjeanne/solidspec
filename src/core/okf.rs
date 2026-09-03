@@ -14,7 +14,7 @@
 //! HTTP client respectively) — `okf-rs search`/`explore`/`graph`/`impact`
 //! still need the external CLI or `okf-mcp` for now.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -25,6 +25,13 @@ use okf_parser::ConceptKind;
 /// switches between the native command and the external CLI reuses one
 /// cache rather than invalidating it.
 const CACHE_FILE: &str = ".okf-cache.json";
+
+/// Default OKF bundle location for a SolidSpec-scaffolded project — the
+/// convention `solidspec init`'s auto-generation (`src/cli/init.rs`), the
+/// `okf` extension (`extensions/okf/`), `solidspec okf generate`/`validate`'s
+/// own CLI defaults, and `analyzer::structural_cross_check` all agree on,
+/// so nothing needs to be told twice where a project's bundle lives.
+pub const DEFAULT_BUNDLE_DIR: &str = ".solidspec/knowledge";
 
 #[derive(Debug, Clone, Default)]
 pub struct GenerateReport {
@@ -88,6 +95,52 @@ pub fn validation_should_fail(report: &okf_validator::ValidationReport, ci: bool
     report.has_errors() || (ci && report.has_warning_of_kind(okf_validator::IssueKind::Orphan))
 }
 
+/// A lightweight, read-only index over an already-generated OKF bundle —
+/// "does this file/symbol actually appear in the knowledge graph" — built
+/// by reading the bundle's own Markdown+YAML files back
+/// (`okf_parser::read_bundle`) rather than re-running extraction. This is
+/// the native equivalent of `okf-rs search`/`explore` for the one query
+/// `analyzer::structural_cross_check` needs (membership, not ranked
+/// search) — see `docs/kg-workflow-vision-gap-analysis.md`'s
+/// recommendation #1.
+pub struct BundleIndex {
+    files: HashSet<String>,
+    symbols: HashSet<String>,
+}
+
+impl BundleIndex {
+    /// Loads the bundle at `bundle_dir`. Returns `Ok(None)` (not an error)
+    /// when the directory doesn't exist — a project that never ran
+    /// `solidspec okf generate` is not a failure, just nothing to check
+    /// against.
+    pub fn load(bundle_dir: &Path) -> Result<Option<Self>> {
+        if !bundle_dir.exists() {
+            return Ok(None);
+        }
+        let concepts = okf_parser::read_bundle(bundle_dir)
+            .with_context(|| format!("failed to read OKF bundle at {}", bundle_dir.display()))?;
+
+        let mut files = HashSet::new();
+        let mut symbols = HashSet::new();
+        for concept in &concepts {
+            files.insert(concept.location.file.clone());
+            symbols.insert(concept.name.clone());
+        }
+        Ok(Some(Self { files, symbols }))
+    }
+
+    /// Whether any concept in the bundle was extracted from `path` (project
+    /// root-relative, `/`-separated — the same form `Location::file` stores).
+    pub fn has_file(&self, path: &str) -> bool {
+        self.files.contains(path)
+    }
+
+    /// Whether any concept in the bundle is named exactly `name`.
+    pub fn has_symbol(&self, name: &str) -> bool {
+        self.symbols.contains(name)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +152,28 @@ mod tests {
             "pub struct Widget;\n\nimpl Widget {\n    pub fn new() -> Self {\n        Widget\n    }\n}\n",
         )
         .unwrap();
+    }
+
+    #[test]
+    fn bundle_index_load_returns_none_when_bundle_missing() {
+        let dir = TempDir::new().unwrap();
+        let missing = dir.path().join("nope");
+        assert!(BundleIndex::load(&missing).unwrap().is_none());
+    }
+
+    #[test]
+    fn bundle_index_knows_generated_files_and_symbols() {
+        let project_dir = TempDir::new().unwrap();
+        write_sample_project(project_dir.path());
+        let output_dir = TempDir::new().unwrap();
+        generate(project_dir.path(), output_dir.path()).unwrap();
+
+        let index = BundleIndex::load(output_dir.path()).unwrap().unwrap();
+        assert!(index.has_file("lib.rs"));
+        assert!(index.has_symbol("Widget"));
+        assert!(index.has_symbol("new"));
+        assert!(!index.has_file("nonexistent.rs"));
+        assert!(!index.has_symbol("TotallyMadeUpSymbol"));
     }
 
     #[test]

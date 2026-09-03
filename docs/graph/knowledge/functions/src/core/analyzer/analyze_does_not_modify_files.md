@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: analyze_does_not_modify_files
-resource: src/core/analyzer.rs#L550-L567
+resource: src/core/analyzer.rs#L708-L725
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_test
-resource: src/core/analyzer.rs#L607-L611
+resource: src/core/analyzer.rs#L765-L769
 visibility: private
 generated:
   by: okf-rs/0.7.0

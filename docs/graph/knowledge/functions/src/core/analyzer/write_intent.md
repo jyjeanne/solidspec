@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_intent
-resource: src/core/analyzer.rs#L603-L605
+resource: src/core/analyzer.rs#L761-L763
 visibility: private
 generated:
   by: okf-rs/0.7.0

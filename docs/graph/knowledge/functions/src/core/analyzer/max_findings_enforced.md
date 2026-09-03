@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: max_findings_enforced
-resource: src/core/analyzer.rs#L544-L547
+resource: src/core/analyzer.rs#L702-L705
 visibility: private
 generated:
   by: okf-rs/0.7.0

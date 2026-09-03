@@ -127,17 +127,30 @@ exécutés réellement sur le dépôt SolidSpec lui-même.
   `which`, invoqué en sous-processus (`std::process::Command`), exactement comme les CLIs d'agents dans
   `src/agents/invoker.rs`.
 
-## Étape 5 — Vérification structurelle dans `analyze`
+## Étape 5 — Vérification structurelle dans `analyze` — fait ✅
 
-- `src/core/analyzer.rs` fait aujourd'hui des vérifications textuelles (traçabilité FR-###, cohérence entre
-  artefacts). Ajouter, seulement si un bundle `okf-rs` existe, une vérification complémentaire :
-  - pour chaque tâche de `tasks.md` référençant un fichier/symbole cible, confirmer via
-    `okf-rs search`/`explore` (invoqué en sous-processus, sortie parsée) que le symbole existe réellement
-    dans le graphe — détecte les références orphelines qu'une simple recherche textuelle raterait.
-  - Ce nouveau contrôle apparaît comme une section distincte dans `analysis-report.md`
-    ("Structural cross-check (okf-rs)"), jamais mélangée aux heuristiques existantes — même principe
-    d'indépendance que documenté pour `ai-spec-review-skill` vs `review.rs` dans CLAUDE.md.
-  - Absence du bundle → section simplement omise, aucun échec.
+**Implémenté nativement, sans `okf-rs search`/`explore`** (ni même `okf-mcp`) : la formulation initiale de
+cette étape supposait shell-out vers le CLI externe, mais `okf-parser` (déjà vendorisé) expose
+`read_bundle(bundle_dir) -> Vec<Concept>`, qui relit le bundle déjà généré (ses fichiers Markdown+YAML) sans
+ré-analyser le code — exactement la seule requête dont ce contrôle a besoin (appartenance, pas recherche
+classée). `src/core/okf.rs::BundleIndex` enveloppe ça en deux ensembles (`files`, `symbols`) avec `has_file`/
+`has_symbol`.
+
+`src/core/analyzer.rs::structural_cross_check` (appelé depuis `analyze_feature`, seulement si `tasks.md`
+existe) détecte deux cas :
+- un symbole entre backticks dans `tasks.md` (`` `CombatSystem.calculate_damage()` ``) qui ne correspond à
+  aucun nom de concept dans le graphe (sévérité Medium) ;
+- un fichier existant sur disque, d'une extension reconnue par `okf_parser::Language::from_extension`,
+  référencé dans `tasks.md`, mais absent du graphe — typiquement un bundle devenu obsolète depuis (sévérité
+  Low). Un fichier qui n'existe pas encore (le livrable de la tâche) n'est jamais signalé.
+
+Le contrôle apparaît comme une section distincte dans `analysis-report.md` ("## Structural cross-check
+(okf-rs)"), jamais mélangée aux heuristiques textuelles existantes — même principe d'indépendance que
+documenté pour `ai-spec-review-skill` vs `review.rs` dans CLAUDE.md. Absence de bundle
+(`.solidspec/knowledge/` introuvable) → section simplement omise (`AnalysisReport.structural_cross_check =
+None`), aucun échec de `analyze`.
+
+Recoupe la recommandation #1 de `docs/kg-workflow-vision-gap-analysis.md`.
 
 ## Étape 6 — `review`/ship gate : rapport d'impact
 
@@ -151,10 +164,16 @@ exécutés réellement sur le dépôt SolidSpec lui-même.
 ## Ordre de priorité recommandé
 
 1. ✅ Étape 1 (faite)
-2. Étape 2 — scaffolding seul, risque quasi nul, valeur immédiate même sans les étapes suivantes
-3. Étape 4 — le hook `plan` est probablement le gain le plus direct pour la qualité des specs/plans générés
-4. Étape 5 — renforce `analyze`, dépend du même mécanisme d'invocation que l'étape 4
-5. Étape 3 — MCP, une fois qu'on sait quels agents dans `AGENTS` le supportent réellement
+2. ✅ Étape 2 (faite)
+3. ✅ Étape 5 (faite) — n'a finalement pas eu besoin d'attendre l'étape 4 : `okf_parser::read_bundle`
+   suffisait, aucun mécanisme d'invocation partagé avec un futur hook `plan` n'était nécessaire.
+4. Étape 4 — le hook de régénération (avant `plan`, et surtout après `implement` — voir la boucle de
+   rétroaction #6 de `docs/kg-workflow-vision-gap-analysis.md`) reste la prochaine étape la plus directe :
+   sans lui, la vérification structurelle de l'étape 5 s'appuie sur un graphe qui ne se rafraîchit jamais
+   tout seul.
+5. Étape 3 — MCP natif, une fois qu'on sait quels agents dans `AGENTS` le supportent réellement (l'entrée
+   `.mcp.json` écrite par `solidspec init` aujourd'hui pointe vers un `okf-mcp` externe non vendorisé —
+   voir `docs/kg-workflow-vision-gap-analysis.md` §1)
 6. Étape 6 — la plus périphérique (ship gate), à faire en dernier
 
 Chaque étape à partir de 2 mérite son propre cycle `spec-driven` (spec → plan → tasks → tests →

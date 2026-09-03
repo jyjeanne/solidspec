@@ -21,6 +21,10 @@ hypothèse) qui est au cœur de la réduction d'hallucinations n'existe pas du t
 connaît que des faits structurels exacts (tree-sitter), sans lien vers spec/plan/décisions/git
 blame.
 
+> **Mise à jour** (postérieure à `4d1258b`) : « aucune étape du DAG ne l'interroge » n'est plus
+> vrai pour `analyze` — voir §8/recommandation #1, implémenté depuis. Le reste du verdict
+> (pas de boucle de rétroaction, pas d'evidence typée) tient toujours.
+
 ---
 
 ## 1. Knowledge Graph (OKF) — ce qui existe
@@ -133,11 +137,13 @@ discussion. État réel de ses étapes :
 | 2. Extension `okf` optionnelle (scaffolding) | ✅ Fait |
 | 3. Enregistrement MCP par agent | ⚠️ **Partiellement fait, hors plan initial** — cette session a ajouté l'écriture de `.mcp.json` dans `solidspec init` lui-même (`src/cli/init.rs::write_okf_mcp_config`), pas gated par un « preset okf actif » comme prévu, et seulement pour Claude Code (pas de champ `supports_mcp` par agent). |
 | 4. Hook de régénération avant `plan` | ❌ Non fait |
-| 5. Vérification structurelle dans `analyze` (symboles de `tasks.md` existent réellement dans le graphe) | ❌ Non fait |
+| 5. Vérification structurelle dans `analyze` (symboles de `tasks.md` existent réellement dans le graphe) | ✅ **Fait** (voir recommandation #1 ci-dessous, mise en œuvre depuis) |
 | 6. Rapport d'impact dans `review`/`ship` | ❌ Non fait |
 
-Les étapes 4 et 5 sont exactement la « boucle » et le « fact-checking » que la vision met en
-avant — elles étaient déjà identifiées, juste pas encore implémentées.
+L'étape 5 est exactement le « fact-checking » que la vision met en avant — implémentée nativement via
+`okf_parser::read_bundle` (pas besoin de `okf-rs search`/`explore` ni de shell-out, contrairement à ce que
+la formulation initiale du plan supposait). L'étape 4 (la « boucle ») reste la plus structurante des
+lacunes restantes — voir écart #1 ci-dessous, inchangé.
 
 ---
 
@@ -149,9 +155,11 @@ avant — elles étaient déjà identifiées, juste pas encore implémentées.
 2. **Aucun lien entre le graphe et spec/plan/decisions** (§2, catégories B et C). Le graphe
    répond à « qu'est-ce qui existe dans le code » mais jamais à « pourquoi » ni « est-ce que ça
    correspond à ce que le spec demande ».
-3. **Pas de vérification structurelle automatique** (étape 5 du plan) — c'est le mécanisme
-   concret de réduction d'hallucination le plus proche d'être réalisable avec ce qui existe
-   déjà (le bundle est là, `analyze` existe déjà, il manque juste le pont).
+3. ~~**Pas de vérification structurelle automatique** (étape 5 du plan)~~ — **fait** :
+   `analyze` compare désormais chaque tâche de `tasks.md` (symboles entre backticks, chemins de
+   fichiers existants) au bundle OKF via `core::okf::BundleIndex`, dans une section dédiée
+   "Structural cross-check (okf-rs)" de `analysis-report.md`. Voir
+   `docs/okf-rs-integration-plan.md` étape 5.
 4. **Pas de distinction fact/decision/inference** (§3) — la plus ambitieuse et la plus
    éloignée de l'existant ; demande un nouveau schéma OKF (nouveaux `ConceptKind`), donc du
    travail côté `okf-rs` lui-même (dépôt séparé), pas seulement côté SolidSpec.
@@ -168,19 +176,21 @@ avant — elles étaient déjà identifiées, juste pas encore implémentées.
 
 ## Recommandation de prochaine étape concrète
 
-Dans l'ordre où je le ferais, en réutilisant ce qui existe déjà plutôt qu'en re-designant :
-
-1. **Étape 5 du plan existant** (vérification structurelle dans `analyze`) — le gain
-   « réduction d'hallucination » le plus immédiat, le moins risqué, et le bundle OKF le
-   permet déjà tel quel (chercher un symbole cité dans `tasks.md` dans l'index du bundle).
+1. ~~**Étape 5 du plan existant** (vérification structurelle dans `analyze`)~~ — **fait**, voir
+   ci-dessus. Implémentation : `src/core/okf.rs::BundleIndex` (lit un bundle déjà généré via
+   `okf_parser::read_bundle`, sans ré-analyser le code) +
+   `src/core/analyzer.rs::structural_cross_check` (backticks → noms de symboles, chemins de
+   fichiers → extensions reconnues), tous deux testés (`cargo test`, 585 tests) et vérifiés
+   manuellement sur un vrai projet.
 2. **Étape 4 du plan existant, généralisée** — pas seulement un hook avant `plan`, mais un
    appel à `core::okf::generate` après `implement` dans `cli/pipeline.rs::execute_phase`
    (best-effort, jamais bloquant, comme le reste du code d'intégration OKF) : c'est la boucle
    de rétroaction (§6), et c'est un ajout localisé (quelques lignes dans une fonction qui
-   existe déjà) plutôt qu'un nouveau sous-système.
+   existe déjà) plutôt qu'un nouveau sous-système. Rendue plus utile encore par l'étape 1 : sans
+   régénération automatique, la vérification structurelle s'appuie sur un graphe qui ne se
+   rafraîchit jamais tout seul.
 3. Ensuite seulement, discuter du modèle **fact/decision/inference** (§3) — c'est un vrai
    changement de format OKF, donc une discussion à avoir avec le dépôt `okf-rs` amont plutôt
    qu'un ajout unilatéral côté SolidSpec.
 
-Je n'ai encore rien codé pour ces trois points — dis-moi si tu veux que j'attaque le premier
-(vérification structurelle dans `analyze`), c'est le plus petit et le plus autonome des trois.
+Prochaine étape suggérée : le point 2 (boucle de rétroaction post-`implement`).

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: constitution_violation_is_critical
-resource: src/core/analyzer.rs#L518-L532
+resource: src/core/analyzer.rs#L676-L690
 visibility: private
 generated:
   by: okf-rs/0.7.0

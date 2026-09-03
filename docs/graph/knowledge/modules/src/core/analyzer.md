@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: analyzer
-resource: src/core/analyzer.rs#L1-L695
+resource: src/core/analyzer.rs#L1-L1086
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -9,7 +9,13 @@ relationships:
   - target: external/std-path-path
     resolved_by: tree-sitter
     confidence: exact
+  - target: external/std-sync-lazylock
+    resolved_by: tree-sitter
+    confidence: exact
   - target: external/anyhow-result
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: external/regex-regex
     resolved_by: tree-sitter
     confidence: exact
   - target: external/super-artifact-graph-self-tracegraph
@@ -22,6 +28,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: external/super-intent-parser-self-intentdrift
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: external/super-okf-bundleindex-default-bundle-dir
     resolved_by: tree-sitter
     confidence: exact
   - target: external/super-spec-parser
@@ -46,6 +55,9 @@ relationships:
 - [Finding](../../../classes/src/core/analyzer/Finding.md)
 - [AnalysisReport](../../../classes/src/core/analyzer/AnalysisReport.md)
 - [analyze_feature](../../../functions/src/core/analyzer/analyze_feature.md)
+- [structural_cross_check](../../../functions/src/core/analyzer/structural_cross_check.md)
+- [extract_symbol_name](../../../functions/src/core/analyzer/extract_symbol_name.md)
+- [extract_file_path](../../../functions/src/core/analyzer/extract_file_path.md)
 - [compute_drift](../../../functions/src/core/analyzer/compute_drift.md)
 - [format_report](../../../functions/src/core/analyzer/format_report.md)
 - [setup_feature](../../../functions/src/core/analyzer/setup_feature.md)
@@ -65,15 +77,30 @@ relationships:
 - [drift_zero_when_no_test_files](../../../functions/src/core/analyzer/drift_zero_when_no_test_files.md)
 - [drift_detects_unsatisfied_criteria](../../../functions/src/core/analyzer/drift_detects_unsatisfied_criteria.md)
 - [drift_score_100_when_all_criteria_uncovered](../../../functions/src/core/analyzer/drift_score_100_when_all_criteria_uncovered.md)
+- [extract_symbol_name_strips_call_syntax_and_qualification](../../../functions/src/core/analyzer/extract_symbol_name_strips_call_syntax_and_qualification.md)
+- [extract_symbol_name_rejects_non_identifiers](../../../functions/src/core/analyzer/extract_symbol_name_rejects_non_identifiers.md)
+- [extract_file_path_accepts_recognized_source_extensions](../../../functions/src/core/analyzer/extract_file_path_accepts_recognized_source_extensions.md)
+- [extract_file_path_rejects_non_paths](../../../functions/src/core/analyzer/extract_file_path_rejects_non_paths.md)
+- [generate_bundle_for](../../../functions/src/core/analyzer/generate_bundle_for.md)
+- [structural_cross_check_is_none_without_a_bundle](../../../functions/src/core/analyzer/structural_cross_check_is_none_without_a_bundle.md)
+- [structural_cross_check_flags_unknown_backtick_symbol](../../../functions/src/core/analyzer/structural_cross_check_flags_unknown_backtick_symbol.md)
+- [structural_cross_check_accepts_a_real_symbol](../../../functions/src/core/analyzer/structural_cross_check_accepts_a_real_symbol.md)
+- [structural_cross_check_flags_existing_file_missing_from_a_stale_bundle](../../../functions/src/core/analyzer/structural_cross_check_flags_existing_file_missing_from_a_stale_bundle.md)
+- [structural_cross_check_ignores_files_that_do_not_exist_yet](../../../functions/src/core/analyzer/structural_cross_check_ignores_files_that_do_not_exist_yet.md)
+- [format_report_omits_structural_section_without_a_bundle](../../../functions/src/core/analyzer/format_report_omits_structural_section_without_a_bundle.md)
+- [format_report_includes_structural_section_with_a_bundle](../../../functions/src/core/analyzer/format_report_includes_structural_section_with_a_bundle.md)
 
 # Imports
 
 - `std::path::Path`
+- `std::sync::LazyLock`
 - `anyhow::Result`
+- `regex::Regex`
 - `super::artifact_graph::{self, TraceGraph}`
 - `super::constitution`
 - `super::errors::SolidSpecError`
 - `super::intent_parser::{self, IntentDrift}`
+- `super::okf::{BundleIndex, DEFAULT_BUNDLE_DIR}`
 - `super::spec_parser`
 - `super::*`
 - `tempfile::TempDir`

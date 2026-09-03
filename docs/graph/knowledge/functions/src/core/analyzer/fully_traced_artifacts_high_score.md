@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: fully_traced_artifacts_high_score
-resource: src/core/analyzer.rs#L466-L478
+resource: src/core/analyzer.rs#L624-L636
 visibility: private
 generated:
   by: okf-rs/0.7.0
