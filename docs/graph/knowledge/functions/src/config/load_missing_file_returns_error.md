@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: load_missing_file_returns_error
-resource: src/config/mod.rs#L429-L432
+resource: src/config/mod.rs#L442-L445
 visibility: private
 generated:
   by: okf-rs/0.7.0

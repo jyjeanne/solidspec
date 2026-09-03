@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: upgrade
-resource: src/cli/upgrade.rs#L1-L152
+resource: src/cli/upgrade.rs#L1-L159
 generated:
   by: okf-rs/0.7.0
 relationships:

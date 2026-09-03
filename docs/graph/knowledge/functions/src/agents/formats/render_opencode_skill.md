@@ -13,7 +13,7 @@ relationships:
   - target: functions/src/agents/formats/opencode_skill_has_name_and_description
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/registry/register_commands
+  - target: functions/src/agents/registry/write_commands_for_agent
     resolved_by: tree-sitter
     confidence: exact
 ---
@@ -29,4 +29,4 @@ relationships:
 # Called by
 
 - [opencode_skill_has_name_and_description](../../../../functions/src/agents/formats/opencode_skill_has_name_and_description.md)
-- [register_commands](../../../../functions/src/agents/registry/register_commands.md)
+- [write_commands_for_agent](../../../../functions/src/agents/registry/write_commands_for_agent.md)

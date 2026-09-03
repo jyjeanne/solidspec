@@ -132,7 +132,8 @@ solidspec --version
 # Bootstrap a new project
 solidspec init --here
 
-# Start a feature end-to-end (spec, plan, tasks, tests, implement handoff)
+# Start a feature end-to-end (spec, plan, tasks, implement handoff — or
+# whichever phases the project's schema has; minimal by default)
 solidspec go "Your feature description"
 
 # See what's ready to work on, and what to run next
@@ -166,8 +167,9 @@ solidspec init --here
 SolidSpec auto-detects your AI agent (if it has a `.claude/`, `.cursor/`, ... directory or CLI already on `PATH` — create an empty one first if this is a brand-new project and you want a specific agent registered) and creates:
 - `.solidspec/` &mdash; constitution, templates, config
 - `specs/` &mdash; where feature artifacts live
-- `solidspec.toml` &mdash; project configuration
-- Slash commands in your agent's native format (`/spcx:new`, `/spcx:apply`, `/spcx:finalise`, `/spcx:explore` in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below if the default schema isn't the right fit)
+- `solidspec.toml` &mdash; project configuration, including which workflow schema this project defaults to (`minimal` unless you pass `--schema`, e.g. `solidspec init --here --schema spec-driven`)
+- Slash commands in your agent's native format, generated for that schema (`/spcx:new`, `/spcx:apply`, `/spcx:finalise`, `/spcx:explore` in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers)
+- On an existing codebase (anything already in the directory besides the files above): a native knowledge-graph bundle at `.solidspec/knowledge/` and an `okf` MCP server entry in `.mcp.json`, so agents can query the codebase instead of re-reading it cold — skipped on a fresh empty directory; run `solidspec okf generate` yourself later if you add code first and want it sooner
 
 ### 2. Describe your feature
 
@@ -177,7 +179,7 @@ In your AI agent, run:
 /spcx:new "TODO list with CRUD operations and local storage"
 ```
 
-This scaffolds and fills in spec.md, plan.md, tasks.md, and test scaffolds in one pass. (Prefer the terminal, or need a non-default schema? `solidspec go "..."` does the same for spec-driven from the CLI; `solidspec pipeline --new "..." --schema tdd-driven --no-agent` covers every other schema.)
+This scaffolds and fills in every artifact through the implement handoff for your project's schema in one pass — `spec.md`, `plan.md`, `tasks.md` for the `minimal` default; also `clarify` and test scaffolds for `spec-driven`. (Prefer the terminal? `solidspec go "..."` does the same thing from the CLI, always on the project's own schema; `solidspec pipeline --new "..." --schema tdd-driven --no-agent` runs any schema explicitly, regardless of the project's default.)
 
 ### 3. Implement and ship
 
@@ -208,9 +210,9 @@ SolidSpec ships **7 built-in workflows** covering the full spectrum from lightwe
 
 ---
 
-### `minimal` — Lean Specification
+### `minimal` — Lean Specification (default)
 
-The fastest path from idea to implementation. No test scaffolds, no review phase, no ship gate. Four artifacts, minimal ceremony.
+The fastest path from idea to implementation, and what `solidspec init` picks when `--schema` is left unset. No test scaffolds, no review phase, no ship gate. Four artifacts, minimal ceremony.
 
 ```
   spec.md → plan.md → tasks.md → implement
@@ -221,12 +223,13 @@ The fastest path from idea to implementation. No test scaffolds, no review phase
 - Hackathon projects or time-boxed spikes
 - The requirements are fully known by the implementer
 - You want the discipline of a written spec but not the full SDD ceremony
+- You're unsure which schema to pick and want to start light — `solidspec init --schema spec-driven` (or any other schema) any time you know you need more
 
-**Avoid when:** quality gates, traceability, or external stakeholders matter.
+**Avoid when:** quality gates, traceability, or external stakeholders matter — pick `spec-driven` (or a stricter schema below) instead.
 
 ---
 
-### `spec-driven` — Full Specification-Driven Development (default)
+### `spec-driven` — Full Specification-Driven Development
 
 The standard SolidSpec workflow. Structured spec, architecture plan, phased tasks, test scaffolds, cross-artifact consistency check, preflight review, and a 4-lane parallel ship gate.
 
@@ -239,7 +242,7 @@ The standard SolidSpec workflow. Structured spec, architecture plan, phased task
 - Adding a new capability to an existing codebase
 - You need traceability from requirements to tasks but not full intent-to-evidence traceability
 - Brownfield features (combine with `solidspec change propose` for delta specs)
-- The default if you're unsure which schema to pick
+- Quality gates, traceability, or external stakeholders matter more than getting started fast
 
 ---
 
@@ -806,7 +809,7 @@ solidspec tasks 001 --schema security-first   # Blocked until security-review.md
 solidspec implement 001
 ```
 
-`--schema security-first` is required on `solidspec tasks` for the gate to apply — without it, `tasks` defaults to the `spec-driven` schema (no security-review dependency) and will generate `tasks.md` regardless of whether `security-review.md` exists.
+`--schema security-first` is required on `solidspec tasks` for the gate to apply unless the project was already initialized with `solidspec init --schema security-first` (which makes it the project's stored default — see `solidspec.toml`'s `[pipeline].schema`). Without either, `tasks` falls back to whatever schema *is* the project's default (`spec-driven` for a pre-existing project, `minimal` for one initialized without `--schema`) — neither has a security-review dependency, so `tasks.md` would be generated regardless of whether `security-review.md` exists.
 
 ---
 
@@ -1161,7 +1164,7 @@ These per-phase commands are what `go`/`continue`/`pipeline` (and, in Claude Cod
 
 | Command | Description |
 |---------|-------------|
-| `solidspec init [name]` | Initialize project with constitution, templates, agent commands |
+| `solidspec init [name]` | Initialize project with constitution, templates, agent commands (`--schema`, default `minimal`; on an existing codebase, also generates a knowledge-graph bundle and registers it as an MCP server — see below) |
 | `solidspec specify <desc>` | Create feature spec with user stories and quality checklist |
 | `solidspec clarify [id]` | Resolve `[NEEDS CLARIFICATION]` markers |
 | `solidspec plan [id]` | Generate plan + research + data model + contracts |
@@ -1214,11 +1217,13 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 
 Feature ID is auto-detected from git branch or latest spec if omitted.
 
-A bundled example extension lives at [`extensions/okf/`](extensions/okf/): generates an
-[OKF](https://github.com/jyjeanne/okf-rs) knowledge-graph bundle for a project built with SolidSpec, via the
-native `solidspec okf generate`/`validate` commands (vendored library crates — no external binary) so AI
-agents can query it instead of re-reading files cold. Install into a project with
-`solidspec extension add extensions/okf --dev`.
+`solidspec init` already generates this bundle automatically for an existing codebase (see step 1 above) —
+no extension needed for that. A bundled example extension at [`extensions/okf/`](extensions/okf/) exists
+for the same generation via its `after_init` hook on a project that skipped it (e.g. `init` ran before any
+code existed) or wants it to fire again on a later `init` re-run; install into a project with
+`solidspec extension add extensions/okf --dev`. Either way it's the same native `solidspec okf
+generate`/`validate` commands (vendored library crates — no external binary) so AI agents can query the
+bundle instead of re-reading files cold.
 
 ---
 

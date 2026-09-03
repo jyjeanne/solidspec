@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: schemas
-resource: src/cli/schemas.rs#L1-L38
+resource: src/cli/schemas.rs#L1-L44
 generated:
   by: okf-rs/0.7.0
 relationships:

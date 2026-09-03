@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_copilot_files
-resource: src/agents/registry.rs#L559-L574
+resource: src/agents/registry.rs#L618-L633
 visibility: private
 generated:
   by: okf-rs/0.7.0

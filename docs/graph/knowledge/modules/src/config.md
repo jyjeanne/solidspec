@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: config
-resource: src/config/mod.rs#L1-L514
+resource: src/config/mod.rs#L1-L527
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -67,6 +67,7 @@ relationships:
 - [InitOptions](../../classes/src/config/InitOptions.md)
 - [save](../../functions/src/config/InitOptions/save.md)
 - [find_project_root](../../functions/src/config/find_project_root.md)
+- [project_default_schema](../../functions/src/config/project_default_schema.md)
 - [new_config_has_correct_defaults](../../functions/src/config/new_config_has_correct_defaults.md)
 - [round_trip_serialize_deserialize](../../functions/src/config/round_trip_serialize_deserialize.md)
 - [load_valid_config](../../functions/src/config/load_valid_config.md)

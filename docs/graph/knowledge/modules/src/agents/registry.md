@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L873
+resource: src/agents/registry.rs#L1-L935
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -27,6 +27,9 @@ relationships:
   - target: external/super
     resolved_by: tree-sitter
     confidence: exact
+  - target: external/crate-core-schema-workflowschema-builtin
+    resolved_by: tree-sitter
+    confidence: exact
   - target: external/tempfile-tempdir
     resolved_by: tree-sitter
     confidence: exact
@@ -42,6 +45,8 @@ relationships:
 - [DetectedAgent](../../../classes/src/agents/registry/DetectedAgent.md)
 - [detect_agents](../../../functions/src/agents/registry/detect_agents.md)
 - [register_commands](../../../functions/src/agents/registry/register_commands.md)
+- [register_spcx_commands](../../../functions/src/agents/registry/register_spcx_commands.md)
+- [write_commands_for_agent](../../../functions/src/agents/registry/write_commands_for_agent.md)
 - [write_command_file](../../../functions/src/agents/registry/write_command_file.md)
 - [apex_skill_dir](../../../functions/src/agents/registry/apex_skill_dir.md)
 - [register_apex_skill](../../../functions/src/agents/registry/register_apex_skill.md)
@@ -49,6 +54,7 @@ relationships:
 - [unregister_commands](../../../functions/src/agents/registry/unregister_commands.md)
 - [register_all](../../../functions/src/agents/registry/register_all.md)
 - [find_binary](../../../functions/src/agents/registry/find_binary.md)
+- [spec_driven_schema](../../../functions/src/agents/registry/spec_driven_schema.md)
 - [detect_claude_when_dir_exists](../../../functions/src/agents/registry/detect_claude_when_dir_exists.md)
 - [detect_multiple_agents](../../../functions/src/agents/registry/detect_multiple_agents.md)
 - [empty_repo_detects_nothing](../../../functions/src/agents/registry/empty_repo_detects_nothing.md)
@@ -90,6 +96,7 @@ relationships:
 - `super::guardrails`
 - `crate::core::apex`
 - `super::*`
+- `crate::core::schema::{WorkflowSchema, builtin}`
 - `tempfile::TempDir`
 
 # Member of

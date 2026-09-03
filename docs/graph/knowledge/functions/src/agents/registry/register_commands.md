@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_commands
-resource: src/agents/registry.rs#L154-L199
+resource: src/agents/registry.rs#L154-L166
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -9,28 +9,7 @@ relationships:
   - target: functions/src/agents/registry/command_body
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/formats/translate_placeholder
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/guardrails/compliance_footer
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/adjust_script_paths
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/render_copilot_agent
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/render_copilot_prompt
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/render_opencode_skill
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/render_command
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/write_command_file
+  - target: functions/src/agents/registry/write_commands_for_agent
     resolved_by: tree-sitter
     confidence: exact
   called_by:
@@ -100,14 +79,7 @@ relationships:
 # Calls
 
 - [command_body](../../../../functions/src/agents/registry/command_body.md)
-- [translate_placeholder](../../../../functions/src/agents/formats/translate_placeholder.md)
-- [compliance_footer](../../../../functions/src/agents/guardrails/compliance_footer.md)
-- [adjust_script_paths](../../../../functions/src/agents/formats/adjust_script_paths.md)
-- [render_copilot_agent](../../../../functions/src/agents/formats/render_copilot_agent.md)
-- [render_copilot_prompt](../../../../functions/src/agents/formats/render_copilot_prompt.md)
-- [render_opencode_skill](../../../../functions/src/agents/formats/render_opencode_skill.md)
-- [render_command](../../../../functions/src/agents/formats/render_command.md)
-- [write_command_file](../../../../functions/src/agents/registry/write_command_file.md)
+- [write_commands_for_agent](../../../../functions/src/agents/registry/write_commands_for_agent.md)
 
 # Called by
 

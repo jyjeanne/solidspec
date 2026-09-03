@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_not_skip_evidence_when_absent
-resource: src/core/pipeline.rs#L523-L527
+resource: src/core/pipeline.rs#L533-L537
 visibility: private
 generated:
   by: okf-rs/0.7.0

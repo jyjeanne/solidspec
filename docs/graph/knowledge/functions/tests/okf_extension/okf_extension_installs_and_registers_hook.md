@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: okf_extension_installs_and_registers_hook
-resource: tests/okf_extension.rs#L55-L66
+resource: tests/okf_extension.rs#L63-L74
 visibility: private
 generated:
   by: okf-rs/0.7.0

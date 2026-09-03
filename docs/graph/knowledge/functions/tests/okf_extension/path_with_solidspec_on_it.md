@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: path_with_solidspec_on_it
-resource: tests/okf_extension.rs#L26-L31
+resource: tests/okf_extension.rs#L34-L39
 visibility: private
 generated:
   by: okf-rs/0.7.0

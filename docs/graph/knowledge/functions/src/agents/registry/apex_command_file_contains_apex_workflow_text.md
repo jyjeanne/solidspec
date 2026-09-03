@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: apex_command_file_contains_apex_workflow_text
-resource: src/agents/registry.rs#L858-L872
+resource: src/agents/registry.rs#L920-L934
 visibility: private
 generated:
   by: okf-rs/0.7.0

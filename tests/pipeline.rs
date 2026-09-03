@@ -398,6 +398,8 @@ artifacts:
             "--dry-run",
             "--auto",
             "--no-agent",
+            "--schema",
+            "spec-driven",
         ])
         .current_dir(dir.path())
         .assert()
@@ -427,6 +429,8 @@ artifacts:
             "--dry-run",
             "--auto",
             "--no-agent",
+            "--schema",
+            "spec-driven",
         ])
         .current_dir(dir.path())
         .assert()

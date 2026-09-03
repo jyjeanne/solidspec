@@ -15,6 +15,9 @@ relationships:
   - target: functions/tests/apex/pipeline_apex_driven_skips_apex_when_finish_exists
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/tests/init/go_and_continue_use_the_projects_stored_default_schema
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/tests/pipeline/full_pipeline_scaffold_generates_all_artifacts
     resolved_by: tree-sitter
     confidence: exact
@@ -104,6 +107,7 @@ relationships:
 - [create_feature](../../../functions/tests/apex/create_feature.md)
 - [pipeline_apex_driven_runs_apex_when_no_finish_file](../../../functions/tests/apex/pipeline_apex_driven_runs_apex_when_no_finish_file.md)
 - [pipeline_apex_driven_skips_apex_when_finish_exists](../../../functions/tests/apex/pipeline_apex_driven_skips_apex_when_finish_exists.md)
+- [go_and_continue_use_the_projects_stored_default_schema](../../../functions/tests/init/go_and_continue_use_the_projects_stored_default_schema.md)
 - [full_pipeline_scaffold_generates_all_artifacts](../../../functions/tests/pipeline/full_pipeline_scaffold_generates_all_artifacts.md)
 - [pipeline_idsd_generates_intent_before_spec](../../../functions/tests/pipeline/pipeline_idsd_generates_intent_before_spec.md)
 - [pipeline_sdd_unchanged_no_intent_md](../../../functions/tests/pipeline/pipeline_sdd_unchanged_no_intent_md.md)

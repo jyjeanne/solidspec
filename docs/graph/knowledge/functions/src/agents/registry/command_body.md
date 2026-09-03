@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: command_body
-resource: src/agents/registry.rs#L45-L74
+resource: src/agents/registry.rs#L39-L65
 visibility: private
 generated:
   by: okf-rs/0.7.0

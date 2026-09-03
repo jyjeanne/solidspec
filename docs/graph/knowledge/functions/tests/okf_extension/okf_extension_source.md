@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: okf_extension_source
-resource: tests/okf_extension.rs#L12-L14
+resource: tests/okf_extension.rs#L20-L22
 visibility: private
 generated:
   by: okf-rs/0.7.0

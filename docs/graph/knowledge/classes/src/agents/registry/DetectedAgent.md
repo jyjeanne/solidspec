@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: DetectedAgent
-resource: src/agents/registry.rs#L78-L82
+resource: src/agents/registry.rs#L69-L73
 generated:
   by: okf-rs/0.7.0
 ---

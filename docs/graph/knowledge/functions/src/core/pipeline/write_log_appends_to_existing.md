@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_log_appends_to_existing
-resource: src/core/pipeline.rs#L587-L605
+resource: src/core/pipeline.rs#L597-L615
 visibility: private
 generated:
   by: okf-rs/0.7.0

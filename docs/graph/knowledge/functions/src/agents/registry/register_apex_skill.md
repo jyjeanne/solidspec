@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_apex_skill
-resource: src/agents/registry.rs#L261-L269
+resource: src/agents/registry.rs#L309-L317
 generated:
   by: okf-rs/0.7.0
 relationships:

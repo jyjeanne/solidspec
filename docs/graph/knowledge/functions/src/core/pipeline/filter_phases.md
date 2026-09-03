@@ -1,10 +1,14 @@
 ---
 type: Rust Function
 title: filter_phases
-resource: src/core/pipeline.rs#L256-L296
+resource: src/core/pipeline.rs#L274-L306
 generated:
   by: okf-rs/0.7.0
 relationships:
+  calls:
+  - target: functions/src/core/pipeline/phases_for_schema
+    resolved_by: tree-sitter
+    confidence: exact
   called_by:
   - target: functions/src/cli/pipeline/run
     resolved_by: tree-sitter
@@ -59,6 +63,10 @@ relationships:
 # Signature
 
 `pub fn filter_phases( schema: &str, from: Option<&str>, to: Option<&str>, ) -> Result<Vec<&'static str>>`
+
+# Calls
+
+- [phases_for_schema](../../../../functions/src/core/pipeline/phases_for_schema.md)
 
 # Called by
 

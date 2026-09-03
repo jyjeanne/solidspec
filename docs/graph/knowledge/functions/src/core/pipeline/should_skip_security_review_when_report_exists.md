@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_security_review_when_report_exists
-resource: src/core/pipeline.rs#L759-L768
+resource: src/core/pipeline.rs#L769-L778
 visibility: private
 generated:
   by: okf-rs/0.7.0

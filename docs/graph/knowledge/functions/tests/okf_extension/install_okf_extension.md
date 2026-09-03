@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: install_okf_extension
-resource: tests/okf_extension.rs#L33-L52
+resource: tests/okf_extension.rs#L41-L60
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
   - target: functions/tests/okf_extension/okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/tests/okf_extension/okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path
+  - target: functions/tests/okf_extension/okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively
     resolved_by: tree-sitter
     confidence: exact
 ---
@@ -34,4 +34,4 @@ relationships:
 
 - [okf_extension_installs_and_registers_hook](../../../functions/tests/okf_extension/okf_extension_installs_and_registers_hook.md)
 - [okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path](../../../functions/tests/okf_extension/okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path.md)
-- [okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path](../../../functions/tests/okf_extension/okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path.md)
+- [okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively](../../../functions/tests/okf_extension/okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively.md)

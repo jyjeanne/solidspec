@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: status
-resource: tests/status.rs#L1-L131
+resource: tests/status.rs#L1-L137
 generated:
   by: okf-rs/0.7.0
 relationships:

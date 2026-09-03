@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path
-resource: tests/okf_extension.rs#L91-L106
+title: okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively
+resource: tests/okf_extension.rs#L99-L122
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path()`
+`fn okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively()`
 
 # Calls
 

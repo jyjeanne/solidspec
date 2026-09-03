@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: pipeline
-resource: src/core/pipeline.rs#L1-L793
+resource: src/core/pipeline.rs#L1-L803
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -47,6 +47,7 @@ relationships:
 - [points_at_ship_directly_instead_of_continue](../../../functions/src/core/pipeline/points_at_ship_directly_instead_of_continue.md)
 - [points_at_continue_for_a_regular_phase](../../../functions/src/core/pipeline/points_at_continue_for_a_regular_phase.md)
 - [falls_back_to_ship_when_nothing_is_ready](../../../functions/src/core/pipeline/falls_back_to_ship_when_nothing_is_ready.md)
+- [phases_for_schema](../../../functions/src/core/pipeline/phases_for_schema.md)
 - [filter_phases](../../../functions/src/core/pipeline/filter_phases.md)
 - [format_log_entry](../../../functions/src/core/pipeline/format_log_entry.md)
 - [write_log](../../../functions/src/core/pipeline/write_log.md)

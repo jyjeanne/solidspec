@@ -5,6 +5,7 @@
 - [InvokeResult](../classes/src/agents/invoker/InvokeResult.md) — Rust Enum
 - [Persona](../classes/src/agents/personas/Persona.md) — Rust Struct
 - [DetectedAgent](../classes/src/agents/registry/DetectedAgent.md) — Rust Struct
+- [SpcxBodies](../classes/src/agents/spcx/SpcxBodies.md) — Rust Struct
 - [Cli](../classes/src/cli/Cli.md) — Rust Struct
 - [Commands](../classes/src/cli/Commands.md) — Rust Enum
 - [ChangeCommands](../classes/src/cli/change/ChangeCommands.md) — Rust Enum

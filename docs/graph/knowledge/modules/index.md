@@ -9,6 +9,7 @@
 - [personas](../modules/src/agents/personas.md) — Rust Module
 - [registrar](../modules/src/agents/registrar.md) — Rust Module
 - [registry](../modules/src/agents/registry.md) — Rust Module
+- [spcx](../modules/src/agents/spcx.md) — Rust Module
 - [cli](../modules/src/cli.md) — Rust Module
 - [analyze](../modules/src/cli/analyze.md) — Rust Module
 - [apex](../modules/src/cli/apex.md) — Rust Module
@@ -85,6 +86,7 @@
 - [common](../modules/tests/common.md) — Rust Module
 - [completions](../modules/tests/completions.md) — Rust Module
 - [evidence](../modules/tests/evidence.md) — Rust Module
+- [init](../modules/tests/init.md) — Rust Module
 - [okf_extension](../modules/tests/okf_extension.md) — Rust Module
 - [pipeline](../modules/tests/pipeline.md) — Rust Module
 - [security_first_minimal](../modules/tests/security_first_minimal.md) — Rust Module

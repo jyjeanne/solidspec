@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_commands
-resource: src/agents/registry.rs#L291-L350
+resource: src/agents/registry.rs#L339-L398
 generated:
   by: okf-rs/0.7.0
 relationships:

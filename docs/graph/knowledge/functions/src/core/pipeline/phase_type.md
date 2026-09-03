@@ -6,6 +6,9 @@ generated:
   by: okf-rs/0.7.0
 relationships:
   called_by:
+  - target: functions/src/agents/spcx/generate_bodies
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/cli/pipeline/run
     resolved_by: tree-sitter
     confidence: exact
@@ -17,4 +20,5 @@ relationships:
 
 # Called by
 
+- [generate_bodies](../../../../functions/src/agents/spcx/generate_bodies.md)
 - [run](../../../../functions/src/cli/pipeline/run.md)

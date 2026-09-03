@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: round_trip_serialize_deserialize
-resource: src/config/mod.rs#L397-L403
+resource: src/config/mod.rs#L410-L416
 visibility: private
 generated:
   by: okf-rs/0.7.0

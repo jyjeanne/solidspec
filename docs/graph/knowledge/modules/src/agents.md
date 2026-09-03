@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: agents
-resource: src/agents/mod.rs#L1-L7
+resource: src/agents/mod.rs#L1-L8
 generated:
   by: okf-rs/0.7.0
 relationships:

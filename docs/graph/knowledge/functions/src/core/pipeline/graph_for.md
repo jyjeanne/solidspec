@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: graph_for
-resource: src/core/pipeline.rs#L361-L364
+resource: src/core/pipeline.rs#L371-L374
 visibility: private
 generated:
   by: okf-rs/0.7.0

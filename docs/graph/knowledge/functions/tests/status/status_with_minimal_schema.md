@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: status_with_minimal_schema
-resource: tests/status.rs#L44-L68
+resource: tests/status.rs#L47-L71
 visibility: private
 generated:
   by: okf-rs/0.7.0

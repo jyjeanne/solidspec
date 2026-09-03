@@ -252,13 +252,14 @@ mod next_step_hint_tests {
     }
 }
 
-/// Filter phases by --from and --to range for the given schema.
-pub fn filter_phases(
-    schema: &str,
-    from: Option<&str>,
-    to: Option<&str>,
-) -> Result<Vec<&'static str>> {
-    let all: &[&str] = match schema {
+/// The narrative/execution-order phase list for a schema name — the same
+/// order `execute_phase`/`filter_phases` run phases in, as opposed to
+/// `ArtifactGraph::topological_order`'s merely-DAG-valid order (which can
+/// (and for `spec-driven` does) interleave `analyze`/`review` before
+/// `tasks`/`implement` since they only declare `requires: ["spec"]`).
+/// `ship` is deliberately excluded — see `next_step_hint`'s doc comment.
+pub fn phases_for_schema(schema: &str) -> &'static [&'static str] {
+    match schema {
         "intent-driven" => PHASES_IDSD,
         "apex-driven" => PHASES_APEX,
         "intent-apex" => PHASES_APEX_IDSD,
@@ -266,7 +267,16 @@ pub fn filter_phases(
         "minimal" => PHASES_MINIMAL,
         "security-first" => PHASES_SECURITY_FIRST,
         _ => PHASES, // spec-driven, custom, unknown
-    };
+    }
+}
+
+/// Filter phases by --from and --to range for the given schema.
+pub fn filter_phases(
+    schema: &str,
+    from: Option<&str>,
+    to: Option<&str>,
+) -> Result<Vec<&'static str>> {
+    let all: &[&str] = phases_for_schema(schema);
     let from_idx = if let Some(f) = from {
         all.iter().position(|p| *p == f).ok_or_else(|| {
             anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", f, all.join(", "))

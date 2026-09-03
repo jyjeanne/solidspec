@@ -78,6 +78,9 @@ relationships:
   - target: functions/src/cli/upgrade/run
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/config/project_default_schema
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -110,3 +113,4 @@ relationships:
 - [run](../../../functions/src/cli/tdd_tests/run.md)
 - [run](../../../functions/src/cli/tests_cmd/run.md)
 - [run](../../../functions/src/cli/upgrade/run.md)
+- [project_default_schema](../../../functions/src/config/project_default_schema.md)

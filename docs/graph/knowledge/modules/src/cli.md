@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: cli
-resource: src/cli/mod.rs#L1-L520
+resource: src/cli/mod.rs#L1-L548
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -22,6 +22,7 @@ relationships:
 
 - [Cli](../../classes/src/cli/Cli.md)
 - [Commands](../../classes/src/cli/Commands.md)
+- [resolved_schema](../../functions/src/cli/resolved_schema.md)
 - [run](../../functions/src/cli/run.md)
 
 # Imports

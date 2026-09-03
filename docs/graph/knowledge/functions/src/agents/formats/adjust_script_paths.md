@@ -12,7 +12,7 @@ relationships:
   - target: functions/src/agents/formats/already_adjusted_paths_not_double_adjusted
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/registry/register_commands
+  - target: functions/src/agents/registry/write_commands_for_agent
     resolved_by: tree-sitter
     confidence: exact
 ---
@@ -25,4 +25,4 @@ relationships:
 
 - [adjust_script_paths_replaces](../../../../functions/src/agents/formats/adjust_script_paths_replaces.md)
 - [already_adjusted_paths_not_double_adjusted](../../../../functions/src/agents/formats/already_adjusted_paths_not_double_adjusted.md)
-- [register_commands](../../../../functions/src/agents/registry/register_commands.md)
+- [write_commands_for_agent](../../../../functions/src/agents/registry/write_commands_for_agent.md)

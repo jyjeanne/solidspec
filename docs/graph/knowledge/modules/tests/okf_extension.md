@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: okf_extension
-resource: tests/okf_extension.rs#L1-L106
+resource: tests/okf_extension.rs#L1-L122
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -29,7 +29,7 @@ relationships:
 - [install_okf_extension](../../functions/tests/okf_extension/install_okf_extension.md)
 - [okf_extension_installs_and_registers_hook](../../functions/tests/okf_extension/okf_extension_installs_and_registers_hook.md)
 - [okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path](../../functions/tests/okf_extension/okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path.md)
-- [okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path](../../functions/tests/okf_extension/okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path.md)
+- [okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively](../../functions/tests/okf_extension/okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively.md)
 
 # Imports
 

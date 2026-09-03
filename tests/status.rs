@@ -6,9 +6,12 @@ use tempfile::TempDir;
 fn status_shows_artifacts_after_pipeline_scaffold() {
     let dir = TempDir::new().unwrap();
 
+    // Explicit --schema: init's own default is "minimal" when unset (see
+    // src/cli/init.rs), but this test exercises the full spec-driven
+    // artifact set (spec/plan/tasks).
     Command::cargo_bin("solidspec")
         .unwrap()
-        .args(["init", "--here", "--no-git"])
+        .args(["init", "--here", "--no-git", "--schema", "spec-driven"])
         .current_dir(dir.path())
         .assert()
         .success();
@@ -86,9 +89,12 @@ fn status_warns_instead_of_panicking_on_cyclic_schema() {
     // crash `solidspec status` — it should warn and still print the table.
     let dir = TempDir::new().unwrap();
 
+    // Explicit --schema: this test overrides the spec-driven schema
+    // specifically to make it cyclic, so the project's default must
+    // actually be spec-driven (init's own default is "minimal" when unset).
     Command::cargo_bin("solidspec")
         .unwrap()
-        .args(["init", "--here", "--no-git"])
+        .args(["init", "--here", "--no-git", "--schema", "spec-driven"])
         .current_dir(dir.path())
         .assert()
         .success();

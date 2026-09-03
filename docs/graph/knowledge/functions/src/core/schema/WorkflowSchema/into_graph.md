@@ -6,6 +6,9 @@ generated:
   by: okf-rs/0.7.0
 relationships:
   called_by:
+  - target: functions/src/agents/spcx/generate_bodies
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/pipeline/graph_for
     resolved_by: tree-sitter
     confidence: exact
@@ -29,6 +32,7 @@ relationships:
 
 # Called by
 
+- [generate_bodies](../../../../../functions/src/agents/spcx/generate_bodies.md)
 - [graph_for](../../../../../functions/src/core/pipeline/graph_for.md)
 - [load_graph](../../../../../functions/src/core/schema/load_graph.md)
 - [schema_converts_to_valid_graph](../../../../../functions/src/core/schema/schema_converts_to_valid_graph.md)

@@ -10,6 +10,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
+  - target: functions/src/cli/init/write_okf_mcp_config
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/config/RootConfig/load
     resolved_by: tree-sitter
     confidence: exact
@@ -52,6 +55,12 @@ relationships:
   - target: functions/src/presets/registry/PresetRegistry/load
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/tests/init/init_on_existing_codebase_generates_knowledge_graph_and_mcp_config
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/tests/init/init_on_existing_codebase_preserves_other_mcp_servers_already_configured
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -64,6 +73,7 @@ relationships:
 
 # Called by
 
+- [write_okf_mcp_config](../../../../../functions/src/cli/init/write_okf_mcp_config.md)
 - [load](../../../../../functions/src/config/RootConfig/load.md)
 - [round_trip_serialize_deserialize](../../../../../functions/src/config/round_trip_serialize_deserialize.md)
 - [load](../../../../../functions/src/core/change/ChangeMetadata/load.md)
@@ -78,3 +88,5 @@ relationships:
 - [load](../../../../../functions/src/extensions/registry/ExtensionRegistry/load.md)
 - [parse](../../../../../functions/src/presets/manifest/PresetManifest/parse.md)
 - [load](../../../../../functions/src/presets/registry/PresetRegistry/load.md)
+- [init_on_existing_codebase_generates_knowledge_graph_and_mcp_config](../../../../../functions/tests/init/init_on_existing_codebase_generates_knowledge_graph_and_mcp_config.md)
+- [init_on_existing_codebase_preserves_other_mcp_servers_already_configured](../../../../../functions/tests/init/init_on_existing_codebase_preserves_other_mcp_servers_already_configured.md)

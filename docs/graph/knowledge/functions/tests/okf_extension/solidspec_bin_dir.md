@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: solidspec_bin_dir
-resource: tests/okf_extension.rs#L19-L24
+resource: tests/okf_extension.rs#L27-L32
 visibility: private
 generated:
   by: okf-rs/0.7.0

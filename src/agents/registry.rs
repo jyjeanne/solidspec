@@ -25,16 +25,10 @@ mod command_bodies {
     pub const TDD_TESTS: &str = include_str!("../../templates/commands/tdd-tests.md");
     pub const TDD_REFACTOR: &str = include_str!("../../templates/commands/tdd-refactor.md");
 
-    /// The 4 spec-driven "meta" commands (docs/simplification-study-openspec.md
-    /// item #1 / OpenSpec-style `/opsx:propose`-`/opsx:apply`-`/opsx:archive`):
-    /// each chains several of the per-phase bodies above via
-    /// `solidspec pipeline ... --no-agent --auto` instead of running one phase
-    /// at a time. Scoped to the default spec-driven schema only for now — see
-    /// docs/okf-rs-integration-plan.md-style scoping notes in
-    /// docs/simplification-study-openspec.md.
-    pub const SPCX_NEW: &str = include_str!("../../templates/commands/spcx/new.md");
-    pub const SPCX_APPLY: &str = include_str!("../../templates/commands/spcx/apply.md");
-    pub const SPCX_FINALISE: &str = include_str!("../../templates/commands/spcx/finalise.md");
+    /// `/spcx:explore` is the one meta command with no schema-specific
+    /// content (no files written, nothing to chain) — see `super::spcx` for
+    /// the other three (`new`/`apply`/`finalise`), generated per schema
+    /// instead of embedded statically.
     pub const SPCX_EXPLORE: &str = include_str!("../../templates/commands/spcx/explore.md");
 }
 
@@ -63,9 +57,6 @@ fn command_body(cmd_name: &str, project_root: &Path) -> String {
         "apex" => command_bodies::APEX.to_string(),
         "tdd-tests" => command_bodies::TDD_TESTS.to_string(),
         "tdd-refactor" => command_bodies::TDD_REFACTOR.to_string(),
-        "spcx-new" => command_bodies::SPCX_NEW.to_string(),
-        "spcx-apply" => command_bodies::SPCX_APPLY.to_string(),
-        "spcx-finalise" => command_bodies::SPCX_FINALISE.to_string(),
         "spcx-explore" => command_bodies::SPCX_EXPLORE.to_string(),
         _ => format!(
             "Read the project context from .solidspec/AGENT.md, then execute the '{cmd_name}' workflow for the feature specified by $ARGUMENTS."
@@ -111,21 +102,30 @@ const COMMANDS: &[(&str, &str)] = &[
         "tdd-refactor",
         "Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)",
     ),
-    // Meta commands (spec-driven schema only, see command_bodies::SPCX_*):
-    // the OpenSpec-style front door of a few commands that each chain
-    // several phases, instead of one command per phase.
+    // /spcx:explore: the one meta command with no schema-specific content
+    // (see `super::spcx` and `SPCX_DYNAMIC_COMMANDS` below for the other 3).
+    (
+        "spcx-explore",
+        "Exploratory research and discussion — no files written",
+    ),
+];
+
+/// The 3 schema-dependent meta commands (docs/simplification-study-openspec.md
+/// item #1 / OpenSpec-style `/opsx:propose`-`/opsx:apply`-`/opsx:archive`):
+/// each chains several per-phase commands via `solidspec pipeline ...
+/// --no-agent --auto` instead of running one phase at a time. Bodies are
+/// generated per schema by `super::spcx::generate_bodies` — see
+/// `register_spcx_commands` below — not embedded statically like `COMMANDS`,
+/// since what each one says depends on which schema the project uses.
+const SPCX_DYNAMIC_COMMANDS: &[(&str, &str)] = &[
     (
         "spcx-new",
-        "Start a feature end-to-end: spec, clarify, plan, tasks, tests",
+        "Start a feature end-to-end through the implement handoff",
     ),
     ("spcx-apply", "Implement the feature's tasks"),
     (
         "spcx-finalise",
-        "Validate, review, and get a SHIP/HOLD decision",
-    ),
-    (
-        "spcx-explore",
-        "Exploratory research and discussion — no files written",
+        "Whatever comes after implement for this schema (analyze/review/ship, or nothing)",
     ),
 ];
 
@@ -152,14 +152,62 @@ pub fn detect_agents(project_root: &Path) -> Vec<DetectedAgent> {
 
 /// Register SolidSpec commands for a specific agent.
 pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
+    let commands: Vec<(&str, &str, String)> = COMMANDS
+        .iter()
+        .map(|(cmd_name, description)| {
+            (
+                *cmd_name,
+                *description,
+                command_body(cmd_name, project_root),
+            )
+        })
+        .collect();
+    write_commands_for_agent(project_root, agent, &commands)
+}
+
+/// Register the schema-dependent `/spcx:*` meta commands (`new`/`apply`/
+/// `finalise` — see `super::spcx`) for a specific agent, using `schema` to
+/// decide what each one says.
+pub fn register_spcx_commands(
+    project_root: &Path,
+    agent: &AgentConfig,
+    schema: &crate::core::schema::WorkflowSchema,
+) -> Result<()> {
+    let bodies = super::spcx::generate_bodies(schema)?;
+    let commands: Vec<(&str, &str, String)> = SPCX_DYNAMIC_COMMANDS
+        .iter()
+        .map(|(cmd_name, description)| {
+            let body = match *cmd_name {
+                "spcx-new" => bodies.new.clone(),
+                "spcx-apply" => bodies.apply.clone(),
+                "spcx-finalise" => bodies.finalise.clone(),
+                _ => unreachable!("SPCX_DYNAMIC_COMMANDS only names the 3 above"),
+            };
+            (*cmd_name, *description, body)
+        })
+        .collect();
+    write_commands_for_agent(project_root, agent, &commands)
+}
+
+/// Shared per-agent writer: translates the canonical `$ARGUMENTS`
+/// placeholder, appends the compliance footer, and renders/writes each
+/// `(name, description, body)` triple in the target agent's format. Used by
+/// both `register_commands` (static bodies) and `register_spcx_commands`
+/// (schema-generated bodies) so agent-specific handling (Copilot's dual
+/// files, Claude's spcx/ namespacing, directory-based skills, ...) lives in
+/// exactly one place.
+fn write_commands_for_agent(
+    project_root: &Path,
+    agent: &AgentConfig,
+    commands: &[(&str, &str, String)],
+) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
         .join(agent.commands_subdir);
     std::fs::create_dir_all(&cmd_dir)?;
 
-    for (cmd_name, description) in COMMANDS {
-        let body = command_body(cmd_name, project_root);
-        let mut body = formats::translate_placeholder(&body, agent.arg_placeholder);
+    for (cmd_name, description, body) in commands {
+        let mut body = formats::translate_placeholder(body, agent.arg_placeholder);
         body.push('\n');
         body.push_str(&guardrails::compliance_footer());
 
@@ -350,7 +398,11 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
 }
 
 /// Register commands for all detected agents.
-pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<Vec<String>> {
+pub fn register_all(
+    project_root: &Path,
+    target_agent: Option<&str>,
+    schema: &crate::core::schema::WorkflowSchema,
+) -> Result<Vec<String>> {
     let mut registered = Vec::new();
 
     if let Some(agent_id) = target_agent {
@@ -366,6 +418,7 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
         let cmd_dir = project_root.join(agent.command_dir);
         std::fs::create_dir_all(cmd_dir.join(agent.commands_subdir))?;
         register_commands(project_root, agent)?;
+        register_spcx_commands(project_root, agent, schema)?;
         register_apex_skill(agent_id, project_root)?;
         registered.push(agent.id.to_string());
     } else {
@@ -374,6 +427,7 @@ pub fn register_all(project_root: &Path, target_agent: Option<&str>) -> Result<V
         for det in &detected {
             if det.dir_exists || det.cli_available {
                 register_commands(project_root, det.config)?;
+                register_spcx_commands(project_root, det.config, schema)?;
                 register_apex_skill(det.config.id, project_root)?;
                 registered.push(det.config.id.to_string());
             }
@@ -419,7 +473,12 @@ pub fn find_binary(name: &str) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::schema::{WorkflowSchema, builtin};
     use tempfile::TempDir;
+
+    fn spec_driven_schema() -> WorkflowSchema {
+        WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap()
+    }
 
     #[test]
     fn detect_claude_when_dir_exists() {
@@ -587,7 +646,7 @@ mod tests {
     #[test]
     fn register_all_with_specific_agent() {
         let dir = TempDir::new().unwrap();
-        let registered = register_all(dir.path(), Some("claude")).unwrap();
+        let registered = register_all(dir.path(), Some("claude"), &spec_driven_schema()).unwrap();
         assert_eq!(registered, vec!["claude"]);
         assert!(
             dir.path()
@@ -599,7 +658,7 @@ mod tests {
     #[test]
     fn register_all_with_invalid_agent_returns_error() {
         let dir = TempDir::new().unwrap();
-        let result = register_all(dir.path(), Some("nonexistent"));
+        let result = register_all(dir.path(), Some("nonexistent"), &spec_driven_schema());
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("Unknown agent"));
@@ -612,7 +671,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join(".claude")).unwrap();
         std::fs::create_dir_all(dir.path().join(".cursor")).unwrap();
 
-        let registered = register_all(dir.path(), None).unwrap();
+        let registered = register_all(dir.path(), None, &spec_driven_schema()).unwrap();
         assert!(registered.contains(&"claude".to_string()));
         assert!(registered.contains(&"cursor".to_string()));
     }
@@ -764,7 +823,7 @@ mod tests {
     #[test]
     fn register_all_also_registers_apex_skill_for_claude() {
         let dir = TempDir::new().unwrap();
-        register_all(dir.path(), Some("claude")).unwrap();
+        register_all(dir.path(), Some("claude"), &spec_driven_schema()).unwrap();
 
         let apex_dir = dir.path().join(".claude/commands/apex");
         assert!(
@@ -798,6 +857,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
+        register_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
 
         for name in ["new", "apply", "finalise", "explore"] {
             let namespaced = dir.path().join(format!(".claude/commands/spcx/{name}.md"));
@@ -816,6 +876,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
+        register_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
 
         let content =
             std::fs::read_to_string(dir.path().join(".claude/commands/spcx/new.md")).unwrap();
@@ -829,6 +890,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let cursor = find_agent("cursor").unwrap();
         register_commands(dir.path(), cursor).unwrap();
+        register_spcx_commands(dir.path(), cursor, &spec_driven_schema()).unwrap();
 
         for name in ["new", "apply", "finalise", "explore"] {
             let flat = dir

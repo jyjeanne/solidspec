@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: init
-resource: src/cli/init.rs#L1-L167
+resource: src/cli/init.rs#L1-L283
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -24,6 +24,9 @@ relationships:
   - target: external/crate-core-git
     resolved_by: tree-sitter
     confidence: exact
+  - target: external/crate-core-schema
+    resolved_by: tree-sitter
+    confidence: exact
   - target: external/crate-extensions
     resolved_by: tree-sitter
     confidence: exact
@@ -39,6 +42,9 @@ relationships:
 # Contains
 
 - [run](../../../functions/src/cli/init/run.md)
+- [has_existing_codebase](../../../functions/src/cli/init/has_existing_codebase.md)
+- [generate_knowledge_graph_and_mcp_config](../../../functions/src/cli/init/generate_knowledge_graph_and_mcp_config.md)
+- [write_okf_mcp_config](../../../functions/src/cli/init/write_okf_mcp_config.md)
 - [resolve_project_dir](../../../functions/src/cli/init/resolve_project_dir.md)
 - [create_directory_structure](../../../functions/src/cli/init/create_directory_structure.md)
 - [generate_constitution](../../../functions/src/cli/init/generate_constitution.md)
@@ -52,6 +58,7 @@ relationships:
 - `crate::agents::registry`
 - `crate::config::{InitOptions, ProjectInternalConfig, RootConfig}`
 - `crate::core::git`
+- `crate::core::schema`
 - `crate::extensions`
 - `crate::templates`
 

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: format_log_entry
-resource: src/core/pipeline.rs#L299-L337
+resource: src/core/pipeline.rs#L309-L347
 generated:
   by: okf-rs/0.7.0
 relationships:

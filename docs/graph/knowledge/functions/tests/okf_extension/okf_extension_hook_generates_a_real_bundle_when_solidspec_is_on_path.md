@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path
-resource: tests/okf_extension.rs#L69-L88
+resource: tests/okf_extension.rs#L77-L96
 visibility: private
 generated:
   by: okf-rs/0.7.0

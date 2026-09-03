@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_not_skip_ship_when_report_absent
-resource: src/core/pipeline.rs#L507-L511
+resource: src/core/pipeline.rs#L517-L521
 visibility: private
 generated:
   by: okf-rs/0.7.0

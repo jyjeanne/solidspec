@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: setup_project
-resource: src/cli/upgrade.rs#L79-L106
+resource: src/cli/upgrade.rs#L86-L113
 visibility: private
 generated:
   by: okf-rs/0.7.0

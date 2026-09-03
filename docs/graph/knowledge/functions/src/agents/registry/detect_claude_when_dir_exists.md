@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_claude_when_dir_exists
-resource: src/agents/registry.rs#L425-L431
+resource: src/agents/registry.rs#L484-L490
 visibility: private
 generated:
   by: okf-rs/0.7.0

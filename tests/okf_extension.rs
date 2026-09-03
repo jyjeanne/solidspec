@@ -4,6 +4,14 @@
 //! whether or not the `solidspec` binary itself is resolvable on `PATH`
 //! from the hook's shell — this extension no longer depends on any
 //! external `okf-rs` binary (see src/core/okf.rs).
+//!
+//! Since the `init` overhaul, `solidspec init` itself also generates a
+//! knowledge-graph bundle natively (in-process, no PATH lookup involved —
+//! see `src/cli/init.rs`'s `generate_knowledge_graph_and_mcp_config`)
+//! whenever it detects an existing codebase, independent of whether this
+//! extension is installed. So a bundle existing after a second `init` run
+//! no longer distinguishes "the extension's hook ran" from "init's own
+//! detection ran" — see `okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively`.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -88,7 +96,7 @@ fn okf_extension_hook_generates_a_real_bundle_when_solidspec_is_on_path() {
 }
 
 #[test]
-fn okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path() {
+fn okf_extension_hook_is_a_harmless_no_op_when_init_already_generated_natively() {
     let dir = TempDir::new().unwrap();
     install_okf_extension(dir.path());
 
@@ -97,10 +105,18 @@ fn okf_extension_hook_never_fails_init_when_solidspec_is_not_on_path() {
         .args(["init", "--here", "--no-git"])
         .current_dir(dir.path())
         // A PATH with no `solidspec` on it at all — the hook's `command -v`
-        // check must no-op cleanly rather than failing `init`.
+        // check must no-op cleanly rather than failing `init`. `init` itself
+        // still generates the bundle natively (in-process, no PATH lookup
+        // needed) since this directory already qualifies as an existing
+        // codebase by the second run — so the assertion here is just that
+        // `init` succeeds, not that the bundle is absent.
         .env("PATH", "/usr/bin:/bin")
         .assert()
         .success();
 
-    assert!(!dir.path().join(".solidspec/knowledge/index.md").exists());
+    assert!(
+        dir.path().join(".solidspec/knowledge/index.md").exists(),
+        "init's own native generation (independent of this extension's hook \
+         and of PATH) should have produced the bundle"
+    );
 }

@@ -5,3 +5,4 @@ pub mod invoker;
 pub mod personas;
 pub mod registrar;
 pub mod registry;
+pub mod spcx;

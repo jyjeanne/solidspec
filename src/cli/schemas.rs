@@ -14,9 +14,15 @@ pub fn run() -> Result<()> {
     let mut schemas = schema::list_available_schemas(&project_root);
     schemas.sort_by(|a, b| a.name.cmp(&b.name));
 
+    // The current project's own default (set by 'solidspec init --schema',
+    // "minimal" otherwise) — not hardcoded, since it's exactly what
+    // go/continue/status/tasks/pipeline themselves fall back to when
+    // --schema is left unset (see cli::resolved_schema).
+    let default_schema = config::project_default_schema(&project_root);
+
     println!("Available workflow schemas:\n");
     for s in &schemas {
-        let default_marker = if s.name == "spec-driven" {
+        let default_marker = if s.name == default_schema {
             " (default)"
         } else {
             ""

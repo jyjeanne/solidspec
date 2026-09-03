@@ -69,11 +69,17 @@ pub enum Commands {
         /// Target AI agent (e.g., copilot, claude, cursor). Auto-detected if omitted.
         #[arg(long)]
         agent: Option<String>,
+
+        /// Workflow schema (run 'solidspec schemas' to list them). Default: minimal.
+        /// Stored as the project's default so status/pipeline/go/continue pick it up
+        /// without repeating --schema.
+        #[arg(long)]
+        schema: Option<String>,
     },
 
-    /// Start a new feature end-to-end (spec-driven schema; scaffold + fill every
-    /// phase through the implement handoff) — shorthand for
-    /// 'pipeline --new "..." --auto'
+    /// Start a new feature end-to-end (the project's default workflow schema;
+    /// scaffold + fill every phase through the implement handoff) —
+    /// shorthand for 'pipeline --new "..." --auto'
     Go {
         /// Feature description
         description: String,
@@ -84,7 +90,7 @@ pub enum Commands {
     },
 
     /// Resume the current (or given) feature at whatever phase is next
-    /// (spec-driven schema) — shorthand for 'pipeline --auto'
+    /// (the project's default workflow schema) — shorthand for 'pipeline --auto'
     #[command(name = "continue")]
     Continue {
         /// Feature ID (e.g., 001) — auto-detected if omitted
@@ -146,9 +152,10 @@ pub enum Commands {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
 
-        /// Workflow schema to use for DAG gate checks (default: spec-driven)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use for DAG gate checks (default: the
+        /// project's own default — see 'solidspec schemas')
+        #[arg(long)]
+        schema: Option<String>,
     },
 
     /// Execute tasks from the task breakdown
@@ -295,9 +302,10 @@ pub enum Commands {
         #[arg(long)]
         no_agent: bool,
 
-        /// Workflow schema to use (default: spec-driven; use intent-driven for IDSD)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use (default: the project's own default — see
+        /// 'solidspec schemas'; use intent-driven for IDSD)
+        #[arg(long)]
+        schema: Option<String>,
     },
 
     /// List all workflow schemas and their use cases
@@ -349,9 +357,10 @@ pub enum Commands {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
 
-        /// Workflow schema to use (default: spec-driven)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use (default: the project's own default — see
+        /// 'solidspec schemas')
+        #[arg(long)]
+        schema: Option<String>,
     },
 
     /// Run concurrent parallel fan-out review and produce a SHIP / HOLD decision
@@ -401,6 +410,20 @@ pub enum Commands {
     },
 }
 
+/// Resolve an optional `--schema` flag to the schema a command should
+/// actually run: the flag's value when given, otherwise the current
+/// project's own stored default (`solidspec.toml`'s `[pipeline].schema`,
+/// set by `solidspec init --schema <name>` — see
+/// `config::project_default_schema`), falling back to "spec-driven" when no
+/// project is found at all (e.g. commands run outside any SolidSpec
+/// project, same as before this existed).
+fn resolved_schema(schema: Option<String>) -> String {
+    schema.unwrap_or_else(|| {
+        let cwd = std::env::current_dir().unwrap_or_default();
+        crate::config::project_default_schema(&cwd)
+    })
+}
+
 pub fn run(cli: Cli) -> Result<()> {
     // Logger already initialized in main() based on --debug flag
 
@@ -411,7 +434,8 @@ pub fn run(cli: Cli) -> Result<()> {
             no_git,
             force,
             agent,
-        } => init::run(name, here, no_git, force, agent),
+            schema,
+        } => init::run(name, here, no_git, force, agent, schema),
         Commands::Go {
             description,
             no_agent,
@@ -428,7 +452,9 @@ pub fn run(cli: Cli) -> Result<()> {
             feature_id,
             dry_run,
         } => security_review::run(feature_id.as_deref(), dry_run),
-        Commands::Tasks { feature_id, schema } => tasks::run(feature_id.as_deref(), &schema),
+        Commands::Tasks { feature_id, schema } => {
+            tasks::run(feature_id.as_deref(), &resolved_schema(schema))
+        }
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
         Commands::Apex {
             feature_id,
@@ -480,7 +506,7 @@ pub fn run(cli: Cli) -> Result<()> {
             dry_run,
             auto,
             no_agent,
-            &schema,
+            &resolved_schema(schema),
         ),
         Commands::Schemas => schemas::run(),
         Commands::Preset { command } => preset::run(command),
@@ -490,7 +516,9 @@ pub fn run(cli: Cli) -> Result<()> {
         Commands::Upgrade { force } => upgrade::run(force),
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
-        Commands::Status { feature_id, schema } => status::run(feature_id.as_deref(), &schema),
+        Commands::Status { feature_id, schema } => {
+            status::run(feature_id.as_deref(), &resolved_schema(schema))
+        }
         Commands::Ship {
             feature_id,
             lane,

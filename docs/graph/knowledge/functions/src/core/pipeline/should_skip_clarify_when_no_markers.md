@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: should_skip_clarify_when_no_markers
-resource: src/core/pipeline.rs#L435-L440
+resource: src/core/pipeline.rs#L445-L450
 visibility: private
 generated:
   by: okf-rs/0.7.0
