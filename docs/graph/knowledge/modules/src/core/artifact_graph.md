@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: artifact_graph
-resource: src/core/artifact_graph.rs#L1-L916
+resource: src/core/artifact_graph.rs#L1-L962
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -38,6 +38,7 @@ relationships:
 - [new](../../../functions/src/core/artifact_graph/ArtifactGraph/new.md)
 - [get](../../../functions/src/core/artifact_graph/ArtifactGraph/get.md)
 - [topological_order](../../../functions/src/core/artifact_graph/ArtifactGraph/topological_order.md)
+- [first_ready](../../../functions/src/core/artifact_graph/ArtifactGraph/first_ready.md)
 - [compute_states](../../../functions/src/core/artifact_graph/ArtifactGraph/compute_states.md)
 - [detect_completion](../../../functions/src/core/artifact_graph/ArtifactGraph/detect_completion.md)
 - [generates_present](../../../functions/src/core/artifact_graph/ArtifactGraph/generates_present.md)
@@ -52,6 +53,9 @@ relationships:
 - [spec_driven_graph](../../../functions/src/core/artifact_graph/spec_driven_graph.md)
 - [default_graph_has_eight_artifacts](../../../functions/src/core/artifact_graph/default_graph_has_eight_artifacts.md)
 - [topological_order_starts_with_no_dependency_artifacts](../../../functions/src/core/artifact_graph/topological_order_starts_with_no_dependency_artifacts.md)
+- [first_ready_on_fresh_project_is_the_root_artifact](../../../functions/src/core/artifact_graph/first_ready_on_fresh_project_is_the_root_artifact.md)
+- [first_ready_advances_as_artifacts_complete](../../../functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete.md)
+- [first_ready_is_none_when_everything_is_done](../../../functions/src/core/artifact_graph/first_ready_is_none_when_everything_is_done.md)
 - [tasks_requires_spec_and_plan](../../../functions/src/core/artifact_graph/tasks_requires_spec_and_plan.md)
 - [compute_states_shows_blocked_when_deps_missing](../../../functions/src/core/artifact_graph/compute_states_shows_blocked_when_deps_missing.md)
 - [detect_completion_finds_existing_files](../../../functions/src/core/artifact_graph/detect_completion_finds_existing_files.md)

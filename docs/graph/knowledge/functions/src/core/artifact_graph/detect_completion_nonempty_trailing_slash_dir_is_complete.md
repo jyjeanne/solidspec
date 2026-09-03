@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_completion_nonempty_trailing_slash_dir_is_complete
-resource: src/core/artifact_graph.rs#L662-L675
+resource: src/core/artifact_graph.rs#L708-L721
 visibility: private
 generated:
   by: okf-rs/0.7.0

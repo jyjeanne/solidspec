@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: red_report_captures_criteria_after_subsection_header
-resource: tests/tdd.rs#L786-L820
+resource: tests/tdd.rs#L789-L823
 visibility: private
 generated:
   by: okf-rs/0.7.0

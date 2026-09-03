@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_agents
-resource: src/agents/registry.rs#L101-L119
+resource: src/agents/registry.rs#L133-L151
 generated:
   by: okf-rs/0.7.0
 relationships:

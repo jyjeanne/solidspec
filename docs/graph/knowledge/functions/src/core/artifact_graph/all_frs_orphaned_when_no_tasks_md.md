@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: all_frs_orphaned_when_no_tasks_md
-resource: src/core/artifact_graph.rs#L826-L833
+resource: src/core/artifact_graph.rs#L872-L879
 visibility: private
 generated:
   by: okf-rs/0.7.0

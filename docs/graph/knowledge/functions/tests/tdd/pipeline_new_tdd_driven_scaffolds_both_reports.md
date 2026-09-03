@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: pipeline_new_tdd_driven_scaffolds_both_reports
-resource: tests/tdd.rs#L1040-L1078
+resource: tests/tdd.rs#L1043-L1081
 visibility: private
 generated:
   by: okf-rs/0.7.0

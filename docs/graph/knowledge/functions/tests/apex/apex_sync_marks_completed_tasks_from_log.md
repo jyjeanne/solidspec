@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: apex_sync_marks_completed_tasks_from_log
-resource: tests/apex.rs#L205-L238
+resource: tests/apex.rs#L210-L243
 visibility: private
 generated:
   by: okf-rs/0.7.0

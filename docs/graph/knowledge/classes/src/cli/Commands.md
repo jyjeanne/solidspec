@@ -1,7 +1,7 @@
 ---
 type: Rust Enum
 title: Commands
-resource: src/cli/mod.rs#L48-L357
+resource: src/cli/mod.rs#L51-L402
 generated:
   by: okf-rs/0.7.0
 ---

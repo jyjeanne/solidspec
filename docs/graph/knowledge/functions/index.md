@@ -76,6 +76,7 @@
 - [apex_command_file_contains_apex_workflow_text](../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md) — Rust Function
 - [apex_skill_dir](../functions/src/agents/registry/apex_skill_dir.md) — Rust Function
 - [apex_skill_dir_returns_correct_paths](../functions/src/agents/registry/apex_skill_dir_returns_correct_paths.md) — Rust Function
+- [claude_gets_namespaced_spcx_commands_not_flat_files](../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md) — Rust Function
 - [command_body](../functions/src/agents/registry/command_body.md) — Rust Function
 - [command_body_generic_fallback_for_unknown_phase](../functions/src/agents/registry/command_body_generic_fallback_for_unknown_phase.md) — Rust Function
 - [command_files_contain_compliance_guardrails](../functions/src/agents/registry/command_files_contain_compliance_guardrails.md) — Rust Function
@@ -89,6 +90,7 @@
 - [kimi_uses_dot_separator_others_use_hyphen](../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md) — Rust Function
 - [no_override_falls_back_to_embedded_default](../functions/src/agents/registry/no_override_falls_back_to_embedded_default.md) — Rust Function
 - [opencode_creates_directory_based_skills](../functions/src/agents/registry/opencode_creates_directory_based_skills.md) — Rust Function
+- [other_agents_get_flat_spcx_commands](../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md) — Rust Function
 - [project_local_override_wins_over_embedded_command_body](../functions/src/agents/registry/project_local_override_wins_over_embedded_command_body.md) — Rust Function
 - [register_all](../functions/src/agents/registry/register_all.md) — Rust Function
 - [register_all_also_registers_apex_skill_for_claude](../functions/src/agents/registry/register_all_also_registers_apex_skill_for_claude.md) — Rust Function
@@ -101,11 +103,13 @@
 - [register_commands](../functions/src/agents/registry/register_commands.md) — Rust Function
 - [register_markdown_agent_creates_md_files](../functions/src/agents/registry/register_markdown_agent_creates_md_files.md) — Rust Function
 - [register_toml_agent_creates_toml_files](../functions/src/agents/registry/register_toml_agent_creates_toml_files.md) — Rust Function
+- [spcx_new_body_has_guardrails_and_arguments_placeholder](../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md) — Rust Function
 - [unregister_apex_skill](../functions/src/agents/registry/unregister_apex_skill.md) — Rust Function
 - [unregister_apex_skill_is_idempotent](../functions/src/agents/registry/unregister_apex_skill_is_idempotent.md) — Rust Function
 - [unregister_apex_skill_removes_directory](../functions/src/agents/registry/unregister_apex_skill_removes_directory.md) — Rust Function
 - [unregister_commands](../functions/src/agents/registry/unregister_commands.md) — Rust Function
 - [unregister_removes_apex_skill_directory](../functions/src/agents/registry/unregister_removes_apex_skill_directory.md) — Rust Function
+- [unregister_removes_claude_spcx_directory_contents](../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md) — Rust Function
 - [unregister_removes_copilot_files](../functions/src/agents/registry/unregister_removes_copilot_files.md) — Rust Function
 - [unregister_removes_kimi_dirs](../functions/src/agents/registry/unregister_removes_kimi_dirs.md) — Rust Function
 - [unregister_removes_opencode_skills](../functions/src/agents/registry/unregister_removes_opencode_skills.md) — Rust Function
@@ -136,8 +140,10 @@
 - [powershell_completions_generated](../functions/src/cli/completions/powershell_completions_generated.md) — Rust Function
 - [run](../functions/src/cli/completions/run.md) — Rust Function
 - [zsh_completions_generated](../functions/src/cli/completions/zsh_completions_generated.md) — Rust Function
+- [run](../functions/src/cli/continue_cmd/run.md) — Rust Function
 - [run](../functions/src/cli/evidence/run.md) — Rust Function
 - [run](../functions/src/cli/extension/run.md) — Rust Function
+- [run](../functions/src/cli/go/run.md) — Rust Function
 - [mark_nonexistent_task_is_noop](../functions/src/cli/implement/mark_nonexistent_task_is_noop.md) — Rust Function
 - [mark_task_done](../functions/src/cli/implement/mark_task_done.md) — Rust Function
 - [mark_task_done_updates_checkbox](../functions/src/cli/implement/mark_task_done_updates_checkbox.md) — Rust Function
@@ -161,6 +167,7 @@
 - [run](../functions/src/cli/preset/run.md) — Rust Function
 - [run](../functions/src/cli/review/run.md) — Rust Function
 - [run](../functions/src/cli/run.md) — Rust Function
+- [run](../functions/src/cli/schemas/run.md) — Rust Function
 - [dry_run_does_not_write_file](../functions/src/cli/security_review/dry_run_does_not_write_file.md) — Rust Function
 - [fails_outside_project](../functions/src/cli/security_review/fails_outside_project.md) — Rust Function
 - [fails_when_feature_dir_missing](../functions/src/cli/security_review/fails_when_feature_dir_missing.md) — Rust Function
@@ -294,6 +301,7 @@
 - [write_tasks](../functions/src/core/apex/write_tasks.md) — Rust Function
 - [compute_states](../functions/src/core/artifact_graph/ArtifactGraph/compute_states.md) — Rust Method
 - [detect_completion](../functions/src/core/artifact_graph/ArtifactGraph/detect_completion.md) — Rust Method
+- [first_ready](../functions/src/core/artifact_graph/ArtifactGraph/first_ready.md) — Rust Method
 - [generates_present](../functions/src/core/artifact_graph/ArtifactGraph/generates_present.md) — Rust Method
 - [get](../functions/src/core/artifact_graph/ArtifactGraph/get.md) — Rust Method
 - [new](../functions/src/core/artifact_graph/ArtifactGraph/new.md) — Rust Method
@@ -313,6 +321,9 @@
 - [detect_completion_nonempty_trailing_slash_dir_is_complete](../functions/src/core/artifact_graph/detect_completion_nonempty_trailing_slash_dir_is_complete.md) — Rust Function
 - [duplicate_artifact_id_errors](../functions/src/core/artifact_graph/duplicate_artifact_id_errors.md) — Rust Function
 - [extracts_fr_ids_from_spec](../functions/src/core/artifact_graph/extracts_fr_ids_from_spec.md) — Rust Function
+- [first_ready_advances_as_artifacts_complete](../functions/src/core/artifact_graph/first_ready_advances_as_artifacts_complete.md) — Rust Function
+- [first_ready_is_none_when_everything_is_done](../functions/src/core/artifact_graph/first_ready_is_none_when_everything_is_done.md) — Rust Function
+- [first_ready_on_fresh_project_is_the_root_artifact](../functions/src/core/artifact_graph/first_ready_on_fresh_project_is_the_root_artifact.md) — Rust Function
 - [format_tree_contains_fr_ids](../functions/src/core/artifact_graph/format_tree_contains_fr_ids.md) — Rust Function
 - [fr_with_task_not_orphaned](../functions/src/core/artifact_graph/fr_with_task_not_orphaned.md) — Rust Function
 - [glob_matches](../functions/src/core/artifact_graph/glob_matches.md) — Rust Function
@@ -911,7 +922,7 @@
 - [setup_script_project](../functions/src/templates/setup_script_project.md) — Rust Function
 - [update_agent_context_lists_feature_status](../functions/src/templates/update_agent_context_lists_feature_status.md) — Rust Function
 - [apex_auto_detects_feature_id](../functions/tests/apex/apex_auto_detects_feature_id.md) — Rust Function
-- [apex_command_appears_in_help](../functions/tests/apex/apex_command_appears_in_help.md) — Rust Function
+- [apex_command_is_hidden_from_top_level_help_but_still_registered](../functions/tests/apex/apex_command_is_hidden_from_top_level_help_but_still_registered.md) — Rust Function
 - [apex_context_file_contains_feature_id](../functions/tests/apex/apex_context_file_contains_feature_id.md) — Rust Function
 - [apex_context_file_contains_pending_tasks](../functions/tests/apex/apex_context_file_contains_pending_tasks.md) — Rust Function
 - [apex_context_generation_is_idempotent](../functions/tests/apex/apex_context_generation_is_idempotent.md) — Rust Function
@@ -1038,7 +1049,6 @@
 - [status_tdd_tests_shows_done_when_tests_dir_nonempty_and_report_exists](../functions/tests/tdd/status_tdd_tests_shows_done_when_tests_dir_nonempty_and_report_exists.md) — Rust Function
 - [status_tdd_tests_shows_ready_when_no_artifacts](../functions/tests/tdd/status_tdd_tests_shows_ready_when_no_artifacts.md) — Rust Function
 - [tdd_driven_schema_listed_by_pipeline_dry_run](../functions/tests/tdd/tdd_driven_schema_listed_by_pipeline_dry_run.md) — Rust Function
-- [tdd_refactor_appears_in_help](../functions/tests/tdd/tdd_refactor_appears_in_help.md) — Rust Function
 - [tdd_refactor_command_body_mentions_green_phase](../functions/tests/tdd/tdd_refactor_command_body_mentions_green_phase.md) — Rust Function
 - [tdd_refactor_command_lists_specific_candidates](../functions/tests/tdd/tdd_refactor_command_lists_specific_candidates.md) — Rust Function
 - [tdd_refactor_command_warns_about_interface_growth](../functions/tests/tdd/tdd_refactor_command_warns_about_interface_growth.md) — Rust Function
@@ -1046,10 +1056,10 @@
 - [tdd_refactor_fails_outside_project](../functions/tests/tdd/tdd_refactor_fails_outside_project.md) — Rust Function
 - [tdd_refactor_fails_without_red_report](../functions/tests/tdd/tdd_refactor_fails_without_red_report.md) — Rust Function
 - [tdd_refactor_help_shows_dry_run_flag](../functions/tests/tdd/tdd_refactor_help_shows_dry_run_flag.md) — Rust Function
+- [tdd_refactor_hidden_from_top_level_help_but_still_registered](../functions/tests/tdd/tdd_refactor_hidden_from_top_level_help_but_still_registered.md) — Rust Function
 - [tdd_refactor_is_idempotent](../functions/tests/tdd/tdd_refactor_is_idempotent.md) — Rust Function
 - [tdd_refactor_succeeds_with_red_report](../functions/tests/tdd/tdd_refactor_succeeds_with_red_report.md) — Rust Function
 - [tdd_refactor_with_explicit_feature_id](../functions/tests/tdd/tdd_refactor_with_explicit_feature_id.md) — Rust Function
-- [tdd_tests_appears_in_help](../functions/tests/tdd/tdd_tests_appears_in_help.md) — Rust Function
 - [tdd_tests_command_body_mentions_red_phase](../functions/tests/tdd/tdd_tests_command_body_mentions_red_phase.md) — Rust Function
 - [tdd_tests_command_mentions_interface_design](../functions/tests/tdd/tdd_tests_command_mentions_interface_design.md) — Rust Function
 - [tdd_tests_command_mentions_mock_boundaries](../functions/tests/tdd/tdd_tests_command_mentions_mock_boundaries.md) — Rust Function
@@ -1060,6 +1070,7 @@
 - [tdd_tests_fails_outside_project](../functions/tests/tdd/tdd_tests_fails_outside_project.md) — Rust Function
 - [tdd_tests_generates_red_report](../functions/tests/tdd/tdd_tests_generates_red_report.md) — Rust Function
 - [tdd_tests_help_shows_dry_run_flag](../functions/tests/tdd/tdd_tests_help_shows_dry_run_flag.md) — Rust Function
+- [tdd_tests_hidden_from_top_level_help_but_still_registered](../functions/tests/tdd/tdd_tests_hidden_from_top_level_help_but_still_registered.md) — Rust Function
 - [tdd_tests_is_idempotent](../functions/tests/tdd/tdd_tests_is_idempotent.md) — Rust Function
 - [tdd_tests_report_contains_acceptance_criteria](../functions/tests/tdd/tdd_tests_report_contains_acceptance_criteria.md) — Rust Function
 - [tdd_tests_report_has_coverage_section](../functions/tests/tdd/tdd_tests_report_has_coverage_section.md) — Rust Function

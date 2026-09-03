@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: schema
-resource: src/core/schema.rs#L1-L516
+resource: src/core/schema.rs#L1-L518
 generated:
   by: okf-rs/0.7.0
 relationships:

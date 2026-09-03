@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: empty_repo_detects_nothing
-resource: src/agents/registry.rs#L402-L406
+resource: src/agents/registry.rs#L453-L457
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: is_intent_schema_matches_both_idsd_variants
-resource: src/core/schema.rs#L498-L505
+resource: src/core/schema.rs#L500-L507
 visibility: private
 generated:
   by: okf-rs/0.7.0

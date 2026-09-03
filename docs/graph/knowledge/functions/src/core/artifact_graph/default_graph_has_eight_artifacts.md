@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: default_graph_has_eight_artifacts
-resource: src/core/artifact_graph.rs#L598-L601
+resource: src/core/artifact_graph.rs#L611-L614
 visibility: private
 generated:
   by: okf-rs/0.7.0

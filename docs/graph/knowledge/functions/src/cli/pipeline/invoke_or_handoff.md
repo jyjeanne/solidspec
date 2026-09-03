@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: invoke_or_handoff
-resource: src/cli/pipeline.rs#L474-L534
+resource: src/cli/pipeline.rs#L482-L542
 visibility: private
 generated:
   by: okf-rs/0.7.0

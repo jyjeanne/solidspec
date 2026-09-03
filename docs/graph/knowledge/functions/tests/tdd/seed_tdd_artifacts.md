@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: seed_tdd_artifacts
-resource: tests/tdd.rs#L1407-L1413
+resource: tests/tdd.rs#L1410-L1416
 visibility: private
 generated:
   by: okf-rs/0.7.0

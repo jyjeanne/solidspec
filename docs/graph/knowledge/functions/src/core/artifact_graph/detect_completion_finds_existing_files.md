@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_completion_finds_existing_files
-resource: src/core/artifact_graph.rs#L634-L644
+resource: src/core/artifact_graph.rs#L680-L690
 visibility: private
 generated:
   by: okf-rs/0.7.0

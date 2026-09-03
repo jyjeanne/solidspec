@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_vibe_dirs
-resource: src/agents/registry.rs#L594-L602
+resource: src/agents/registry.rs#L645-L653
 visibility: private
 generated:
   by: okf-rs/0.7.0

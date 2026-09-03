@@ -20,6 +20,12 @@ pub struct WorkflowSchema {
     pub version: String,
     #[serde(default)]
     pub description: String,
+    /// One-line "use this when..." blurb — shown by `solidspec schemas`
+    /// (docs/simplification-study-openspec.md item #5: one command to
+    /// discover all schemas and their specifics, instead of a README table
+    /// a new user has to read before running anything).
+    #[serde(default)]
+    pub use_case: String,
     pub artifacts: Vec<SchemaArtifact>,
 }
 
@@ -46,9 +52,7 @@ pub mod builtin {
     pub const INTENT_APEX: &str = include_str!("../../schemas/intent-apex/schema.yaml");
     pub const TDD_DRIVEN: &str = include_str!("../../schemas/tdd-driven/schema.yaml");
 
-    /// Used by `list_available_schemas` below, which is tested but not yet
-    /// wired to a CLI command (candidate for a future `solidspec schema list`).
-    #[allow(dead_code)]
+    /// Used by `list_available_schemas` below, which backs `solidspec schemas`.
     pub fn names() -> Vec<&'static str> {
         vec![
             "spec-driven",
@@ -144,12 +148,8 @@ pub fn is_intent_schema(name: &str) -> bool {
     matches!(name, "intent-driven" | "intent-apex")
 }
 
-/// List all available schema names (built-in + project-local).
-///
-/// Fully implemented and tested (`list_available_schemas_includes_builtins`,
-/// `list_available_schemas_includes_apex_schemas`) but not yet called from
-/// any CLI command — candidate for a future `solidspec schema list`.
-#[allow(dead_code)]
+/// List all available schema names (built-in + project-local). Backs
+/// `solidspec schemas`.
 pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
     let mut schemas = Vec::new();
     let mut seen = std::collections::HashSet::new();
@@ -162,6 +162,7 @@ pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
                 name: schema.name,
                 version: schema.version,
                 description: schema.description,
+                use_case: schema.use_case,
                 artifact_count: schema.artifacts.len(),
                 source: "built-in".into(),
             });
@@ -187,6 +188,7 @@ pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
                         name: schema.name,
                         version: schema.version,
                         description: schema.description,
+                        use_case: schema.use_case,
                         artifact_count: schema.artifacts.len(),
                         source: "project-local".into(),
                     });
@@ -199,13 +201,13 @@ pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
 }
 
 /// Summary info about an available schema. Return type of
-/// `list_available_schemas` — see its doc comment for status.
+/// `list_available_schemas`, printed by `solidspec schemas`.
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct SchemaInfo {
     pub name: String,
     pub version: String,
     pub description: String,
+    pub use_case: String,
     pub artifact_count: usize,
     pub source: String,
 }

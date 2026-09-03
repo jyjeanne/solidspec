@@ -1,7 +1,7 @@
 ---
 type: Rust Enum
 title: SchemaSource
-resource: src/core/schema.rs#L134-L138
+resource: src/core/schema.rs#L138-L142
 generated:
   by: okf-rs/0.7.0
 ---

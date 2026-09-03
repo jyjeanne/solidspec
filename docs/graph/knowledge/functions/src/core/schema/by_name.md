@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: by_name
-resource: src/core/schema.rs#L64-L75
+resource: src/core/schema.rs#L68-L79
 generated:
   by: okf-rs/0.7.0
 relationships:

@@ -200,3 +200,60 @@ that want it, while defaulting new users to 4.
 4. #2 and #9 (a `go`/`continue` front door) last — the only items that add new CLI surface, so worth
    scoping as their own small spec-driven cycle rather than doing ad hoc, consistent with how prior
    `okf-rs` integration steps in this repo were sequenced.
+
+## Implementation status
+
+All 10 items above shipped, plus a follow-up architectural piece the user asked for explicitly: an
+OpenSpec-style set of AI-agent slash commands (`/spcx:new`/`/spcx:apply`/`/spcx:finalise`/`/spcx:explore`,
+spec-driven schema only) that each chain several of the per-phase commands, with the CLI's own front door
+narrowed to init/status/validate/go/continue/schemas/pipeline/okf/ship.
+
+- **#1 install** — `scripts/install.sh` (downloads the prebuilt GitHub Release binary, no toolchain) and
+  `cargo install --git https://github.com/jyjeanne/solidspec` both verified working end-to-end. Publishing to
+  crates.io itself is currently blocked: crates.io requires every dependency to be a published crate, and
+  `okf-core`/`okf-analyzer`/`okf-generator`/`okf-validator`/`okf-parser` (vendored per
+  `docs/okf-rs-integration-plan.md`) are git-only. Documented as a known limitation in the README, not
+  silently worked around.
+- **#2 / #9 front door** — `solidspec go "desc"` and `solidspec continue [id]`, thin wrappers over
+  `pipeline::run` (`src/cli/go.rs`, `src/cli/continue_cmd.rs`). `pipeline` itself keeps its full flag surface
+  unchanged.
+- **#3 / #4 / #5 / #10** — README reordered to pitch → install → quick reference → a 3-step quick start
+  (using `go`/`spcx:new`/`continue`/`status`, no numeric feature ID in sight) → *then* the full
+  Workflows/Methodologies + Choosing-a-Workflow reference material, moved down from just after the pitch.
+- A new **`solidspec schemas`** command (`src/cli/schemas.rs`) wires up `core::schema::list_available_schemas`
+  — already fully implemented and tested but never called from any command before this — and prints each
+  schema's name, artifact count, and a new one-line `use_case` field added to every `schemas/*/schema.yaml`
+  and `WorkflowSchema`/`SchemaInfo`.
+- **#6 aliases** — `solidspec validate` is now the primary name for the old `analyze` command
+  (`#[command(name = "validate", alias = "analyze")]` — both work). The broader "rename every jargon verb"
+  idea from item #6 was superseded by the slash-command layer below rather than done piecemeal.
+- **#7 next-step hints** — `ArtifactGraph::first_ready` (`src/core/artifact_graph.rs`, new, tested) finds the
+  next `Ready` artifact in topological order; `init`, `pipeline`/`go`/`continue`, and `status` all print
+  `Next: solidspec <verb>` from it.
+- **#8 quiet init** — `init`'s per-agent registration output collapsed from listing agent IDs and formats to
+  one line ("AI agent commands ready" / "No AI agent detected — run 'solidspec check' for setup details").
+- **Per-phase commands hidden, not removed** — `intent`, `specify`, `clarify`, `plan`, `security-review`,
+  `tasks`, `implement`, `apex`, `tdd-tests`, `tdd-refactor`, `tests`, `evidence`, `checklist`, `review` all
+  get `#[command(hide = true)]` in `src/cli/mod.rs`: absent from `solidspec --help`, fully functional when
+  invoked directly, exactly as `pipeline`/`go`/`continue`/the slash commands already call them internally.
+  Explicit choice (confirmed with the user before starting): non-breaking over a clean removal.
+- **Slash commands** (`templates/commands/spcx/{new,apply,finalise,explore}.md`, wired in
+  `src/agents/registry.rs`) — each body chains `solidspec pipeline ... --no-agent --auto` scaffolding with the
+  agent filling in content per the existing per-phase instructions, scoped to the default `spec-driven`
+  schema (per the user's own scoping choice — other schemas keep using `pipeline --schema <name>` directly).
+  Registered for all 20 agents via the existing generic command-writing path (flat
+  `solidspec-spcx-<name>` naming); Claude Code additionally gets genuine namespaced commands at
+  `.claude/commands/spcx/<name>.md` (`/spcx:new`, not `/solidspec-spcx-new`) — the one agent format in this
+  repo where a subdirectory is known to produce a real namespaced slash command. Extending true namespacing
+  to other agents that support the same convention is unverified follow-up work, not done here.
+- **Housekeeping fix found along the way**: `scripts/generate-graph.sh` now `rm -rf`s the bundle directory
+  before regenerating — `write_bundle` only ever writes/updates current concepts, so a renamed function
+  (several test functions were renamed while building this) left its old file behind as a new "orphaned
+  concept" `validate --ci` failure. Clean rebuild each run avoids that permanently; the incremental-index
+  *cache* (`.okf-cache.json`) is untouched, so re-parsing unchanged source files is still skipped.
+
+Verified: `cargo build`, `cargo clippy --all-targets -- -D warnings`, `cargo fmt --check`, and the full test
+suite (555 unit + all integration tests) clean; `./scripts/generate-graph.sh` runs clean end to end; manual
+end-to-end runs of `go --no-agent` → `continue --no-agent` → `status` in a scratch project, and of
+`solidspec init` with a real `.claude/` directory to confirm the namespaced `/spcx:*` files and the generic
+`solidspec-spcx-*` files for a non-Claude agent (Cursor).

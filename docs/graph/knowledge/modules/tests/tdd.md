@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: tdd
-resource: tests/tdd.rs#L1-L1413
+resource: tests/tdd.rs#L1-L1416
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -24,8 +24,8 @@ relationships:
 # Contains
 
 - [create_feature](../../functions/tests/tdd/create_feature.md)
-- [tdd_tests_appears_in_help](../../functions/tests/tdd/tdd_tests_appears_in_help.md)
-- [tdd_refactor_appears_in_help](../../functions/tests/tdd/tdd_refactor_appears_in_help.md)
+- [tdd_tests_hidden_from_top_level_help_but_still_registered](../../functions/tests/tdd/tdd_tests_hidden_from_top_level_help_but_still_registered.md)
+- [tdd_refactor_hidden_from_top_level_help_but_still_registered](../../functions/tests/tdd/tdd_refactor_hidden_from_top_level_help_but_still_registered.md)
 - [tdd_tests_help_shows_dry_run_flag](../../functions/tests/tdd/tdd_tests_help_shows_dry_run_flag.md)
 - [tdd_refactor_help_shows_dry_run_flag](../../functions/tests/tdd/tdd_refactor_help_shows_dry_run_flag.md)
 - [tdd_tests_fails_outside_project](../../functions/tests/tdd/tdd_tests_fails_outside_project.md)

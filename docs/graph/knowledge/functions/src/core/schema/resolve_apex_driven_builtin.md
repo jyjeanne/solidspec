@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_apex_driven_builtin
-resource: src/core/schema.rs#L474-L479
+resource: src/core/schema.rs#L476-L481
 visibility: private
 generated:
   by: okf-rs/0.7.0

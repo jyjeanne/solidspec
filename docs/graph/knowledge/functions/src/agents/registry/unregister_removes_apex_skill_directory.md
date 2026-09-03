@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_apex_skill_directory
-resource: src/agents/registry.rs#L766-L780
+resource: src/agents/registry.rs#L817-L831
 visibility: private
 generated:
   by: okf-rs/0.7.0

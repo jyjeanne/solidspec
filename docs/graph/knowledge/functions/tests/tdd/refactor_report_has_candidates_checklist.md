@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: refactor_report_has_candidates_checklist
-resource: tests/tdd.rs#L602-L633
+resource: tests/tdd.rs#L605-L636
 visibility: private
 generated:
   by: okf-rs/0.7.0

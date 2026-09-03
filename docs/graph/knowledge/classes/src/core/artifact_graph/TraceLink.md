@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: TraceLink
-resource: src/core/artifact_graph.rs#L246-L250
+resource: src/core/artifact_graph.rs#L259-L263
 generated:
   by: okf-rs/0.7.0
 ---

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: kimi_uses_dot_separator_others_use_hyphen
-resource: src/agents/registry.rs#L647-L667
+resource: src/agents/registry.rs#L698-L718
 visibility: private
 generated:
   by: okf-rs/0.7.0

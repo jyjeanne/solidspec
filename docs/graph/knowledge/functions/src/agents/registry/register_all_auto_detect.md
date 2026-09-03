@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_auto_detect
-resource: src/agents/registry.rs#L563-L571
+resource: src/agents/registry.rs#L614-L622
 visibility: private
 generated:
   by: okf-rs/0.7.0

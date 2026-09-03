@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/mod.rs#L359-L466
+resource: src/cli/mod.rs#L404-L520
 generated:
   by: okf-rs/0.7.0
 ---

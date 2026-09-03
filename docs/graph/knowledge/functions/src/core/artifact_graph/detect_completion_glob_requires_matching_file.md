@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_completion_glob_requires_matching_file
-resource: src/core/artifact_graph.rs#L706-L729
+resource: src/core/artifact_graph.rs#L752-L775
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: into_graph
-resource: src/core/schema.rs#L86-L100
+resource: src/core/schema.rs#L90-L104
 generated:
   by: okf-rs/0.7.0
 relationships:

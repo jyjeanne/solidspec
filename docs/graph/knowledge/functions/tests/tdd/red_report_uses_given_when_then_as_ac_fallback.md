@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: red_report_uses_given_when_then_as_ac_fallback
-resource: tests/tdd.rs#L750-L783
+resource: tests/tdd.rs#L753-L786
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -47,16 +47,16 @@ pub fn run(
     // Generate AGENT.md
     generate_agent_file(&project_dir, &project_name)?;
 
-    // Detect and register AI agent commands
+    // Detect and register AI agent commands. Per-agent mechanics (which
+    // directory, Markdown vs Toml, one file vs a skill directory, ...) are
+    // real but not something a user needs to see at init time — see
+    // docs/simplification-study-openspec.md item #8. Full detail is still
+    // one 'solidspec check' away.
     let registered = registry::register_all(&project_dir, agent.as_deref())?;
     if registered.is_empty() {
-        println!("  No AI agent directories detected (create .claude/, .cursor/, etc. to enable)");
+        println!("  No AI agent detected — run 'solidspec check' for setup details");
     } else {
-        println!(
-            "  Registered commands for {} agent(s): {}",
-            registered.len(),
-            registered.join(", ")
-        );
+        println!("  AI agent commands ready");
     }
 
     // Save init options (use first detected agent, detect script type from OS)
@@ -84,6 +84,10 @@ pub fn run(
     extensions::hooks::fire_hooks("after_init", &project_dir, &ext_registry);
 
     println!("  Project initialized at {}", project_dir.display());
+    println!();
+    println!(
+        "Next: solidspec go \"<feature description>\"   (or 'solidspec schemas' to pick a different workflow)"
+    );
     Ok(())
 }
 

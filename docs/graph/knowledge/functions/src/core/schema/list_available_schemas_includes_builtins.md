@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: list_available_schemas_includes_builtins
-resource: src/core/schema.rs#L354-L364
+resource: src/core/schema.rs#L356-L366
 visibility: private
 generated:
   by: okf-rs/0.7.0

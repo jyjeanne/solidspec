@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: pipeline_force_reruns_tdd_tests_when_red_report_exists
-resource: tests/tdd.rs#L915-L968
+resource: tests/tdd.rs#L918-L971
 visibility: private
 generated:
   by: okf-rs/0.7.0

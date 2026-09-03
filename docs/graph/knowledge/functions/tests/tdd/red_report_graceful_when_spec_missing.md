@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: red_report_graceful_when_spec_missing
-resource: tests/tdd.rs#L823-L852
+resource: tests/tdd.rs#L826-L855
 visibility: private
 generated:
   by: okf-rs/0.7.0

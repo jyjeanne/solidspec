@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: schema_converts_to_valid_graph
-resource: src/core/schema.rs#L252-L257
+resource: src/core/schema.rs#L254-L259
 visibility: private
 generated:
   by: okf-rs/0.7.0

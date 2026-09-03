@@ -44,21 +44,24 @@ fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
 // ── T1: CLI registration ──────────────────────────────────────────────────────
 
 #[test]
-fn tdd_tests_appears_in_help() {
+fn tdd_tests_hidden_from_top_level_help_but_still_registered() {
+    // Per-phase commands (tdd-tests included) are hidden from the top-level
+    // --help now (docs/simplification-study-openspec.md) — still fully
+    // functional, see `tdd_tests_help_shows_dry_run_flag` below.
     solidspec()
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("tdd-tests"));
+        .stdout(predicate::str::contains("tdd-tests").not());
 }
 
 #[test]
-fn tdd_refactor_appears_in_help() {
+fn tdd_refactor_hidden_from_top_level_help_but_still_registered() {
     solidspec()
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("tdd-refactor"));
+        .stdout(predicate::str::contains("tdd-refactor").not());
 }
 
 #[test]

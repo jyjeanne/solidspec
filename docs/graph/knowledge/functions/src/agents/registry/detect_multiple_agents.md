@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_multiple_agents
-resource: src/agents/registry.rs#L387-L399
+resource: src/agents/registry.rs#L438-L450
 visibility: private
 generated:
   by: okf-rs/0.7.0

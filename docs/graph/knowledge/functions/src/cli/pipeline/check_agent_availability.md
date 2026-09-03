@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: check_agent_availability
-resource: src/cli/pipeline.rs#L278-L308
+resource: src/cli/pipeline.rs#L286-L316
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: vibe_creates_directory_based_skills
-resource: src/agents/registry.rs#L574-L591
+resource: src/agents/registry.rs#L625-L642
 visibility: private
 generated:
   by: okf-rs/0.7.0

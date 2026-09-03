@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/pipeline.rs#L11-L264
+resource: src/cli/pipeline.rs#L11-L272
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -54,6 +54,15 @@ relationships:
   - target: functions/src/core/pipeline/write_log
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/core/artifact_graph/ArtifactGraph/detect_completion
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/core/artifact_graph/ArtifactGraph/compute_states
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/core/artifact_graph/ArtifactGraph/first_ready
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -78,3 +87,6 @@ relationships:
 - [execute_phase](../../../../functions/src/cli/pipeline/execute_phase.md)
 - [find_feature_dir_by_prefix](../../../../functions/src/core/feature/find_feature_dir_by_prefix.md)
 - [write_log](../../../../functions/src/core/pipeline/write_log.md)
+- [detect_completion](../../../../functions/src/core/artifact_graph/ArtifactGraph/detect_completion.md)
+- [compute_states](../../../../functions/src/core/artifact_graph/ArtifactGraph/compute_states.md)
+- [first_ready](../../../../functions/src/core/artifact_graph/ArtifactGraph/first_ready.md)

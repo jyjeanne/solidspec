@@ -5,8 +5,10 @@ pub mod check;
 pub mod checklist;
 pub mod clarify;
 pub mod completions;
+pub mod continue_cmd;
 pub mod evidence;
 pub mod extension;
+pub mod go;
 pub mod implement;
 pub mod init;
 pub mod intent;
@@ -15,6 +17,7 @@ pub mod pipeline;
 pub mod plan;
 pub mod preset;
 pub mod review;
+pub mod schemas;
 pub mod security_review;
 pub mod ship;
 pub mod specify;
@@ -68,7 +71,32 @@ pub enum Commands {
         agent: Option<String>,
     },
 
+    /// Start a new feature end-to-end (spec-driven schema; scaffold + fill every
+    /// phase through the implement handoff) — shorthand for
+    /// 'pipeline --new "..." --auto'
+    Go {
+        /// Feature description
+        description: String,
+
+        /// Scaffold only — skip AI agent invocation
+        #[arg(long)]
+        no_agent: bool,
+    },
+
+    /// Resume the current (or given) feature at whatever phase is next
+    /// (spec-driven schema) — shorthand for 'pipeline --auto'
+    #[command(name = "continue")]
+    Continue {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Scaffold only — skip AI agent invocation
+        #[arg(long)]
+        no_agent: bool,
+    },
+
     /// Capture the intent for a new or existing feature (IDSD workflow)
+    #[command(hide = true)]
     Intent {
         /// Intent title — describes why this capability should exist
         #[arg(name = "title")]
@@ -80,6 +108,7 @@ pub enum Commands {
     },
 
     /// Create a new feature specification
+    #[command(hide = true)]
     Specify {
         /// Feature description
         #[arg(name = "feature-name")]
@@ -87,18 +116,21 @@ pub enum Commands {
     },
 
     /// Resolve ambiguities in a specification
+    #[command(hide = true)]
     Clarify {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Generate an architecture plan from a specification
+    #[command(hide = true)]
     Plan {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Run an OWASP Top 10 heuristic security audit of plan.md (security-first workflow)
+    #[command(hide = true)]
     SecurityReview {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -109,6 +141,7 @@ pub enum Commands {
     },
 
     /// Generate a story-driven task breakdown from the plan
+    #[command(hide = true)]
     Tasks {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -119,6 +152,7 @@ pub enum Commands {
     },
 
     /// Execute tasks from the task breakdown
+    #[command(hide = true)]
     Implement {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -129,6 +163,7 @@ pub enum Commands {
     },
 
     /// Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)
+    #[command(hide = true)]
     Apex {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -147,6 +182,7 @@ pub enum Commands {
     },
 
     /// Generate real failing tests for every acceptance criterion (TDD RED phase)
+    #[command(hide = true)]
     TddTests {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -157,6 +193,7 @@ pub enum Commands {
     },
 
     /// Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)
+    #[command(hide = true)]
     TddRefactor {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -167,6 +204,7 @@ pub enum Commands {
     },
 
     /// Generate test scaffolds from acceptance scenarios
+    #[command(hide = true)]
     Tests {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -185,6 +223,7 @@ pub enum Commands {
     },
 
     /// Collect evidence satisfaction from implemented test scaffolds (IDSD workflow)
+    #[command(hide = true)]
     Evidence {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -195,18 +234,21 @@ pub enum Commands {
     },
 
     /// Validate cross-artifact consistency (read-only)
+    #[command(name = "validate", alias = "analyze")]
     Analyze {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Review spec quality with preflight heuristics
+    #[command(hide = true)]
     Review {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Generate a quality validation checklist
+    #[command(hide = true)]
     Checklist {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -257,6 +299,9 @@ pub enum Commands {
         #[arg(long, default_value = "spec-driven")]
         schema: String,
     },
+
+    /// List all workflow schemas and their use cases
+    Schemas,
 
     /// Manage workflow presets
     Preset {
@@ -367,6 +412,14 @@ pub fn run(cli: Cli) -> Result<()> {
             force,
             agent,
         } => init::run(name, here, no_git, force, agent),
+        Commands::Go {
+            description,
+            no_agent,
+        } => go::run(&description, no_agent),
+        Commands::Continue {
+            feature_id,
+            no_agent,
+        } => continue_cmd::run(feature_id.as_deref(), no_agent),
         Commands::Intent { title, feature } => intent::run(&title, feature.as_deref()),
         Commands::Specify { feature_name } => specify::run(&feature_name),
         Commands::Clarify { feature_id } => clarify::run(feature_id.as_deref()),
@@ -429,6 +482,7 @@ pub fn run(cli: Cli) -> Result<()> {
             no_agent,
             &schema,
         ),
+        Commands::Schemas => schemas::run(),
         Commands::Preset { command } => preset::run(command),
         Commands::Change { command } => change::run(command),
         Commands::Extension { command } => extension::run(command),

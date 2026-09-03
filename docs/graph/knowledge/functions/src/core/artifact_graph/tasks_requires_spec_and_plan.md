@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: tasks_requires_spec_and_plan
-resource: src/core/artifact_graph.rs#L611-L616
+resource: src/core/artifact_graph.rs#L657-L662
 visibility: private
 generated:
   by: okf-rs/0.7.0

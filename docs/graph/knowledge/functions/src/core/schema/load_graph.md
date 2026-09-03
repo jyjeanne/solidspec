@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: load_graph
-resource: src/core/schema.rs#L214-L220
+resource: src/core/schema.rs#L216-L222
 generated:
   by: okf-rs/0.7.0
 relationships:

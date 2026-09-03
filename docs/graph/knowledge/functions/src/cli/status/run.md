@@ -24,6 +24,9 @@ relationships:
   - target: functions/src/core/artifact_graph/ArtifactGraph/topological_order
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/core/artifact_graph/ArtifactGraph/first_ready
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/schema/is_intent_schema
     resolved_by: tree-sitter
     confidence: exact
@@ -44,5 +47,6 @@ relationships:
 - [detect_completion](../../../../functions/src/core/artifact_graph/ArtifactGraph/detect_completion.md)
 - [compute_states](../../../../functions/src/core/artifact_graph/ArtifactGraph/compute_states.md)
 - [topological_order](../../../../functions/src/core/artifact_graph/ArtifactGraph/topological_order.md)
+- [first_ready](../../../../functions/src/core/artifact_graph/ArtifactGraph/first_ready.md)
 - [is_intent_schema](../../../../functions/src/core/schema/is_intent_schema.md)
 - [compute_drift](../../../../functions/src/core/analyzer/compute_drift.md)

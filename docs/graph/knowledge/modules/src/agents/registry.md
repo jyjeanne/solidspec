@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L798
+resource: src/agents/registry.rs#L1-L912
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -77,6 +77,10 @@ relationships:
 - [unregister_apex_skill_is_idempotent](../../../functions/src/agents/registry/unregister_apex_skill_is_idempotent.md)
 - [register_all_also_registers_apex_skill_for_claude](../../../functions/src/agents/registry/register_all_also_registers_apex_skill_for_claude.md)
 - [unregister_removes_apex_skill_directory](../../../functions/src/agents/registry/unregister_removes_apex_skill_directory.md)
+- [claude_gets_namespaced_spcx_commands_not_flat_files](../../../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md)
+- [spcx_new_body_has_guardrails_and_arguments_placeholder](../../../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md)
+- [other_agents_get_flat_spcx_commands](../../../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md)
+- [unregister_removes_claude_spcx_directory_contents](../../../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md)
 - [apex_command_file_contains_apex_workflow_text](../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)
 
 # Imports

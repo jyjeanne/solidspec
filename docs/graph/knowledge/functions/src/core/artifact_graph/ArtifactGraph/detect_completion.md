@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: detect_completion
-resource: src/core/artifact_graph.rs#L161-L167
+resource: src/core/artifact_graph.rs#L174-L180
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -10,6 +10,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
+  - target: functions/src/cli/pipeline/run
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/cli/status/run
     resolved_by: tree-sitter
     confidence: exact
@@ -40,6 +43,7 @@ relationships:
 
 # Called by
 
+- [run](../../../../../functions/src/cli/pipeline/run.md)
 - [run](../../../../../functions/src/cli/status/run.md)
 - [run](../../../../../functions/src/cli/tasks/run.md)
 - [detect_completion_finds_existing_files](../../../../../functions/src/core/artifact_graph/detect_completion_finds_existing_files.md)

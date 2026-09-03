@@ -17,6 +17,14 @@ BUNDLE="$OUT/knowledge"
 cargo build --quiet --manifest-path "$ROOT/Cargo.toml"
 SOLIDSPEC="$ROOT/target/debug/solidspec"
 
+# Clean rebuild: write_bundle only ever writes/updates files for concepts
+# that still exist, so a renamed or removed function's old file would
+# otherwise linger and turn up as a stale "orphaned concept" warning on the
+# next `validate --ci`. The incremental-index *cache* (.okf-cache.json,
+# untouched here) still skips re-parsing unchanged source files — only the
+# already-cheap bundle write is redone from scratch.
+rm -rf "$BUNDLE"
+
 generate_output="$("$SOLIDSPEC" okf generate "$ROOT" --output "$BUNDLE")"
 echo "$generate_output"
 "$SOLIDSPEC" okf validate "$BUNDLE" --ci

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate_agent_file
-resource: src/cli/init.rs#L150-L163
+resource: src/cli/init.rs#L154-L167
 visibility: private
 generated:
   by: okf-rs/0.7.0

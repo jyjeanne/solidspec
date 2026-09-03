@@ -45,6 +45,9 @@ relationships:
   - target: functions/src/cli/review/run
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/cli/schemas/run
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/cli/security_review/run
     resolved_by: tree-sitter
     confidence: exact
@@ -96,6 +99,7 @@ relationships:
 - [run](../../../functions/src/cli/plan/run.md)
 - [run](../../../functions/src/cli/preset/run.md)
 - [run](../../../functions/src/cli/review/run.md)
+- [run](../../../functions/src/cli/schemas/run.md)
 - [run](../../../functions/src/cli/security_review/run.md)
 - [run](../../../functions/src/cli/ship/run.md)
 - [run](../../../functions/src/cli/specify/run.md)

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: status_tdd_driven_schema_shows_correct_artifact_count
-resource: tests/tdd.rs#L1197-L1213
+resource: tests/tdd.rs#L1200-L1216
 visibility: private
 generated:
   by: okf-rs/0.7.0

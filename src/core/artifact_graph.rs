@@ -129,6 +129,19 @@ impl ArtifactGraph {
         Ok(order)
     }
 
+    /// The first artifact (in topological order) whose state is `Ready` —
+    /// i.e. what a "Next: solidspec X" hint should point at
+    /// (docs/simplification-study-openspec.md item #7). `None` when nothing
+    /// is ready (everything done, or everything blocked — the latter would
+    /// mean a broken schema, since a fresh graph always has at least one
+    /// no-dependency artifact ready).
+    pub fn first_ready(&self, states: &HashMap<String, ArtifactState>) -> Option<&ArtifactNode> {
+        let order = self.topological_order().ok()?;
+        order
+            .into_iter()
+            .find(|node| states.get(&node.id) == Some(&ArtifactState::Ready))
+    }
+
     /// Determine the state of each artifact given a set of completed artifact IDs.
     pub fn compute_states(&self, completed: &HashSet<String>) -> HashMap<String, ArtifactState> {
         let mut states = HashMap::new();
@@ -605,6 +618,39 @@ mod tests {
         let graph = spec_driven_graph();
         let order = graph.topological_order().unwrap();
         assert_eq!(order[0].id, "spec");
+    }
+
+    #[test]
+    fn first_ready_on_fresh_project_is_the_root_artifact() {
+        let graph = spec_driven_graph();
+        let states = graph.compute_states(&HashSet::new());
+        assert_eq!(graph.first_ready(&states).unwrap().id, "spec");
+    }
+
+    #[test]
+    fn first_ready_advances_as_artifacts_complete() {
+        let graph = spec_driven_graph();
+        let completed: HashSet<String> = ["spec".into()].into_iter().collect();
+        let states = graph.compute_states(&completed);
+        // clarify, plan, tests, analyze, review all become ready once spec is
+        // done; topological order picks the first of those deterministically.
+        let ready = graph.first_ready(&states).unwrap();
+        assert_ne!(ready.id, "spec");
+        assert!(
+            graph
+                .get(&ready.id)
+                .unwrap()
+                .requires
+                .contains(&"spec".to_string())
+        );
+    }
+
+    #[test]
+    fn first_ready_is_none_when_everything_is_done() {
+        let graph = spec_driven_graph();
+        let completed: HashSet<String> = graph.nodes.keys().cloned().collect();
+        let states = graph.compute_states(&completed);
+        assert!(graph.first_ready(&states).is_none());
     }
 
     #[test]

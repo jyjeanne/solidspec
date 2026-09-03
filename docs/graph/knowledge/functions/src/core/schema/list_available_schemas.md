@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: list_available_schemas
-resource: src/core/schema.rs#L153-L199
+resource: src/core/schema.rs#L153-L201
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -13,6 +13,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
+  - target: functions/src/cli/schemas/run
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/schema/list_available_schemas_includes_builtins
     resolved_by: tree-sitter
     confidence: exact
@@ -32,5 +35,6 @@ relationships:
 
 # Called by
 
+- [run](../../../../functions/src/cli/schemas/run.md)
 - [list_available_schemas_includes_builtins](../../../../functions/src/core/schema/list_available_schemas_includes_builtins.md)
 - [list_available_schemas_includes_apex_schemas](../../../../functions/src/core/schema/list_available_schemas_includes_apex_schemas.md)

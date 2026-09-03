@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: SchemaInfo
-resource: src/core/schema.rs#L205-L211
+resource: src/core/schema.rs#L206-L213
 generated:
   by: okf-rs/0.7.0
 ---

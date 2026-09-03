@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_project_local_override
-resource: src/core/schema.rs#L276-L297
+resource: src/core/schema.rs#L278-L299
 visibility: private
 generated:
   by: okf-rs/0.7.0

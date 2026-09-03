@@ -7,6 +7,7 @@
 name: tdd-driven
 version: "1.1"
 description: "AI-TDD workflow — RED-GREEN-REFACTOR with AI agents and human approval gates"
+use_case: "Library/SDK code, complex business logic, or code needing strict regression safety — real failing tests before implementation."
 
 artifacts:
   - id: spec

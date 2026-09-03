@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_schema
-resource: src/core/schema.rs#L108-L130
+resource: src/core/schema.rs#L112-L134
 generated:
   by: okf-rs/0.7.0
 relationships:

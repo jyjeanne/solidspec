@@ -17,8 +17,10 @@
 - [checklist](../modules/src/cli/checklist.md) — Rust Module
 - [clarify](../modules/src/cli/clarify.md) — Rust Module
 - [completions](../modules/src/cli/completions.md) — Rust Module
+- [continue_cmd](../modules/src/cli/continue_cmd.md) — Rust Module
 - [evidence](../modules/src/cli/evidence.md) — Rust Module
 - [extension](../modules/src/cli/extension.md) — Rust Module
+- [go](../modules/src/cli/go.md) — Rust Module
 - [implement](../modules/src/cli/implement.md) — Rust Module
 - [init](../modules/src/cli/init.md) — Rust Module
 - [intent](../modules/src/cli/intent.md) — Rust Module
@@ -27,6 +29,7 @@
 - [plan](../modules/src/cli/plan.md) — Rust Module
 - [preset](../modules/src/cli/preset.md) — Rust Module
 - [review](../modules/src/cli/review.md) — Rust Module
+- [schemas](../modules/src/cli/schemas.md) — Rust Module
 - [security_review](../modules/src/cli/security_review.md) — Rust Module
 - [ship](../modules/src/cli/ship.md) — Rust Module
 - [specify](../modules/src/cli/specify.md) — Rust Module

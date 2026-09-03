@@ -7,6 +7,9 @@ license = "MIT"
 repository = "https://github.com/jyjeanne/solidspec"
 homepage = "https://github.com/jyjeanne/solidspec"
 documentation = "https://github.com/jyjeanne/solidspec#readme"
+readme = "README.md"
+keywords = ["sdd", "spec-driven", "ai-agent", "cli", "tdd"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 # CLI

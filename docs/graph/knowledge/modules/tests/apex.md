@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: apex
-resource: tests/apex.rs#L1-L889
+resource: tests/apex.rs#L1-L894
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -24,7 +24,7 @@ relationships:
 # Contains
 
 - [create_feature](../../functions/tests/apex/create_feature.md)
-- [apex_command_appears_in_help](../../functions/tests/apex/apex_command_appears_in_help.md)
+- [apex_command_is_hidden_from_top_level_help_but_still_registered](../../functions/tests/apex/apex_command_is_hidden_from_top_level_help_but_still_registered.md)
 - [apex_help_shows_flags](../../functions/tests/apex/apex_help_shows_flags.md)
 - [apex_fails_without_tasks_md](../../functions/tests/apex/apex_fails_without_tasks_md.md)
 - [apex_fails_outside_project_root](../../functions/tests/apex/apex_fails_outside_project_root.md)

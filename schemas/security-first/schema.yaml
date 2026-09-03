@@ -3,6 +3,7 @@
 name: security-first
 version: "1.0"
 description: "Security-audited SDD workflow — plan must pass security review before tasks"
+use_case: "Payment, auth, PII, or public-facing endpoints — mandatory OWASP audit gates task generation."
 
 artifacts:
   - id: spec

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: topological_order_starts_with_no_dependency_artifacts
-resource: src/core/artifact_graph.rs#L604-L608
+resource: src/core/artifact_graph.rs#L617-L621
 visibility: private
 generated:
   by: okf-rs/0.7.0

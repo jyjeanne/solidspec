@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: create_directory_structure
-resource: src/cli/init.rs#L103-L128
+resource: src/cli/init.rs#L107-L132
 visibility: private
 generated:
   by: okf-rs/0.7.0

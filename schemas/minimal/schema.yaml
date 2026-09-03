@@ -3,6 +3,7 @@
 name: minimal
 version: "1.0"
 description: "Minimal SDD workflow: spec → plan → tasks → implement"
+use_case: "Quick internal tools, hackathon spikes, or fully-known requirements — no tests/review/ship ceremony."
 
 artifacts:
   - id: spec

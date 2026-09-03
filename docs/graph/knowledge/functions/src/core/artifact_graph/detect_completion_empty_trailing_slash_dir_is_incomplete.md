@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: detect_completion_empty_trailing_slash_dir_is_incomplete
-resource: src/core/artifact_graph.rs#L647-L659
+resource: src/core/artifact_graph.rs#L693-L705
 visibility: private
 generated:
   by: okf-rs/0.7.0

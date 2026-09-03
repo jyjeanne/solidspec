@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_toml_agent_creates_toml_files
-resource: src/agents/registry.rs#L464-L477
+resource: src/agents/registry.rs#L515-L528
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: glob_matches
-resource: src/core/artifact_graph.rs#L206-L234
+resource: src/core/artifact_graph.rs#L219-L247
 visibility: private
 generated:
   by: okf-rs/0.7.0

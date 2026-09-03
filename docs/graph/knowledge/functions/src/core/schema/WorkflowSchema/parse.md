@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: parse
-resource: src/core/schema.rs#L80-L83
+resource: src/core/schema.rs#L84-L87
 generated:
   by: okf-rs/0.7.0
 relationships:

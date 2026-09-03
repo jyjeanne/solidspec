@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: red_report_single_ac_shows_no_remaining_cycles
-resource: tests/tdd.rs#L660-L691
+resource: tests/tdd.rs#L663-L694
 visibility: private
 generated:
   by: okf-rs/0.7.0

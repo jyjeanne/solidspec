@@ -260,6 +260,14 @@ pub fn run(
         agent_list.join(", ")
     );
     println!("Log: specs/{feature_dir_name}/pipeline-log.md");
+
+    let completed = artifact_graph.detect_completion(&feature_dir);
+    let states = artifact_graph.compute_states(&completed);
+    match artifact_graph.first_ready(&states) {
+        Some(next) => println!("Next: solidspec continue   (next phase: {})", next.id),
+        None => println!("Next: solidspec ship"),
+    }
+
     Ok(())
 }
 

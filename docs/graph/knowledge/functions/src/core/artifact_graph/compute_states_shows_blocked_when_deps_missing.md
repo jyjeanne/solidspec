@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: compute_states_shows_blocked_when_deps_missing
-resource: src/core/artifact_graph.rs#L619-L631
+resource: src/core/artifact_graph.rs#L665-L677
 visibility: private
 generated:
   by: okf-rs/0.7.0

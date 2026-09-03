@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: is_intent_schema
-resource: src/core/schema.rs#L143-L145
+resource: src/core/schema.rs#L147-L149
 generated:
   by: okf-rs/0.7.0
 relationships:

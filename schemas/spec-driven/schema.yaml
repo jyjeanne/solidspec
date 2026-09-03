@@ -3,6 +3,7 @@
 name: spec-driven
 version: "1.0"
 description: "Complete specification-driven development workflow"
+use_case: "Most greenfield features or additions to an existing codebase — the default when you're unsure which schema to pick."
 
 artifacts:
   - id: spec

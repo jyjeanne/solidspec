@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: tasks_without_fr_refs_produce_orphaned_frs
-resource: src/core/artifact_graph.rs#L846-L852
+resource: src/core/artifact_graph.rs#L892-L898
 visibility: private
 generated:
   by: okf-rs/0.7.0

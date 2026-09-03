@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_intent_apex_builtin
-resource: src/core/schema.rs#L482-L487
+resource: src/core/schema.rs#L484-L489
 visibility: private
 generated:
   by: okf-rs/0.7.0

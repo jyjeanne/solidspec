@@ -24,6 +24,18 @@ mod command_bodies {
     pub const APEX: &str = include_str!("../../templates/commands/apex.md");
     pub const TDD_TESTS: &str = include_str!("../../templates/commands/tdd-tests.md");
     pub const TDD_REFACTOR: &str = include_str!("../../templates/commands/tdd-refactor.md");
+
+    /// The 4 spec-driven "meta" commands (docs/simplification-study-openspec.md
+    /// item #1 / OpenSpec-style `/opsx:propose`-`/opsx:apply`-`/opsx:archive`):
+    /// each chains several of the per-phase bodies above via
+    /// `solidspec pipeline ... --no-agent --auto` instead of running one phase
+    /// at a time. Scoped to the default spec-driven schema only for now — see
+    /// docs/okf-rs-integration-plan.md-style scoping notes in
+    /// docs/simplification-study-openspec.md.
+    pub const SPCX_NEW: &str = include_str!("../../templates/commands/spcx/new.md");
+    pub const SPCX_APPLY: &str = include_str!("../../templates/commands/spcx/apply.md");
+    pub const SPCX_FINALISE: &str = include_str!("../../templates/commands/spcx/finalise.md");
+    pub const SPCX_EXPLORE: &str = include_str!("../../templates/commands/spcx/explore.md");
 }
 
 /// Resolve a command's body: a project-local override at
@@ -51,6 +63,10 @@ fn command_body(cmd_name: &str, project_root: &Path) -> String {
         "apex" => command_bodies::APEX.to_string(),
         "tdd-tests" => command_bodies::TDD_TESTS.to_string(),
         "tdd-refactor" => command_bodies::TDD_REFACTOR.to_string(),
+        "spcx-new" => command_bodies::SPCX_NEW.to_string(),
+        "spcx-apply" => command_bodies::SPCX_APPLY.to_string(),
+        "spcx-finalise" => command_bodies::SPCX_FINALISE.to_string(),
+        "spcx-explore" => command_bodies::SPCX_EXPLORE.to_string(),
         _ => format!(
             "Read the project context from .solidspec/AGENT.md, then execute the '{cmd_name}' workflow for the feature specified by $ARGUMENTS."
         ),
@@ -94,6 +110,22 @@ const COMMANDS: &[(&str, &str)] = &[
     (
         "tdd-refactor",
         "Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)",
+    ),
+    // Meta commands (spec-driven schema only, see command_bodies::SPCX_*):
+    // the OpenSpec-style front door of a few commands that each chain
+    // several phases, instead of one command per phase.
+    (
+        "spcx-new",
+        "Start a feature end-to-end: spec, clarify, plan, tasks, tests",
+    ),
+    ("spcx-apply", "Implement the feature's tasks"),
+    (
+        "spcx-finalise",
+        "Validate, review, and get a SHIP/HOLD decision",
+    ),
+    (
+        "spcx-explore",
+        "Exploratory research and discussion — no files written",
     ),
 ];
 
@@ -180,7 +212,19 @@ fn write_command_file(
         .join(agent.command_dir)
         .join(agent.commands_subdir);
 
-    if agent.id == "kimi" {
+    if agent.id == "claude"
+        && let Some(suffix) = cmd_name.strip_prefix("spcx-")
+    {
+        // Claude Code: a subdirectory under commands/ is a genuine namespaced
+        // slash command (/spcx:new, not /solidspec-spcx-new) — the one place
+        // this repo uses that convention today, matching OpenSpec's own
+        // /opsx:propose-style naming for the same 4 meta commands. Written
+        // instead of (not in addition to) the flat solidspec-spcx-* file the
+        // generic branch below would otherwise produce.
+        let spcx_dir = cmd_dir.join("spcx");
+        std::fs::create_dir_all(&spcx_dir)?;
+        std::fs::write(spcx_dir.join(format!("{suffix}.md")), content)?;
+    } else if agent.id == "kimi" {
         // Kimi: directory-based skills with dot-separator
         let skill_name = formats::kimi_command_name(cmd_name);
         let skill_dir = cmd_dir.join(&skill_name);
@@ -258,7 +302,14 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
     }
 
     for (cmd_name, _) in COMMANDS {
-        if agent.id == "kimi" {
+        if agent.id == "claude"
+            && let Some(suffix) = cmd_name.strip_prefix("spcx-")
+        {
+            let path = cmd_dir.join("spcx").join(format!("{suffix}.md"));
+            if path.exists() {
+                std::fs::remove_file(&path)?;
+            }
+        } else if agent.id == "kimi" {
             let skill_name = formats::kimi_command_name(cmd_name);
             let skill_dir = cmd_dir.join(&skill_name);
             if skill_dir.exists() {
@@ -777,6 +828,69 @@ mod tests {
             !apex_dir.exists(),
             "APEX dir should be removed by unregister_commands"
         );
+    }
+
+    // ── spcx meta-command registration ─────────────────────────────────────
+
+    #[test]
+    fn claude_gets_namespaced_spcx_commands_not_flat_files() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        for name in ["new", "apply", "finalise", "explore"] {
+            let namespaced = dir.path().join(format!(".claude/commands/spcx/{name}.md"));
+            assert!(namespaced.exists(), "{name} missing at spcx/{name}.md");
+        }
+        // The generic flat naming must NOT also be written for Claude.
+        assert!(
+            !dir.path()
+                .join(".claude/commands/solidspec-spcx-new.md")
+                .exists()
+        );
+    }
+
+    #[test]
+    fn spcx_new_body_has_guardrails_and_arguments_placeholder() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let content =
+            std::fs::read_to_string(dir.path().join(".claude/commands/spcx/new.md")).unwrap();
+        assert!(content.contains("$ARGUMENTS"));
+        assert!(content.contains("Before You Skip Any Step"));
+        assert!(content.contains("pipeline --new"));
+    }
+
+    #[test]
+    fn other_agents_get_flat_spcx_commands() {
+        let dir = TempDir::new().unwrap();
+        let cursor = find_agent("cursor").unwrap();
+        register_commands(dir.path(), cursor).unwrap();
+
+        for name in ["new", "apply", "finalise", "explore"] {
+            let flat = dir
+                .path()
+                .join(format!(".cursor/commands/solidspec-spcx-{name}.md"));
+            assert!(flat.exists(), "solidspec-spcx-{name}.md missing for cursor");
+        }
+    }
+
+    #[test]
+    fn unregister_removes_claude_spcx_directory_contents() {
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+        unregister_commands(dir.path(), claude).unwrap();
+
+        for name in ["new", "apply", "finalise", "explore"] {
+            assert!(
+                !dir.path()
+                    .join(format!(".claude/commands/spcx/{name}.md"))
+                    .exists()
+            );
+        }
     }
 
     #[test]

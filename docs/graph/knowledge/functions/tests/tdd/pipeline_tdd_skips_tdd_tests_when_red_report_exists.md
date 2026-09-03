@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: pipeline_tdd_skips_tdd_tests_when_red_report_exists
-resource: tests/tdd.rs#L347-L377
+resource: tests/tdd.rs#L350-L380
 visibility: private
 generated:
   by: okf-rs/0.7.0
