@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: markdown_has_frontmatter_delimiters
-resource: src/agents/formats.rs#L142-L148
+resource: src/agents/formats.rs#L122-L128
 visibility: private
 generated:
   by: okf-rs/0.7.0

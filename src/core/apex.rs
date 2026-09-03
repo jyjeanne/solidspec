@@ -59,7 +59,7 @@ pub mod skill_files {
 /// `steps/`, `templates/`, and `scripts/` subdirectory structure.
 ///
 /// For Claude Code the caller passes `.claude/commands/apex/`.
-/// For Kimi/Vibe/OpenCode the caller passes their respective skills dirs.
+/// For Kimi/OpenCode the caller passes their respective skills dirs.
 ///
 /// Script files are written with executable permission on Unix.
 /// Existing files are always overwritten so `solidspec upgrade` refreshes them.

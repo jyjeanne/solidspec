@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: claude_gets_namespaced_spcx_commands_not_flat_files
-resource: src/agents/registry.rs#L836-L851
+resource: src/agents/registry.rs#L797-L812
 visibility: private
 generated:
   by: okf-rs/0.7.0

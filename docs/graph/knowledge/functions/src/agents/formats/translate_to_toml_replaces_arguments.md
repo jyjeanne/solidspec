@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: translate_to_toml_replaces_arguments
-resource: src/agents/formats.rs#L119-L124
+resource: src/agents/formats.rs#L99-L104
 visibility: private
 generated:
   by: okf-rs/0.7.0

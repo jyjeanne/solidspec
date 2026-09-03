@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_commands
-resource: src/agents/registry.rs#L154-L202
+resource: src/agents/registry.rs#L154-L199
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -22,9 +22,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/formats/render_copilot_prompt
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/formats/render_vibe_skill
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/formats/render_opencode_skill
@@ -62,12 +59,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/unregister_removes_kimi_dirs
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/vibe_creates_directory_based_skills
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/unregister_removes_vibe_dirs
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/opencode_creates_directory_based_skills
@@ -114,7 +105,6 @@ relationships:
 - [adjust_script_paths](../../../../functions/src/agents/formats/adjust_script_paths.md)
 - [render_copilot_agent](../../../../functions/src/agents/formats/render_copilot_agent.md)
 - [render_copilot_prompt](../../../../functions/src/agents/formats/render_copilot_prompt.md)
-- [render_vibe_skill](../../../../functions/src/agents/formats/render_vibe_skill.md)
 - [render_opencode_skill](../../../../functions/src/agents/formats/render_opencode_skill.md)
 - [render_command](../../../../functions/src/agents/formats/render_command.md)
 - [write_command_file](../../../../functions/src/agents/registry/write_command_file.md)
@@ -130,8 +120,6 @@ relationships:
 - [kimi_creates_directory_based_skills](../../../../functions/src/agents/registry/kimi_creates_directory_based_skills.md)
 - [unregister_removes_copilot_files](../../../../functions/src/agents/registry/unregister_removes_copilot_files.md)
 - [unregister_removes_kimi_dirs](../../../../functions/src/agents/registry/unregister_removes_kimi_dirs.md)
-- [vibe_creates_directory_based_skills](../../../../functions/src/agents/registry/vibe_creates_directory_based_skills.md)
-- [unregister_removes_vibe_dirs](../../../../functions/src/agents/registry/unregister_removes_vibe_dirs.md)
 - [opencode_creates_directory_based_skills](../../../../functions/src/agents/registry/opencode_creates_directory_based_skills.md)
 - [unregister_removes_opencode_skills](../../../../functions/src/agents/registry/unregister_removes_opencode_skills.md)
 - [kimi_uses_dot_separator_others_use_hyphen](../../../../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md)

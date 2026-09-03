@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: cli_agents_have_requires_cli_true
-resource: src/agents/config.rs#L375-L395
+resource: src/agents/config.rs#L361-L381
 visibility: private
 generated:
   by: okf-rs/0.7.0

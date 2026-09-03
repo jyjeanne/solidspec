@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: opencode_skill_has_name_and_description
-resource: src/agents/formats.rs#L188-L198
+resource: src/agents/formats.rs#L156-L166
 visibility: private
 generated:
   by: okf-rs/0.7.0

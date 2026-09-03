@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: copilot_creates_agent_md_and_prompt_md
-resource: src/agents/registry.rs#L531-L545
+resource: src/agents/registry.rs#L527-L541
 visibility: private
 generated:
   by: okf-rs/0.7.0

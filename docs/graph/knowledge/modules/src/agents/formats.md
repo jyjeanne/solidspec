@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: formats
-resource: src/agents/formats.rs#L1-L211
+resource: src/agents/formats.rs#L1-L179
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -27,7 +27,6 @@ relationships:
 - [adjust_script_paths](../../../functions/src/agents/formats/adjust_script_paths.md)
 - [render_copilot_agent](../../../functions/src/agents/formats/render_copilot_agent.md)
 - [render_copilot_prompt](../../../functions/src/agents/formats/render_copilot_prompt.md)
-- [render_vibe_skill](../../../functions/src/agents/formats/render_vibe_skill.md)
 - [render_opencode_skill](../../../functions/src/agents/formats/render_opencode_skill.md)
 - [kimi_command_name](../../../functions/src/agents/formats/kimi_command_name.md)
 - [standard_command_name](../../../functions/src/agents/formats/standard_command_name.md)
@@ -38,7 +37,6 @@ relationships:
 - [toml_has_description_and_prompt](../../../functions/src/agents/formats/toml_has_description_and_prompt.md)
 - [adjust_script_paths_replaces](../../../functions/src/agents/formats/adjust_script_paths_replaces.md)
 - [already_adjusted_paths_not_double_adjusted](../../../functions/src/agents/formats/already_adjusted_paths_not_double_adjusted.md)
-- [vibe_skill_has_required_frontmatter](../../../functions/src/agents/formats/vibe_skill_has_required_frontmatter.md)
 - [opencode_skill_has_name_and_description](../../../functions/src/agents/formats/opencode_skill_has_name_and_description.md)
 - [kimi_dot_separator_naming](../../../functions/src/agents/formats/kimi_dot_separator_naming.md)
 - [standard_hyphen_separator_naming](../../../functions/src/agents/formats/standard_hyphen_separator_naming.md)

@@ -46,7 +46,7 @@ SolidSpec is a Rust CLI tool (Rust 2024 edition) that scaffolds Specification-Dr
   - `constitution.rs` — Reads `.solidspec/constitution.md` for architecture guardrails.
 - **`src/agents/`** — Manages 20 AI agent integrations:
   - `config.rs` — Static `AGENTS` table mapping agent IDs to their command directory, file format (`Markdown`/`Toml`), CLI binary, argument placeholder, etc.
-  - `registry.rs` — Detects agents in a repo, writes/deletes command files with per-agent format differences (flat `.md`/`.toml` for most; directory-based `SKILL.md` for Kimi/Vibe/OpenCode; dual `.agent.md` + `.prompt.md` for Copilot).
+  - `registry.rs` — Detects agents in a repo, writes/deletes command files with per-agent format differences (flat `.md`/`.toml` for most; directory-based `SKILL.md` for Kimi/OpenCode; dual `.agent.md` + `.prompt.md` for Copilot).
   - `invoker.rs` — Executes the agent CLI non-interactively for automated pipeline runs.
   - `formats.rs` — Renders command file bodies for each format; `guardrails.rs` appends a compliance footer to all command bodies.
 - **`src/config/`** — `solidspec.toml` (`RootConfig`) and `.solidspec/config.toml` (`ProjectInternalConfig`). `find_project_root()` walks up from cwd looking for `solidspec.toml` or `.solidspec/`.

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_with_invalid_agent_returns_error
-resource: src/agents/registry.rs#L604-L611
+resource: src/agents/registry.rs#L600-L607
 visibility: private
 generated:
   by: okf-rs/0.7.0

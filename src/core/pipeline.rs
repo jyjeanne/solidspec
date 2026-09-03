@@ -542,7 +542,7 @@ mod tests {
         .unwrap();
         let results = vec![PhaseResult {
             name: "analyze".into(),
-            agent: "vibe".into(),
+            agent: "opencode".into(),
             status: PhaseStatus::Done,
             duration_ms: 300,
             output: "100%".into(),
@@ -550,7 +550,7 @@ mod tests {
         write_log(dir.path(), "001", &results).unwrap();
         let content = std::fs::read_to_string(dir.path().join("pipeline-log.md")).unwrap();
         assert!(content.contains("old content"));
-        assert!(content.contains("| analyze | vibe | done |"));
+        assert!(content.contains("| analyze | opencode | done |"));
     }
 
     // ── APEX phase tests ──────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_apex_skill_returns_false_for_unsupported_agent
-resource: src/agents/registry.rs#L776-L781
+resource: src/agents/registry.rs#L737-L742
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: adjust_script_paths_replaces
-resource: src/agents/formats.rs#L159-L166
+resource: src/agents/formats.rs#L139-L146
 visibility: private
 generated:
   by: okf-rs/0.7.0

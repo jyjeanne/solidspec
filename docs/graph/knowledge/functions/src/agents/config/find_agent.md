@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: find_agent
-resource: src/agents/config.rs#L317-L324
+resource: src/agents/config.rs#L303-L310
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -46,12 +46,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/unregister_removes_kimi_dirs
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/vibe_creates_directory_based_skills
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/unregister_removes_vibe_dirs
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/opencode_creates_directory_based_skills
@@ -106,8 +100,6 @@ relationships:
 - [kimi_creates_directory_based_skills](../../../../functions/src/agents/registry/kimi_creates_directory_based_skills.md)
 - [unregister_removes_copilot_files](../../../../functions/src/agents/registry/unregister_removes_copilot_files.md)
 - [unregister_removes_kimi_dirs](../../../../functions/src/agents/registry/unregister_removes_kimi_dirs.md)
-- [vibe_creates_directory_based_skills](../../../../functions/src/agents/registry/vibe_creates_directory_based_skills.md)
-- [unregister_removes_vibe_dirs](../../../../functions/src/agents/registry/unregister_removes_vibe_dirs.md)
 - [opencode_creates_directory_based_skills](../../../../functions/src/agents/registry/opencode_creates_directory_based_skills.md)
 - [unregister_removes_opencode_skills](../../../../functions/src/agents/registry/unregister_removes_opencode_skills.md)
 - [kimi_uses_dot_separator_others_use_hyphen](../../../../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md)

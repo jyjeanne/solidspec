@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_opencode_skills
-resource: src/agents/registry.rs#L687-L695
+resource: src/agents/registry.rs#L652-L660
 visibility: private
 generated:
   by: okf-rs/0.7.0

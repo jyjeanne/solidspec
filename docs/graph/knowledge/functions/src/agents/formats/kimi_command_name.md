@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: kimi_command_name
-resource: src/agents/formats.rs#L105-L107
+resource: src/agents/formats.rs#L85-L87
 generated:
   by: okf-rs/0.7.0
 relationships:

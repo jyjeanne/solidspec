@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L912
+resource: src/agents/registry.rs#L1-L873
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -64,8 +64,6 @@ relationships:
 - [register_all_with_specific_agent](../../../functions/src/agents/registry/register_all_with_specific_agent.md)
 - [register_all_with_invalid_agent_returns_error](../../../functions/src/agents/registry/register_all_with_invalid_agent_returns_error.md)
 - [register_all_auto_detect](../../../functions/src/agents/registry/register_all_auto_detect.md)
-- [vibe_creates_directory_based_skills](../../../functions/src/agents/registry/vibe_creates_directory_based_skills.md)
-- [unregister_removes_vibe_dirs](../../../functions/src/agents/registry/unregister_removes_vibe_dirs.md)
 - [opencode_creates_directory_based_skills](../../../functions/src/agents/registry/opencode_creates_directory_based_skills.md)
 - [unregister_removes_opencode_skills](../../../functions/src/agents/registry/unregister_removes_opencode_skills.md)
 - [kimi_uses_dot_separator_others_use_hyphen](../../../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md)

@@ -14,7 +14,7 @@
     <a href="#install">Install</a> &bull;
     <a href="#parallel-fan-out-ship-gate">Ship Gate</a> &bull;
     <a href="#using-with-claude-code">Claude Code</a> &bull;
-    <a href="#using-with-mistral-vibe">Mistral Vibe</a> &bull;
+    <a href="#using-with-opencode">OpenCode</a> &bull;
     <a href="#using-with-github-copilot">Copilot</a> &bull;
     <a href="#use-cases">Use Cases</a> &bull;
     <a href="#all-commands">Commands</a>
@@ -36,7 +36,7 @@ You describe a feature to your AI coding agent. It generates code. But the code 
 - Tackling a complex feature that needs structured implementation? Use `apex-driven`.
 - Need all of the above? Use `intent-apex`.
 
-**SolidSpec works with 20 AI agents** (Claude Code, Copilot, Vibe, Gemini, Cursor, Windsurf, Codex, and more), registers slash commands in each agent's native format, and can invoke them automatically via a fully automated or mixed-mode pipeline.
+**SolidSpec works with 19 AI agents** (Claude Code, Copilot, OpenCode, Gemini, Cursor, Windsurf, Codex, and more), registers slash commands in each agent's native format, and can invoke them automatically via a fully automated or mixed-mode pipeline.
 
 ---
 
@@ -674,16 +674,16 @@ Or one phase at a time, for explicit control:
 
 ---
 
-## Using with Mistral Vibe
+## Using with OpenCode
 
-Mistral Vibe gets skills registered as directories in `.vibe/skills/`.
+OpenCode gets skills registered as directories in `.opencode/skills/`.
 
 ```bash
-mkdir -p .vibe
+mkdir -p .opencode
 solidspec init --here
 ```
 
-Skills are created at `.vibe/skills/solidspec-*/SKILL.md`. Usage is identical to Claude Code but with Vibe's `/skill-name` format.
+Skills are created at `.opencode/skills/solidspec-*/SKILL.md`. Usage is identical to Claude Code but with OpenCode's `/skill-name` format.
 
 ---
 
@@ -700,12 +700,11 @@ solidspec init --here
 
 ## Using Multiple Agents Together
 
-SolidSpec registers commands for **all detected agents simultaneously**. If your project has both `.claude/` and `.vibe/`:
+SolidSpec registers commands for **all detected agents simultaneously**. If your project has both `.claude/` and `.opencode/`:
 
 ```bash
-mkdir .claude .vibe
+mkdir .claude .opencode
 solidspec init --here
-# Registered commands for 2 agent(s): claude, vibe
 ```
 
 Both agents get the same commands and work from the same spec artifacts. The artifacts in `specs/` are agent-agnostic — any agent can read and build from them.
@@ -909,7 +908,7 @@ specify = "claude"
 plan    = "claude"
 tasks   = "claude"
 tests   = "claude"
-implement = "vibe"
+implement = "opencode"
 analyze = "claude"
 review  = "claude"
 ```
@@ -1223,12 +1222,12 @@ agents can query it instead of re-reading files cold. Install into a project wit
 
 ---
 
-## Supported AI Agents (20)
+## Supported AI Agents (19)
 
 | Agent | Directory | Format |
 |-------|-----------|--------|
 | Claude Code | `.claude/commands/` | Markdown |
-| Mistral Vibe | `.vibe/skills/` | Markdown (directory-based) |
+| OpenCode | `.opencode/skills/` | Markdown (SKILL.md) |
 | GitHub Copilot | `.github/agents/` | Markdown + `.prompt.md` |
 | Gemini CLI | `.gemini/commands/` | TOML |
 | Cursor | `.cursor/commands/` | Markdown |
@@ -1238,7 +1237,6 @@ agents can query it instead of re-reading files cold. Install into a project wit
 | Kimi Code | `.kimi/skills/` | Markdown (directory-based) |
 | Tabnine CLI | `.tabnine/agent/commands/` | TOML |
 | Qwen Code | `.qwen/commands/` | Markdown |
-| opencode | `.opencode/skills/` | Markdown (SKILL.md) |
 | Kilo Code | `.kilocode/workflows/` | Markdown |
 | Auggie CLI | `.augment/commands/` | Markdown |
 | Roo Code | `.roo/commands/` | Markdown |

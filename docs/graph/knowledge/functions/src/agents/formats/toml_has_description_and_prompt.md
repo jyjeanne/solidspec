@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: toml_has_description_and_prompt
-resource: src/agents/formats.rs#L151-L156
+resource: src/agents/formats.rs#L131-L136
 visibility: private
 generated:
   by: okf-rs/0.7.0

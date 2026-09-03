@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: ide_agents_have_requires_cli_false
-resource: src/agents/config.rs#L398-L406
+resource: src/agents/config.rs#L384-L390
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: no_duplicate_ids
-resource: src/agents/config.rs#L337-L340
+resource: src/agents/config.rs#L323-L326
 visibility: private
 generated:
   by: okf-rs/0.7.0

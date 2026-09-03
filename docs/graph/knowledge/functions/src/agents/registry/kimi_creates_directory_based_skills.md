@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: kimi_creates_directory_based_skills
-resource: src/agents/registry.rs#L548-L560
+resource: src/agents/registry.rs#L544-L556
 visibility: private
 generated:
   by: okf-rs/0.7.0

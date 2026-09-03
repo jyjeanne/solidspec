@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: render_opencode_skill
-resource: src/agents/formats.rs#L93-L102
+resource: src/agents/formats.rs#L73-L82
 generated:
   by: okf-rs/0.7.0
 relationships:

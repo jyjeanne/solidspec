@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: copilot_uses_agent_md_extension
-resource: src/agents/config.rs#L430-L433
+resource: src/agents/config.rs#L414-L417
 visibility: private
 generated:
   by: okf-rs/0.7.0

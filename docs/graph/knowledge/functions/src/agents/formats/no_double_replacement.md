@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: no_double_replacement
-resource: src/agents/formats.rs#L135-L139
+resource: src/agents/formats.rs#L115-L119
 visibility: private
 generated:
   by: okf-rs/0.7.0

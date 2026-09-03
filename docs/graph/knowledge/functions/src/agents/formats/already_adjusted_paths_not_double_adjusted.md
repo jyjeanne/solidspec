@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: already_adjusted_paths_not_double_adjusted
-resource: src/agents/formats.rs#L169-L173
+resource: src/agents/formats.rs#L149-L153
 visibility: private
 generated:
   by: okf-rs/0.7.0

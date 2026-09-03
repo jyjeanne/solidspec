@@ -184,10 +184,7 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
             continue;
         }
 
-        let content = if agent.id == "vibe" {
-            let rendered = formats::render_vibe_skill(cmd_name, description, &body);
-            formats::adjust_script_paths(&rendered)
-        } else if agent.id == "opencode" {
+        let content = if agent.id == "opencode" {
             let rendered = formats::render_opencode_skill(cmd_name, description, &body);
             formats::adjust_script_paths(&rendered)
         } else {
@@ -230,8 +227,8 @@ fn write_command_file(
         let skill_dir = cmd_dir.join(&skill_name);
         std::fs::create_dir_all(&skill_dir)?;
         std::fs::write(skill_dir.join("SKILL.md"), content)?;
-    } else if agent.id == "vibe" || agent.id == "opencode" {
-        // Vibe/OpenCode: directory-based skills with hyphen-separator (SKILL.md)
+    } else if agent.id == "opencode" {
+        // OpenCode: directory-based skills with hyphen-separator (SKILL.md)
         let skill_name = formats::standard_command_name(cmd_name);
         let skill_dir = cmd_dir.join(&skill_name);
         std::fs::create_dir_all(&skill_dir)?;
@@ -254,7 +251,6 @@ fn apex_skill_dir(agent_id: &str, project_root: &Path) -> Option<PathBuf> {
     match agent_id {
         "claude" => Some(project_root.join(".claude/commands/apex")),
         "kimi" => Some(project_root.join(".kimi/skills/apex")),
-        "vibe" => Some(project_root.join(".vibe/skills/apex")),
         "opencode" => Some(project_root.join(".opencode/skills/apex")),
         _ => None,
     }
@@ -315,7 +311,7 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
             if skill_dir.exists() {
                 std::fs::remove_dir_all(&skill_dir)?;
             }
-        } else if agent.id == "vibe" || agent.id == "opencode" {
+        } else if agent.id == "opencode" {
             let skill_name = formats::standard_command_name(cmd_name);
             let skill_dir = cmd_dir.join(&skill_name);
             if skill_dir.exists() {
@@ -622,37 +618,6 @@ mod tests {
     }
 
     #[test]
-    fn vibe_creates_directory_based_skills() {
-        let dir = TempDir::new().unwrap();
-        let vibe = find_agent("vibe").unwrap();
-        register_commands(dir.path(), vibe).unwrap();
-
-        // Directory-based: .vibe/skills/solidspec-specify/SKILL.md
-        let skill = dir.path().join(".vibe/skills/solidspec-specify/SKILL.md");
-        assert!(
-            skill.exists(),
-            "Vibe skill not found at {}",
-            skill.display()
-        );
-
-        let content = std::fs::read_to_string(&skill).unwrap();
-        assert!(content.contains("name: solidspec-specify"));
-        assert!(content.contains("user-invocable: true"));
-        assert!(content.contains("allowed-tools:"));
-    }
-
-    #[test]
-    fn unregister_removes_vibe_dirs() {
-        let dir = TempDir::new().unwrap();
-        let vibe = find_agent("vibe").unwrap();
-        register_commands(dir.path(), vibe).unwrap();
-        unregister_commands(dir.path(), vibe).unwrap();
-
-        let skill = dir.path().join(".vibe/skills/solidspec-specify");
-        assert!(!skill.exists());
-    }
-
-    #[test]
     fn opencode_creates_directory_based_skills() {
         let dir = TempDir::new().unwrap();
         let opencode = find_agent("opencode").unwrap();
@@ -743,10 +708,6 @@ mod tests {
         assert_eq!(
             apex_skill_dir("kimi", dir.path()),
             Some(dir.path().join(".kimi/skills/apex"))
-        );
-        assert_eq!(
-            apex_skill_dir("vibe", dir.path()),
-            Some(dir.path().join(".vibe/skills/apex"))
         );
         assert_eq!(
             apex_skill_dir("opencode", dir.path()),
