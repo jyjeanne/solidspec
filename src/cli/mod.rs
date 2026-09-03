@@ -234,7 +234,7 @@ pub enum Commands {
     },
 
     /// Validate cross-artifact consistency (read-only)
-    #[command(name = "validate", alias = "analyze")]
+    #[command(alias = "validate")]
     Analyze {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,

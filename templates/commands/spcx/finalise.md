@@ -2,7 +2,7 @@ Read the project context from .solidspec/AGENT.md.
 
 Feature: $ARGUMENTS (auto-detected if left empty).
 
-1. Run: `solidspec validate $ARGUMENTS`
+1. Run: `solidspec analyze $ARGUMENTS`
    Cross-artifact consistency: requirement traceability (FR-### → plan →
    tasks), entity coverage, constitution compliance. Fix any gaps it reports
    before continuing.

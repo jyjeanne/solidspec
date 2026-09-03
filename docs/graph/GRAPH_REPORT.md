@@ -1,6 +1,6 @@
 # Graph Report - solidspec (2026-09-03)
 
-Built from commit: `27aa201`
+Built from commit: `22fc8b3`
 
 ## Topology (`solidspec okf generate`)
 

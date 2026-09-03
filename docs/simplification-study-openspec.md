@@ -224,9 +224,14 @@ narrowed to init/status/validate/go/continue/schemas/pipeline/okf/ship.
   — already fully implemented and tested but never called from any command before this — and prints each
   schema's name, artifact count, and a new one-line `use_case` field added to every `schemas/*/schema.yaml`
   and `WorkflowSchema`/`SchemaInfo`.
-- **#6 aliases** — `solidspec validate` is now the primary name for the old `analyze` command
-  (`#[command(name = "validate", alias = "analyze")]` — both work). The broader "rename every jargon verb"
-  idea from item #6 was superseded by the slash-command layer below rather than done piecemeal.
+- **#6 aliases** — `solidspec validate` was briefly made the primary name for the old `analyze` command
+  (`#[command(name = "validate", alias = "analyze")]`). **Reverted**: a follow-up study comparing it against
+  `solidspec check` (which does something genuinely different — environment/project-setup verification, no
+  feature argument, no findings/severity report) found the name collision confusing rather than
+  clarifying — "validate" reads as a synonym for "check," when the command it named is actually a per-feature
+  requirement-traceability analysis with a findings report and severity levels. `analyze` is the primary name
+  again; `#[command(alias = "validate")]` keeps the brief rename non-breaking. The broader "rename every
+  jargon verb" idea from item #6 was superseded by the slash-command layer below rather than done piecemeal.
 - **#7 next-step hints** — `ArtifactGraph::first_ready` (`src/core/artifact_graph.rs`, new, tested) finds the
   next `Ready` artifact in topological order; `init`, `pipeline`/`go`/`continue`, and `status` all print
   `Next: solidspec <verb>` from it.

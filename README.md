@@ -1169,7 +1169,7 @@ These per-phase commands are what `go`/`continue`/`pipeline` (and, in Claude Cod
 | `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers (`--schema` enforces DAG gates, e.g. security-first's security-review requirement) |
 | `solidspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
 | `solidspec implement [id]` | Execute tasks with hook support |
-| `solidspec validate [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode (alias: `analyze`) |
+| `solidspec analyze [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode (alias: `validate`) |
 | `solidspec review [id]` | Review spec quality with dimension scoring |
 | `solidspec checklist [id]` | Generate/append quality checklists |
 
