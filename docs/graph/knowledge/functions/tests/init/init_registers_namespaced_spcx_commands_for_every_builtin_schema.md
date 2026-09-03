@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: init_on_empty_directory_skips_knowledge_graph_generation
-resource: tests/init.rs#L152-L165
+title: init_registers_namespaced_spcx_commands_for_every_builtin_schema
+resource: tests/init.rs#L105-L149
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn init_on_empty_directory_skips_knowledge_graph_generation()`
+`fn init_registers_namespaced_spcx_commands_for_every_builtin_schema()`
 
 # Calls
 

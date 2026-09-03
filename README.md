@@ -168,7 +168,7 @@ SolidSpec auto-detects your AI agent (if it has a `.claude/`, `.cursor/`, ... di
 - `.solidspec/` &mdash; constitution, templates, config
 - `specs/` &mdash; where feature artifacts live
 - `solidspec.toml` &mdash; project configuration, including which workflow schema this project defaults to (`minimal` unless you pass `--schema`, e.g. `solidspec init --here --schema spec-driven`)
-- Slash commands in your agent's native format, generated for that schema (`/spcx:new`, `/spcx:apply`, `/spcx:finalise`, `/spcx:explore` in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers)
+- Slash commands in your agent's native format: `/spcx:new`, `/spcx:apply`, `/spcx:finalise` for the project's default schema, `/spcx:explore` always, plus a namespaced `/spcx:<schema>-new`/`-apply`/`-finalise` for every other built-in workflow (`/spcx:tdd-driven-new`, `/spcx:security-first-apply`, ...) in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers
 - On an existing codebase (anything already in the directory besides the files above): a native knowledge-graph bundle at `.solidspec/knowledge/` and an `okf` MCP server entry in `.mcp.json`, so agents can query the codebase instead of re-reading it cold — skipped on a fresh empty directory; run `solidspec okf generate` yourself later if you add code first and want it sooner
 
 ### 2. Describe your feature
@@ -607,14 +607,28 @@ solidspec init --here
 
 ### Available slash commands
 
-The 4 commands below (spec-driven schema only) chain the per-phase ones underneath — start here:
+The 4 commands below chain the per-phase ones underneath for the project's own default schema (`minimal` unless `solidspec init --schema` said otherwise) — start here:
 
 | Slash Command | What it does |
 |---------------|-------------|
-| `/spcx:new` | Start a feature end-to-end: spec, clarify, plan, tasks, tests |
+| `/spcx:new` | Start a feature end-to-end through the implement handoff, for the project's default schema |
 | `/spcx:apply` | Implement the feature's tasks |
-| `/spcx:finalise` | Validate, review, and get a SHIP/HOLD decision |
+| `/spcx:finalise` | Whatever comes after implement for that schema (analyze/review/ship, or nothing for `minimal`) |
 | `/spcx:explore` | Exploratory research and discussion — no files written |
+
+**Every other built-in workflow gets the same 3 commands too**, namespaced by schema name — run any workflow's DAG-specific steps without changing `solidspec.toml`'s stored default:
+
+| Slash Command | What it does |
+|---------------|-------------|
+| `/spcx:minimal-new` / `-apply` / `-finalise` | Lean spec → plan → tasks → implement, nothing after |
+| `/spcx:spec-driven-new` / `-apply` / `-finalise` | Full SDD: spec → clarify → plan → tasks → tests → implement → analyze → review → ship |
+| `/spcx:security-first-new` / `-apply` / `-finalise` | Adds a mandatory OWASP-audit gate before tasks |
+| `/spcx:tdd-driven-new` / `-apply` / `-finalise` | Real failing tests (RED) before implementation, refactor phase after |
+| `/spcx:intent-driven-new` / `-apply` / `-finalise` | IDSD: intent capture, evidence collection, drift detection |
+| `/spcx:apex-driven-new` / `-apply` / `-finalise` | Structured APEX (Analyze-Plan-Execute-eXamine) implementation |
+| `/spcx:intent-apex-new` / `-apply` / `-finalise` | Intent-anchored with APEX and evidence collection |
+
+See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd-driven-apply` really does walk you through RED → implement → REFACTOR and `/spcx:minimal-finalise` really does say there's nothing left to run.
 
 Every individual phase also has its own command, for explicit control or other schemas:
 

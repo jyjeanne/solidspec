@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spec_driven_schema
-resource: src/agents/registry.rs#L479-L481
+resource: src/agents/registry.rs#L597-L599
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -28,6 +28,9 @@ relationships:
   - target: functions/src/agents/registry/other_agents_get_flat_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/register_all_registers_per_schema_spcx_commands_too
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -43,3 +46,4 @@ relationships:
 - [claude_gets_namespaced_spcx_commands_not_flat_files](../../../../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md)
 - [spcx_new_body_has_guardrails_and_arguments_placeholder](../../../../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md)
 - [other_agents_get_flat_spcx_commands](../../../../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md)
+- [register_all_registers_per_schema_spcx_commands_too](../../../../functions/src/agents/registry/register_all_registers_per_schema_spcx_commands_too.md)

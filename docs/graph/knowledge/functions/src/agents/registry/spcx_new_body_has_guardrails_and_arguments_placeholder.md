@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spcx_new_body_has_guardrails_and_arguments_placeholder
-resource: src/agents/registry.rs#L875-L886
+resource: src/agents/registry.rs#L993-L1004
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: register_all_with_invalid_agent_returns_error
-resource: src/agents/registry.rs#L777-L784
+title: register_all_registers_per_schema_spcx_commands_too
+resource: src/agents/registry.rs#L1097-L1112
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn register_all_with_invalid_agent_returns_error()`
+`fn register_all_registers_per_schema_spcx_commands_too()`
 
 # Calls
 

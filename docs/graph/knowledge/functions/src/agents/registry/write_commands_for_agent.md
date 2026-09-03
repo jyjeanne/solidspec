@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_commands_for_agent
-resource: src/agents/registry.rs#L199-L247
+resource: src/agents/registry.rs#L255-L303
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -38,11 +38,14 @@ relationships:
   - target: functions/src/agents/registry/register_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/register_all_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
 
-`fn write_commands_for_agent( project_root: &Path, agent: &AgentConfig, commands: &[(&str, &str, String)], ) -> Result<()>`
+`fn write_commands_for_agent( project_root: &Path, agent: &AgentConfig, commands: &[(String, &str, String)], ) -> Result<()>`
 
 # Calls
 
@@ -59,3 +62,4 @@ relationships:
 
 - [register_commands](../../../../functions/src/agents/registry/register_commands.md)
 - [register_spcx_commands](../../../../functions/src/agents/registry/register_spcx_commands.md)
+- [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)

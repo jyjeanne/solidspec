@@ -75,6 +75,18 @@ relationships:
   - target: functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/register_all_schema_spcx_commands_covers_every_builtin_schema
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/registry/per_schema_spcx_bodies_actually_differ_by_schema
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/registry/other_agents_get_flat_per_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/registry/unregister_removes_per_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/registry/apex_command_file_contains_apex_workflow_text
     resolved_by: tree-sitter
     confidence: exact
@@ -109,4 +121,8 @@ relationships:
 - [spcx_new_body_has_guardrails_and_arguments_placeholder](../../../../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md)
 - [other_agents_get_flat_spcx_commands](../../../../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md)
 - [unregister_removes_claude_spcx_directory_contents](../../../../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md)
+- [register_all_schema_spcx_commands_covers_every_builtin_schema](../../../../functions/src/agents/registry/register_all_schema_spcx_commands_covers_every_builtin_schema.md)
+- [per_schema_spcx_bodies_actually_differ_by_schema](../../../../functions/src/agents/registry/per_schema_spcx_bodies_actually_differ_by_schema.md)
+- [other_agents_get_flat_per_schema_spcx_commands](../../../../functions/src/agents/registry/other_agents_get_flat_per_schema_spcx_commands.md)
+- [unregister_removes_per_schema_spcx_commands](../../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
 - [apex_command_file_contains_apex_workflow_text](../../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)

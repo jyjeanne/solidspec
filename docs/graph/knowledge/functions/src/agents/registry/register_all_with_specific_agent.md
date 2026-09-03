@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_with_specific_agent
-resource: src/agents/registry.rs#L647-L656
+resource: src/agents/registry.rs#L765-L774
 visibility: private
 generated:
   by: okf-rs/0.7.0

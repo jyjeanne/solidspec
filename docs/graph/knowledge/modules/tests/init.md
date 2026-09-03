@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: init
-resource: tests/init.rs#L1-L208
+resource: tests/init.rs#L1-L255
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -28,6 +28,7 @@ relationships:
 - [init_with_schema_flag_persists_the_chosen_schema](../../functions/tests/init/init_with_schema_flag_persists_the_chosen_schema.md)
 - [init_with_unknown_schema_fails_before_writing_any_files](../../functions/tests/init/init_with_unknown_schema_fails_before_writing_any_files.md)
 - [init_registers_spcx_commands_matching_the_chosen_schema](../../functions/tests/init/init_registers_spcx_commands_matching_the_chosen_schema.md)
+- [init_registers_namespaced_spcx_commands_for_every_builtin_schema](../../functions/tests/init/init_registers_namespaced_spcx_commands_for_every_builtin_schema.md)
 - [init_on_empty_directory_skips_knowledge_graph_generation](../../functions/tests/init/init_on_empty_directory_skips_knowledge_graph_generation.md)
 - [init_on_existing_codebase_generates_knowledge_graph_and_mcp_config](../../functions/tests/init/init_on_existing_codebase_generates_knowledge_graph_and_mcp_config.md)
 - [init_on_existing_codebase_preserves_other_mcp_servers_already_configured](../../functions/tests/init/init_on_existing_codebase_preserves_other_mcp_servers_already_configured.md)

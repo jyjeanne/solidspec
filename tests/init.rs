@@ -102,6 +102,53 @@ fn init_registers_spcx_commands_matching_the_chosen_schema() {
 }
 
 #[test]
+fn init_registers_namespaced_spcx_commands_for_every_builtin_schema() {
+    let dir = TempDir::new().unwrap();
+    with_claude_dir(dir.path());
+
+    // Regardless of --schema, init also registers /spcx:<schema>-{new,apply,
+    // finalise} for every other built-in workflow, so an agent can run any
+    // of them explicitly without switching the project's stored default —
+    // see src/agents/registry.rs's register_all_schema_spcx_commands.
+    solidspec()
+        .args(["init", "--here", "--no-git", "--schema", "minimal"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    for schema in [
+        "minimal",
+        "spec-driven",
+        "security-first",
+        "tdd-driven",
+        "intent-driven",
+        "apex-driven",
+        "intent-apex",
+    ] {
+        for phase in ["new", "apply", "finalise"] {
+            let path = dir
+                .path()
+                .join(format!(".claude/commands/spcx/{schema}-{phase}.md"));
+            assert!(path.exists(), "missing /spcx:{schema}-{phase}");
+        }
+    }
+
+    // The flagless /spcx:new (the project's minimal default) still exists
+    // alongside the namespaced /spcx:minimal-new — both should say the same
+    // thing since minimal is this project's default schema.
+    let flagless =
+        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/new.md")).unwrap();
+    let namespaced =
+        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/minimal-new.md")).unwrap();
+    assert_eq!(flagless, namespaced);
+
+    // A different schema's content actually differs.
+    let tdd = std::fs::read_to_string(dir.path().join(".claude/commands/spcx/tdd-driven-apply.md"))
+        .unwrap();
+    assert!(tdd.to_lowercase().contains("red"));
+}
+
+#[test]
 fn init_on_empty_directory_skips_knowledge_graph_generation() {
     let dir = TempDir::new().unwrap();
     with_claude_dir(dir.path());

@@ -31,6 +31,9 @@ relationships:
   - target: functions/src/agents/registry/register_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/all_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement
     resolved_by: tree-sitter
     confidence: exact
@@ -80,6 +83,7 @@ relationships:
 # Called by
 
 - [register_spcx_commands](../../../../functions/src/agents/registry/register_spcx_commands.md)
+- [all_schema_spcx_commands](../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
 - [minimal_new_covers_specify_plan_tasks_and_stops_before_implement](../../../../functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement.md)
 - [minimal_finalise_has_nothing_to_run](../../../../functions/src/agents/spcx/minimal_finalise_has_nothing_to_run.md)
 - [minimal_apply_says_schema_ends_here](../../../../functions/src/agents/spcx/minimal_apply_says_schema_ends_here.md)

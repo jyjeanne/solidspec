@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_spcx_commands
-resource: src/agents/registry.rs#L171-L190
+resource: src/agents/registry.rs#L174-L193
 generated:
   by: okf-rs/0.7.0
 relationships:

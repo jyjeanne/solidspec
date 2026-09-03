@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: init_on_existing_codebase_generates_knowledge_graph_and_mcp_config
-resource: tests/init.rs#L121-L151
+resource: tests/init.rs#L168-L198
 visibility: private
 generated:
   by: okf-rs/0.7.0
