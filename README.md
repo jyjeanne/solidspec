@@ -620,7 +620,11 @@ Every built-in workflow gets 3 commands that chain the per-phase ones underneath
 | `/spcx:iapex:new` / `:apply` / `:finalise` | Intent-anchored with APEX and evidence collection |
 | `/spcx:explore` | Exploratory research and discussion — no files written, schema-independent |
 
-See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd:apply` really does walk you through RED → implement → REFACTOR and `/spcx:min:finalise` really does say there's nothing left to run. A project running a fully custom-named schema (`.solidspec/workflows/<name>/schema.yaml`) gets `/spcx:<name>:*` too — unless that name happens to reduce to the same short name as a built-in (e.g. a custom schema literally named `tdd`), in which case `solidspec init`/`upgrade` fail loudly with a rename suggestion instead of silently overwriting the built-in's commands.
+See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd:apply` really does walk you through RED → implement → REFACTOR and `/spcx:min:finalise` really does say there's nothing left to run. `solidspec schemas` prints every schema's `/spcx:<short>:*` commands alongside its description, so you never have to guess a short name.
+
+A project running a fully custom-named schema (`.solidspec/workflows/<name>/schema.yaml`) gets `/spcx:<name>:*` too — registration and `solidspec schemas` both key off the schema's actual identifier (the directory name / `--schema` value), never a `schema.yaml`'s own possibly-stale internal `name:` field, so a custom schema still gets its commands even if that field was left unedited after copying an existing one. The one exception: if the identifier happens to reduce to the same short name as a built-in (checked case-insensitively, since `.claude/commands/spcx/<short>/` is a real directory and macOS/Windows default to case-insensitive filesystems — e.g. a custom schema literally named `tdd` or `TDD`), `solidspec init`/`upgrade` fail loudly with a rename suggestion instead of silently overwriting the built-in's commands.
+
+`/spcx:<short>:apply`'s generated body also reminds the agent to run `solidspec okf generate` before moving on, when a knowledge-graph bundle exists — the interactive flow edits files directly with no `solidspec pipeline` subprocess call in between (unlike `go`/`continue`/`pipeline`, which refresh an existing bundle automatically right after implement/apex/tdd-tests/tdd-refactor), so without that reminder a `/spcx:<short>:finalise` → `solidspec analyze` run right after would flag the agent's own new code as "orphaned" against a stale graph.
 
 Every individual phase also has its own command, for explicit control or other schemas:
 
@@ -1213,7 +1217,7 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 |---------|-------------|
 | `solidspec go "desc"` | Start a feature end-to-end on the default schema — shorthand for `pipeline --new "desc" --auto` |
 | `solidspec continue [id]` | Resume the current (or given) feature at whatever phase is next — shorthand for `pipeline --auto` |
-| `solidspec schemas` | List every workflow schema and its use case |
+| `solidspec schemas` | List every workflow schema, its use case, and its `/spcx:<short>:*` slash commands |
 | `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--only`, `--auto`, `--no-agent`, `--schema`, `--force`, `--dry-run`) — full control, any schema |
 | `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`) and what to run next; intent drift in IDSD mode |
 | `solidspec ship [id]` | Run parallel fan-out review (4 concurrent AI lanes) → `SHIP` / `HOLD` decision (`--lane`, `--no-agent`, `--fail-on-hold`, `--dry-run`, `--timeout`, `--ignore-timeout`) |
