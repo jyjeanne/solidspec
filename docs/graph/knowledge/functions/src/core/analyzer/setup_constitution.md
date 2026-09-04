@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: setup_constitution
-resource: src/core/analyzer.rs#L614-L621
+resource: src/core/analyzer.rs#L638-L645
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -34,6 +34,9 @@ relationships:
   - target: functions/src/core/analyzer/structural_cross_check_accepts_a_real_symbol
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/core/analyzer/structural_cross_check_ignores_bare_config_filenames_in_backticks
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/analyzer/structural_cross_check_flags_existing_file_missing_from_a_stale_bundle
     resolved_by: tree-sitter
     confidence: exact
@@ -63,6 +66,7 @@ relationships:
 - [structural_cross_check_is_none_without_a_bundle](../../../../functions/src/core/analyzer/structural_cross_check_is_none_without_a_bundle.md)
 - [structural_cross_check_flags_unknown_backtick_symbol](../../../../functions/src/core/analyzer/structural_cross_check_flags_unknown_backtick_symbol.md)
 - [structural_cross_check_accepts_a_real_symbol](../../../../functions/src/core/analyzer/structural_cross_check_accepts_a_real_symbol.md)
+- [structural_cross_check_ignores_bare_config_filenames_in_backticks](../../../../functions/src/core/analyzer/structural_cross_check_ignores_bare_config_filenames_in_backticks.md)
 - [structural_cross_check_flags_existing_file_missing_from_a_stale_bundle](../../../../functions/src/core/analyzer/structural_cross_check_flags_existing_file_missing_from_a_stale_bundle.md)
 - [structural_cross_check_ignores_files_that_do_not_exist_yet](../../../../functions/src/core/analyzer/structural_cross_check_ignores_files_that_do_not_exist_yet.md)
 - [format_report_omits_structural_section_without_a_bundle](../../../../functions/src/core/analyzer/format_report_omits_structural_section_without_a_bundle.md)

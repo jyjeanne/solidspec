@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: missing_plan_is_high_finding
-resource: src/core/analyzer.rs#L639-L652
+resource: src/core/analyzer.rs#L663-L676
 visibility: private
 generated:
   by: okf-rs/0.7.0

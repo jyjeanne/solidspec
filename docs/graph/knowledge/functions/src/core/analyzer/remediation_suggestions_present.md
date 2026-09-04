@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: remediation_suggestions_present
-resource: src/core/analyzer.rs#L728-L741
+resource: src/core/analyzer.rs#L752-L765
 visibility: private
 generated:
   by: okf-rs/0.7.0

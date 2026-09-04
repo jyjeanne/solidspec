@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_apex_skill_creates_files_for_claude
-resource: src/agents/registry.rs#L898-L911
+resource: src/agents/registry.rs#L917-L930
 visibility: private
 generated:
   by: okf-rs/0.7.0

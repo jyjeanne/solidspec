@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: structural_cross_check_is_none_without_a_bundle
-resource: src/core/analyzer.rs#L908-L921
+resource: src/core/analyzer.rs#L948-L961
 visibility: private
 generated:
   by: okf-rs/0.7.0

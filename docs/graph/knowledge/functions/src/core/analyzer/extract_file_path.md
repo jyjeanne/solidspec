@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: extract_file_path
-resource: src/core/analyzer.rs#L387-L397
+resource: src/core/analyzer.rs#L411-L421
 visibility: private
 generated:
   by: okf-rs/0.7.0

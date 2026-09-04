@@ -24,6 +24,9 @@ relationships:
   - target: functions/src/config/PipelineConfig/validate
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/core/analyzer/extract_symbol_name
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/core/analyzer/compute_drift
     resolved_by: tree-sitter
     confidence: exact
@@ -104,6 +107,7 @@ relationships:
 - [run](../../../../../functions/src/cli/ship/run.md)
 - [run](../../../../../functions/src/cli/tests_cmd/run.md)
 - [validate](../../../../../functions/src/config/PipelineConfig/validate.md)
+- [extract_symbol_name](../../../../../functions/src/core/analyzer/extract_symbol_name.md)
 - [compute_drift](../../../../../functions/src/core/analyzer/compute_drift.md)
 - [topological_order](../../../../../functions/src/core/artifact_graph/ArtifactGraph/topological_order.md)
 - [generates_present](../../../../../functions/src/core/artifact_graph/ArtifactGraph/generates_present.md)

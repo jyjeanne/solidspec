@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_per_schema_spcx_commands
-resource: src/agents/registry.rs#L1115-L1131
+resource: src/agents/registry.rs#L1134-L1150
 visibility: private
 generated:
   by: okf-rs/0.7.0

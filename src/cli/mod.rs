@@ -240,7 +240,7 @@ pub enum Commands {
         update: bool,
     },
 
-    /// Validate cross-artifact consistency (read-only)
+    /// Validate cross-artifact consistency; writes analysis-report.md
     #[command(alias = "validate")]
     Analyze {
         /// Feature ID (e.g., 001) — auto-detected if omitted

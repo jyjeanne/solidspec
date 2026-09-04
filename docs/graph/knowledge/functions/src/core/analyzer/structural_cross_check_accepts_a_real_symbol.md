@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: structural_cross_check_accepts_a_real_symbol
-resource: src/core/analyzer.rs#L953-L979
+resource: src/core/analyzer.rs#L993-L1019
 visibility: private
 generated:
   by: okf-rs/0.7.0

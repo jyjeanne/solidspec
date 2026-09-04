@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spec_driven_schema
-resource: src/agents/registry.rs#L597-L599
+resource: src/agents/registry.rs#L607-L609
 visibility: private
 generated:
   by: okf-rs/0.7.0

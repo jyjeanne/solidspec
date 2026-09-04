@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: analyzer
-resource: src/core/analyzer.rs#L1-L1086
+resource: src/core/analyzer.rs#L1-L1153
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -79,12 +79,14 @@ relationships:
 - [drift_score_100_when_all_criteria_uncovered](../../../functions/src/core/analyzer/drift_score_100_when_all_criteria_uncovered.md)
 - [extract_symbol_name_strips_call_syntax_and_qualification](../../../functions/src/core/analyzer/extract_symbol_name_strips_call_syntax_and_qualification.md)
 - [extract_symbol_name_rejects_non_identifiers](../../../functions/src/core/analyzer/extract_symbol_name_rejects_non_identifiers.md)
+- [extract_symbol_name_rejects_bare_config_filenames](../../../functions/src/core/analyzer/extract_symbol_name_rejects_bare_config_filenames.md)
 - [extract_file_path_accepts_recognized_source_extensions](../../../functions/src/core/analyzer/extract_file_path_accepts_recognized_source_extensions.md)
 - [extract_file_path_rejects_non_paths](../../../functions/src/core/analyzer/extract_file_path_rejects_non_paths.md)
 - [generate_bundle_for](../../../functions/src/core/analyzer/generate_bundle_for.md)
 - [structural_cross_check_is_none_without_a_bundle](../../../functions/src/core/analyzer/structural_cross_check_is_none_without_a_bundle.md)
 - [structural_cross_check_flags_unknown_backtick_symbol](../../../functions/src/core/analyzer/structural_cross_check_flags_unknown_backtick_symbol.md)
 - [structural_cross_check_accepts_a_real_symbol](../../../functions/src/core/analyzer/structural_cross_check_accepts_a_real_symbol.md)
+- [structural_cross_check_ignores_bare_config_filenames_in_backticks](../../../functions/src/core/analyzer/structural_cross_check_ignores_bare_config_filenames_in_backticks.md)
 - [structural_cross_check_flags_existing_file_missing_from_a_stale_bundle](../../../functions/src/core/analyzer/structural_cross_check_flags_existing_file_missing_from_a_stale_bundle.md)
 - [structural_cross_check_ignores_files_that_do_not_exist_yet](../../../functions/src/core/analyzer/structural_cross_check_ignores_files_that_do_not_exist_yet.md)
 - [format_report_omits_structural_section_without_a_bundle](../../../functions/src/core/analyzer/format_report_omits_structural_section_without_a_bundle.md)

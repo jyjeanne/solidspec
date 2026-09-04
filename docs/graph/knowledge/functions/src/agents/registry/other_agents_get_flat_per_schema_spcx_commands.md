@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: other_agents_get_flat_per_schema_spcx_commands
-resource: src/agents/registry.rs#L1085-L1094
+resource: src/agents/registry.rs#L1104-L1113
 visibility: private
 generated:
   by: okf-rs/0.7.0

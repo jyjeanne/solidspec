@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: format_report_omits_structural_section_without_a_bundle
-resource: src/core/analyzer.rs#L1047-L1061
+resource: src/core/analyzer.rs#L1114-L1128
 visibility: private
 generated:
   by: okf-rs/0.7.0

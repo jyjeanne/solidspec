@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: drift_detects_unsatisfied_criteria
-resource: src/core/analyzer.rs#L808-L827
+resource: src/core/analyzer.rs#L832-L851
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -349,13 +349,34 @@ fn structural_cross_check(tasks_content: &str, project_root: &Path) -> Option<Ve
     Some(findings)
 }
 
+/// Bare filenames commonly written in backticks in prose (`` `Cargo.toml` ``,
+/// `` `package.json` ``, `` `.gitignore` ``) that would otherwise be
+/// misread by `extract_symbol_name` as a qualified symbol whose last
+/// segment is the extension itself ("toml", "json", ...) — these have no
+/// `/`, so `extract_file_path` never catches them either. Scoped to
+/// extensions that are unambiguously config/doc filenames, never plausible
+/// method/function names, to keep false negatives on real symbols near zero.
+const NON_SYMBOL_FILE_EXTENSIONS: &[&str] = &[
+    "toml",
+    "json",
+    "yaml",
+    "yml",
+    "md",
+    "lock",
+    "gitignore",
+    "dockerignore",
+    "editorconfig",
+    "npmrc",
+];
+
 /// Extracts a plausible bare symbol name from a backtick span's raw text:
 /// strips a trailing `(...)` call syntax, then takes the last segment of a
 /// qualified name (`Foo.bar`, `foo::bar`) — the graph indexes concepts by
 /// their own short name (`Concept::name`), not a qualified path. Returns
 /// `None` for anything that isn't a single bare identifier (multi-word
-/// text, an actual file path — handled separately by `extract_file_path`)
-/// so this stays a conservative, low-noise check.
+/// text, an actual file path — handled separately by `extract_file_path`,
+/// or a bare filename like `Cargo.toml` with no `/` for either check to
+/// exempt) so this stays a conservative, low-noise check.
 fn extract_symbol_name(raw: &str) -> Option<String> {
     let without_call = raw.split('(').next().unwrap_or(raw).trim();
     if without_call.is_empty()
@@ -368,6 +389,9 @@ fn extract_symbol_name(raw: &str) -> Option<String> {
         .rsplit(['.', ':'])
         .next()
         .unwrap_or(without_call);
+    if NON_SYMBOL_FILE_EXTENSIONS.contains(&last_segment.to_lowercase().as_str()) {
+        return None;
+    }
     let is_identifier = !last_segment.is_empty()
         && last_segment
             .chars()
@@ -878,6 +902,22 @@ Allow PDF export.
     }
 
     #[test]
+    fn extract_symbol_name_rejects_bare_config_filenames() {
+        // Regression: `Cargo.toml`/`.gitignore` etc. have no '/' (so
+        // extract_file_path never sees them) and would otherwise be
+        // misread as a qualified symbol named "toml"/"gitignore".
+        assert_eq!(extract_symbol_name("Cargo.toml"), None);
+        assert_eq!(extract_symbol_name("package.json"), None);
+        assert_eq!(extract_symbol_name(".gitignore"), None);
+        assert_eq!(extract_symbol_name("docker-compose.yml"), None);
+        // A real qualified symbol must still be extracted.
+        assert_eq!(
+            extract_symbol_name("CombatSystem.calculate_damage"),
+            Some("calculate_damage".to_string())
+        );
+    }
+
+    #[test]
     fn extract_file_path_accepts_recognized_source_extensions() {
         assert_eq!(
             extract_file_path("src/combat/system.rs"),
@@ -976,6 +1016,33 @@ Allow PDF export.
                 .any(|f| f.message.contains("calculate_damage")),
             "a real symbol must not be flagged: {findings:?}"
         );
+    }
+
+    #[test]
+    fn structural_cross_check_ignores_bare_config_filenames_in_backticks() {
+        // Regression: `` `Cargo.toml` ``/`` `.gitignore` `` are extremely
+        // common in real tasks.md prose and must never be flagged as an
+        // unknown symbol.
+        let dir = TempDir::new().unwrap();
+        std::fs::write(
+            dir.path().join("combat.rs"),
+            "pub fn calculate_damage() {}\n",
+        )
+        .unwrap();
+        generate_bundle_for(dir.path());
+
+        let feature = dir.path().join("specs/001-auth");
+        setup_feature(
+            &feature,
+            "# Spec\n",
+            Some("# Plan\n"),
+            Some("- [ ] T001 Update `Cargo.toml` and `.gitignore` for the new dependency\n"),
+        );
+        setup_constitution(dir.path());
+
+        let report = analyze_feature(&feature, dir.path()).unwrap();
+        let findings = report.structural_cross_check.unwrap();
+        assert!(findings.is_empty(), "{findings:?}");
     }
 
     #[test]

@@ -55,13 +55,16 @@ SolidSpec is a Rust CLI tool (Rust 2024 edition) that scaffolds Specification-Dr
 
 ### Workflow schemas
 
-Four built-in schemas in `schemas/`:
-- `spec-driven` (default) — 8 artifacts: spec → clarify → plan → tasks → tests → implement → analyze → review
-- `minimal` — 4 artifacts
+Seven built-in schemas in `schemas/`:
+- `minimal` (`solidspec init`'s actual default when `--schema` is omitted) — 4 artifacts: spec → plan → tasks → implement
+- `spec-driven` — 9 artifacts: spec → clarify → plan → tasks → tests → implement → analyze → review → ship
 - `security-first` — adds a `security-review` artifact between plan and tasks
+- `tdd-driven` — real failing tests (RED) before implementation, `tdd-refactor` phase after
 - `intent-driven` — IDSD mode, adds `intent` as phase 0 before spec
+- `apex-driven` — SDD with APEX replacing the manual `implement` handoff
+- `intent-apex` — IDSD + APEX, maximum rigor
 
-Custom schemas live at `.solidspec/workflows/<name>/schema.yaml`.
+Custom schemas live at `.solidspec/workflows/<name>/schema.yaml`. Run `solidspec schemas` for this same list with each one's use case, from the terminal.
 
 ### Feature directories
 

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_apex_skill
-resource: src/agents/registry.rs#L381-L388
+resource: src/agents/registry.rs#L383-L390
 generated:
   by: okf-rs/0.7.0
 relationships:

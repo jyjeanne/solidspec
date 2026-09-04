@@ -1,12 +1,15 @@
 ---
 type: Rust Function
 title: extract_symbol_name
-resource: src/core/analyzer.rs#L359-L380
+resource: src/core/analyzer.rs#L380-L404
 visibility: private
 generated:
   by: okf-rs/0.7.0
 relationships:
   calls:
+  - target: functions/src/core/intent_parser/IntentStatus/as_str
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/templates/all
     resolved_by: tree-sitter
     confidence: exact
@@ -22,6 +25,7 @@ relationships:
 
 # Calls
 
+- [as_str](../../../../functions/src/core/intent_parser/IntentStatus/as_str.md)
 - [all](../../../../functions/src/templates/all.md)
 
 # Called by

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: per_schema_spcx_bodies_actually_differ_by_schema
-resource: src/agents/registry.rs#L1056-L1082
+resource: src/agents/registry.rs#L1075-L1101
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: all_schema_spcx_commands
-resource: src/agents/registry.rs#L230-L246
+resource: src/agents/registry.rs#L231-L247
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,6 +17,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
+  - target: functions/src/agents/registry/register_all
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/registry/register_all_schema_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
@@ -34,4 +37,5 @@ relationships:
 
 # Called by
 
+- [register_all](../../../../functions/src/agents/registry/register_all.md)
 - [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)

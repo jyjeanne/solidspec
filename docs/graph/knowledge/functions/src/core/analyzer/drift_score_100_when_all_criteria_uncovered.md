@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: drift_score_100_when_all_criteria_uncovered
-resource: src/core/analyzer.rs#L830-L852
+resource: src/core/analyzer.rs#L854-L876
 visibility: private
 generated:
   by: okf-rs/0.7.0

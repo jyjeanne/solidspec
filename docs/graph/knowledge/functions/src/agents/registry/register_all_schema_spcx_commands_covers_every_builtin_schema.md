@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_schema_spcx_commands_covers_every_builtin_schema
-resource: src/agents/registry.rs#L1040-L1053
+resource: src/agents/registry.rs#L1059-L1072
 visibility: private
 generated:
   by: okf-rs/0.7.0

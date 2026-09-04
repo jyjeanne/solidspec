@@ -168,9 +168,9 @@ pub fn register_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>
 /// Register the schema-dependent `/spcx:*` meta commands (`new`/`apply`/
 /// `finalise` — see `super::spcx`) for a specific agent, using `schema` to
 /// decide what each one says. This is the flagless shorthand for the
-/// project's own default schema — see `register_all_schema_spcx_commands`
-/// below for the explicit, per-schema-namespaced form covering every other
-/// built-in workflow too.
+/// project's own default schema — see `all_schema_spcx_commands` below for
+/// the explicit, per-schema-namespaced form covering every other built-in
+/// workflow too.
 pub fn register_spcx_commands(
     project_root: &Path,
     agent: &AgentConfig,
@@ -208,25 +208,26 @@ const SPCX_PHASES: &[(&str, &str)] = &[
     ),
 ];
 
-/// Register `/spcx:<schema>-{new,apply,finalise}` for every built-in
-/// workflow schema (docs/simplification-study-openspec.md's slash-command
-/// design, extended so an agent isn't limited to the project's own default
-/// schema): lets an AI agent run any workflow's DAG-specific steps —
-/// `/spcx:tdd-driven-new`, `/spcx:security-first-apply`, ... — without
-/// changing `solidspec.toml`'s `[pipeline].schema`. The project's default
-/// schema still also gets the flagless `/spcx:new`/`/spcx:apply`/
-/// `/spcx:finalise` from `register_spcx_commands` above, so the common case
-/// stays a single memorable name.
+/// Builds the `/spcx:<schema>-{new,apply,finalise}` `(name, description,
+/// body)` triples for every built-in workflow schema
+/// (docs/simplification-study-openspec.md's slash-command design, extended
+/// so an agent isn't limited to the project's own default schema): lets an
+/// AI agent run any workflow's DAG-specific steps — `/spcx:tdd-driven-new`,
+/// `/spcx:security-first-apply`, ... — without changing `solidspec.toml`'s
+/// `[pipeline].schema`. The project's default schema still also gets the
+/// flagless `/spcx:new`/`/spcx:apply`/`/spcx:finalise` from
+/// `register_spcx_commands` above, so the common case stays a single
+/// memorable name.
 ///
 /// Project-local overrides at `.solidspec/workflows/<name>/schema.yaml`
 /// (via `schema::resolve_schema`) apply here too, same as everywhere else a
 /// schema name is resolved — a customized `spec-driven` changes what
 /// `/spcx:spec-driven-*` says without this function needing to know that.
-pub fn register_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
-    let commands = all_schema_spcx_commands(project_root)?;
-    write_commands_for_agent(project_root, agent, &commands)
-}
-
+///
+/// Schema-independent of any one agent — callers compute this once and
+/// pass it to `write_commands_for_agent` per agent (see `register_all`)
+/// rather than re-resolving all 7 schemas and regenerating their bodies
+/// once per agent for identical output.
 fn all_schema_spcx_commands(project_root: &Path) -> Result<Vec<(String, &'static str, String)>> {
     let mut commands = Vec::new();
     for schema_name in crate::core::schema::builtin::names() {
@@ -249,9 +250,10 @@ fn all_schema_spcx_commands(project_root: &Path) -> Result<Vec<(String, &'static
 /// placeholder, appends the compliance footer, and renders/writes each
 /// `(name, description, body)` triple in the target agent's format. Used by
 /// `register_commands` (static bodies), `register_spcx_commands`, and
-/// `register_all_schema_spcx_commands` (schema-generated bodies) so
-/// agent-specific handling (Copilot's dual files, Claude's spcx/
-/// namespacing, directory-based skills, ...) lives in exactly one place.
+/// `register_all` (with `all_schema_spcx_commands`'s schema-generated
+/// bodies) so agent-specific handling (Copilot's dual files, Claude's
+/// spcx/ namespacing, directory-based skills, ...) lives in exactly one
+/// place.
 fn write_commands_for_agent(
     project_root: &Path,
     agent: &AgentConfig,
@@ -455,9 +457,9 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
 }
 
 /// Remove the per-schema-namespaced `/spcx:<schema>-*` command files written
-/// by `register_all_schema_spcx_commands`. Mirrors `unregister_commands`'s
-/// per-agent path logic but iterates the dynamic per-schema name set instead
-/// of the static `COMMANDS` table.
+/// via `all_schema_spcx_commands` in `register_all`. Mirrors
+/// `unregister_commands`'s per-agent path logic but iterates the dynamic
+/// per-schema name set instead of the static `COMMANDS` table.
 fn unregister_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -521,6 +523,14 @@ pub fn register_all(
 ) -> Result<Vec<String>> {
     let mut registered = Vec::new();
 
+    // Computed once and reused for every agent below: the (name,
+    // description, body) triples for all 7 built-in schemas' /spcx:*
+    // commands are agent-independent (only write_commands_for_agent's
+    // placement differs per agent) — resolving each schema and generating
+    // its bodies again per agent would redo the same schema.yaml reads and
+    // DAG walks once per detected agent for no behavioral difference.
+    let schema_spcx_commands = all_schema_spcx_commands(project_root)?;
+
     if let Some(agent_id) = target_agent {
         // Register for a specific agent
         let agent = find_agent(agent_id).ok_or_else(|| {
@@ -535,7 +545,7 @@ pub fn register_all(
         std::fs::create_dir_all(cmd_dir.join(agent.commands_subdir))?;
         register_commands(project_root, agent)?;
         register_spcx_commands(project_root, agent, schema)?;
-        register_all_schema_spcx_commands(project_root, agent)?;
+        write_commands_for_agent(project_root, agent, &schema_spcx_commands)?;
         register_apex_skill(agent_id, project_root)?;
         registered.push(agent.id.to_string());
     } else {
@@ -545,7 +555,7 @@ pub fn register_all(
             if det.dir_exists || det.cli_available {
                 register_commands(project_root, det.config)?;
                 register_spcx_commands(project_root, det.config, schema)?;
-                register_all_schema_spcx_commands(project_root, det.config)?;
+                write_commands_for_agent(project_root, det.config, &schema_spcx_commands)?;
                 register_apex_skill(det.config.id, project_root)?;
                 registered.push(det.config.id.to_string());
             }
@@ -596,6 +606,15 @@ mod tests {
 
     fn spec_driven_schema() -> WorkflowSchema {
         WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap()
+    }
+
+    /// Test-only equivalent of what `register_all` does for the per-schema
+    /// `/spcx:*` commands: compute them once, write them for one agent.
+    /// `register_all` itself now inlines this (see its doc comment on why
+    /// it isn't a standalone production function anymore).
+    fn register_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
+        let commands = all_schema_spcx_commands(project_root)?;
+        write_commands_for_agent(project_root, agent, &commands)
     }
 
     #[test]

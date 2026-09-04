@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_claude_spcx_directory_contents
-resource: src/agents/registry.rs#L1022-L1035
+resource: src/agents/registry.rs#L1041-L1054
 visibility: private
 generated:
   by: okf-rs/0.7.0

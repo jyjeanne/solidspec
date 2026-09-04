@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: format_report_includes_structural_section_with_a_bundle
-resource: src/core/analyzer.rs#L1064-L1085
+resource: src/core/analyzer.rs#L1131-L1152
 visibility: private
 generated:
   by: okf-rs/0.7.0

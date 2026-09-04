@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_command_file
-resource: src/agents/registry.rs#L306-L351
+resource: src/agents/registry.rs#L308-L353
 visibility: private
 generated:
   by: okf-rs/0.7.0

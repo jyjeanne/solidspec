@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: structural_cross_check_flags_existing_file_missing_from_a_stale_bundle
-resource: src/core/analyzer.rs#L1049-L1085
+title: structural_cross_check_ignores_bare_config_filenames_in_backticks
+resource: src/core/analyzer.rs#L1022-L1046
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -20,7 +20,7 @@ relationships:
 
 # Signature
 
-`fn structural_cross_check_flags_existing_file_missing_from_a_stale_bundle()`
+`fn structural_cross_check_ignores_bare_config_filenames_in_backticks()`
 
 # Calls
 

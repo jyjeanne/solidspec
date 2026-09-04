@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: structural_cross_check_flags_unknown_backtick_symbol
-resource: src/core/analyzer.rs#L924-L950
+resource: src/core/analyzer.rs#L964-L990
 visibility: private
 generated:
   by: okf-rs/0.7.0
