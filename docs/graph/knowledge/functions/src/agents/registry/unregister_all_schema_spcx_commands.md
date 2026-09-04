@@ -1,13 +1,16 @@
 ---
 type: Rust Function
 title: unregister_all_schema_spcx_commands
-resource: src/agents/registry.rs#L463-L516
+resource: src/agents/registry.rs#L518-L593
 visibility: private
 generated:
   by: okf-rs/0.7.0
 relationships:
   calls:
   - target: functions/src/core/schema/names
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/schema_short_name
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/formats/kimi_command_name
@@ -24,11 +27,12 @@ relationships:
 
 # Signature
 
-`fn unregister_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>`
+`fn unregister_all_schema_spcx_commands( project_root: &Path, agent: &AgentConfig, default_schema_name: Option<&str>, ) -> Result<()>`
 
 # Calls
 
 - [names](../../../../functions/src/core/schema/names.md)
+- [schema_short_name](../../../../functions/src/agents/spcx/schema_short_name.md)
 - [kimi_command_name](../../../../functions/src/agents/formats/kimi_command_name.md)
 - [standard_command_name](../../../../functions/src/agents/formats/standard_command_name.md)
 

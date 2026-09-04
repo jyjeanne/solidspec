@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate_knowledge_graph_and_mcp_config
-resource: src/cli/init.rs#L150-L172
+resource: src/cli/init.rs#L144-L166
 visibility: private
 generated:
   by: okf-rs/0.7.0

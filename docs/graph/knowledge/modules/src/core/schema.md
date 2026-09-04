@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: schema
-resource: src/core/schema.rs#L1-L518
+resource: src/core/schema.rs#L1-L551
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -55,6 +55,7 @@ relationships:
 - [intent_driven_schema_has_ship_artifact](../../../functions/src/core/schema/intent_driven_schema_has_ship_artifact.md)
 - [intent_driven_schema_has_evidence_artifact](../../../functions/src/core/schema/intent_driven_schema_has_evidence_artifact.md)
 - [list_available_schemas_includes_builtins](../../../functions/src/core/schema/list_available_schemas_includes_builtins.md)
+- [list_available_schemas_project_local_uses_directory_name_not_yaml_label](../../../functions/src/core/schema/list_available_schemas_project_local_uses_directory_name_not_yaml_label.md)
 - [parse_apex_driven_schema](../../../functions/src/core/schema/parse_apex_driven_schema.md)
 - [apex_driven_has_apex_not_implement](../../../functions/src/core/schema/apex_driven_has_apex_not_implement.md)
 - [apex_driven_apex_requires_tasks](../../../functions/src/core/schema/apex_driven_apex_requires_tasks.md)

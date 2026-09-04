@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: init
-resource: src/cli/init.rs#L1-L283
+resource: src/cli/init.rs#L1-L277
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -22,6 +22,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: external/crate-core-git
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: external/crate-core-okf-default-bundle-dir-as-okf-bundle-dir
     resolved_by: tree-sitter
     confidence: exact
   - target: external/crate-core-schema
@@ -58,6 +61,7 @@ relationships:
 - `crate::agents::registry`
 - `crate::config::{InitOptions, ProjectInternalConfig, RootConfig}`
 - `crate::core::git`
+- `crate::core::okf::DEFAULT_BUNDLE_DIR as OKF_BUNDLE_DIR`
 - `crate::core::schema`
 - `crate::extensions`
 - `crate::templates`

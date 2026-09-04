@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/schemas.rs#L10-L44
+resource: src/cli/schemas.rs#L11-L53
 generated:
   by: okf-rs/0.7.0
 relationships:

@@ -185,7 +185,16 @@ pub fn list_available_schemas(project_root: &Path) -> Vec<SchemaInfo> {
                     && let Ok(schema) = WorkflowSchema::parse(&content)
                 {
                     schemas.push(SchemaInfo {
-                        name: schema.name,
+                        // The directory name, not `schema.name`: nothing
+                        // enforces that a project-local schema.yaml's own
+                        // `name:` field matches the directory it lives in
+                        // (e.g. one started as a copy of another schema's
+                        // schema.yaml with that field left unedited) — this
+                        // is the identifier `--schema`/`[pipeline].schema`
+                        // actually resolves by (see `resolve_schema`'s
+                        // Level 1), so it's the one that must be shown and
+                        // used, not the possibly-stale label.
+                        name,
                         version: schema.version,
                         description: schema.description,
                         use_case: schema.use_case,
@@ -363,6 +372,30 @@ artifacts:
         for s in &schemas {
             assert!(s.artifact_count >= 2, "{} has too few artifacts", s.name);
         }
+    }
+
+    #[test]
+    fn list_available_schemas_project_local_uses_directory_name_not_yaml_label() {
+        // A project-local schema's schema.yaml can carry a `name:` field
+        // that doesn't match the directory it lives in (e.g. started as a
+        // copy of an existing schema.yaml with that field left unedited) —
+        // list_available_schemas (and everything downstream of it, like
+        // `solidspec schemas` and /spcx:<name>:* registration) must report
+        // the directory name, the actual identifier `--schema`/
+        // `[pipeline].schema` resolve by, not the possibly-stale label.
+        let dir = TempDir::new().unwrap();
+        let workflow_dir = dir.path().join(".solidspec/workflows/my-flow");
+        std::fs::create_dir_all(&workflow_dir).unwrap();
+        // builtin::SPEC_DRIVEN's own `name:` field is "spec-driven", not
+        // "my-flow" — written verbatim, deliberately mismatched.
+        std::fs::write(workflow_dir.join("schema.yaml"), builtin::SPEC_DRIVEN).unwrap();
+
+        let schemas = list_available_schemas(dir.path());
+        let custom = schemas
+            .iter()
+            .find(|s| s.source == "project-local")
+            .expect("project-local schema missing");
+        assert_eq!(custom.name, "my-flow");
     }
 
     // ── APEX schemas ──────────────────────────────────────────────────────────

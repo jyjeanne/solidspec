@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: load_graph_one_step
-resource: src/core/schema.rs#L510-L517
+resource: src/core/schema.rs#L543-L550
 visibility: private
 generated:
   by: okf-rs/0.7.0

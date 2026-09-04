@@ -89,6 +89,7 @@
 - [init](../modules/tests/init.md) — Rust Module
 - [okf_extension](../modules/tests/okf_extension.md) — Rust Module
 - [pipeline](../modules/tests/pipeline.md) — Rust Module
+- [schemas](../modules/tests/schemas.md) — Rust Module
 - [security_first_minimal](../modules/tests/security_first_minimal.md) — Rust Module
 - [ship](../modules/tests/ship.md) — Rust Module
 - [status](../modules/tests/status.md) — Rust Module

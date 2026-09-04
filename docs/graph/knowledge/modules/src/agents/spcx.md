@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: spcx
-resource: src/agents/spcx.rs#L1-L287
+resource: src/agents/spcx.rs#L1-L377
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -38,6 +38,7 @@ relationships:
 - [SpcxBodies](../../../classes/src/agents/spcx/SpcxBodies.md)
 - [cli_command_for](../../../functions/src/agents/spcx/cli_command_for.md)
 - [artifact_id_for_phase](../../../functions/src/agents/spcx/artifact_id_for_phase.md)
+- [schema_short_name](../../../functions/src/agents/spcx/schema_short_name.md)
 - [generate_bodies](../../../functions/src/agents/spcx/generate_bodies.md)
 - [render_new](../../../functions/src/agents/spcx/render_new.md)
 - [render_apply](../../../functions/src/agents/spcx/render_apply.md)
@@ -51,7 +52,10 @@ relationships:
 - [security_first_new_includes_security_review_step](../../../functions/src/agents/spcx/security_first_new_includes_security_review_step.md)
 - [security_first_finalise_has_nothing_to_run](../../../functions/src/agents/spcx/security_first_finalise_has_nothing_to_run.md)
 - [tdd_driven_apply_covers_all_three_handoff_phases](../../../functions/src/agents/spcx/tdd_driven_apply_covers_all_three_handoff_phases.md)
+- [apply_reminds_the_agent_to_refresh_the_knowledge_graph](../../../functions/src/agents/spcx/apply_reminds_the_agent_to_refresh_the_knowledge_graph.md)
 - [intent_driven_new_uses_intent_cli_command_first](../../../functions/src/agents/spcx/intent_driven_new_uses_intent_cli_command_first.md)
+- [schema_short_name_maps_every_builtin_and_is_hyphen_free](../../../functions/src/agents/spcx/schema_short_name_maps_every_builtin_and_is_hyphen_free.md)
+- [schema_short_name_passes_through_unknown_names](../../../functions/src/agents/spcx/schema_short_name_passes_through_unknown_names.md)
 - [every_builtin_schema_generates_without_error](../../../functions/src/agents/spcx/every_builtin_schema_generates_without_error.md)
 
 # Imports

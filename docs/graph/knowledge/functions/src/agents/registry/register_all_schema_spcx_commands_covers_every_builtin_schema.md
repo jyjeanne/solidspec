@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_schema_spcx_commands_covers_every_builtin_schema
-resource: src/agents/registry.rs#L1059-L1072
+resource: src/agents/registry.rs#L1143-L1157
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -16,6 +16,9 @@ relationships:
   - target: functions/src/core/schema/names
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/spcx/schema_short_name
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -27,3 +30,4 @@ relationships:
 - [find_agent](../../../../functions/src/agents/config/find_agent.md)
 - [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)
 - [names](../../../../functions/src/core/schema/names.md)
+- [schema_short_name](../../../../functions/src/agents/spcx/schema_short_name.md)

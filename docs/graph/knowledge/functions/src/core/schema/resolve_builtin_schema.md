@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_builtin_schema
-resource: src/core/schema.rs#L262-L267
+resource: src/core/schema.rs#L271-L276
 visibility: private
 generated:
   by: okf-rs/0.7.0

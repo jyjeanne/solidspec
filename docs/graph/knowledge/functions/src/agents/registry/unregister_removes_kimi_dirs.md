@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_kimi_dirs
-resource: src/agents/registry.rs#L773-L781
+resource: src/agents/registry.rs#L876-L884
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: go_and_continue_use_the_projects_stored_default_schema
-resource: tests/init.rs#L231-L255
+resource: tests/init.rs#L214-L238
 visibility: private
 generated:
   by: okf-rs/0.7.0

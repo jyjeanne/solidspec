@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: command_files_contain_compliance_guardrails
-resource: src/agents/registry.rs#L882-L893
+resource: src/agents/registry.rs#L985-L996
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate_constitution
-resource: src/cli/init.rs#L250-L268
+resource: src/cli/init.rs#L244-L262
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/upgrade.rs#L7-L79
+resource: src/cli/upgrade.rs#L7-L78
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -13,9 +13,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/templates/copy_embedded_scripts
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/core/schema/resolve_schema
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/register_all
@@ -32,5 +29,4 @@ relationships:
 - [find_project_root](../../../../functions/src/config/find_project_root.md)
 - [all](../../../../functions/src/templates/all.md)
 - [copy_embedded_scripts](../../../../functions/src/templates/copy_embedded_scripts.md)
-- [resolve_schema](../../../../functions/src/core/schema/resolve_schema.md)
 - [register_all](../../../../functions/src/agents/registry/register_all.md)

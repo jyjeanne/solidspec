@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: intent_apex_converts_to_valid_graph
-resource: src/core/schema.rs#L468-L473
+resource: src/core/schema.rs#L501-L506
 visibility: private
 generated:
   by: okf-rs/0.7.0

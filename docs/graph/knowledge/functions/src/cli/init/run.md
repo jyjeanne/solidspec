@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/init.rs#L19-L132
+resource: src/cli/init.rs#L14-L126
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -13,9 +13,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/core/schema/by_name
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/core/schema/resolve_schema
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/cli/init/create_directory_structure
@@ -65,7 +62,6 @@ relationships:
 - [resolve_project_dir](../../../../functions/src/cli/init/resolve_project_dir.md)
 - [has_existing_codebase](../../../../functions/src/cli/init/has_existing_codebase.md)
 - [by_name](../../../../functions/src/core/schema/by_name.md)
-- [resolve_schema](../../../../functions/src/core/schema/resolve_schema.md)
 - [create_directory_structure](../../../../functions/src/cli/init/create_directory_structure.md)
 - [copy_embedded_templates](../../../../functions/src/templates/copy_embedded_templates.md)
 - [copy_embedded_scripts](../../../../functions/src/templates/copy_embedded_scripts.md)

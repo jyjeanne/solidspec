@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: list_available_schemas_includes_apex_schemas
-resource: src/core/schema.rs#L492-L497
+resource: src/core/schema.rs#L525-L530
 visibility: private
 generated:
   by: okf-rs/0.7.0

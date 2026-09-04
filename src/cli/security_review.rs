@@ -54,7 +54,22 @@ pub fn run(feature_id: Option<&str>, dry_run: bool) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
     use tempfile::TempDir;
+
+    /// `run()` resolves everything relative to `std::env::current_dir()` —
+    /// process-global state shared by every test thread in this binary, not
+    /// just the ones below. `cargo test` runs tests in parallel by default,
+    /// so without serializing them, two of the four tests here (each doing
+    /// `set_current_dir` immediately followed by a call to `run()`) can
+    /// interleave: thread A sets cwd to its own tempdir, thread B — running
+    /// concurrently — overwrites it with *its* tempdir before thread A's
+    /// `run()` call reads cwd back, so `run()` looks for `specs/` in the
+    /// wrong directory and fails with a spurious "No feature matching ...
+    /// found" error (observed intermittently in CI). Holding this lock for
+    /// each test's full body is the standard fix for tests that must
+    /// exercise real cwd-relative resolution.
+    static CWD_LOCK: Mutex<()> = Mutex::new(());
 
     fn init(dir: &std::path::Path) {
         std::fs::create_dir_all(dir.join(".solidspec")).unwrap();
@@ -63,6 +78,7 @@ mod tests {
 
     #[test]
     fn fails_outside_project() {
+        let _guard = CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = TempDir::new().unwrap();
         std::env::set_current_dir(dir.path()).unwrap();
         let err = run(Some("001"), false).unwrap_err();
@@ -75,6 +91,7 @@ mod tests {
         // `feature_dir.exists()` check in `run` (an empty specs/ dir, as
         // opposed to a missing one, makes `feature::resolve_feature` return
         // the requested id unresolved rather than erroring earlier).
+        let _guard = CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = TempDir::new().unwrap();
         init(dir.path());
         std::fs::create_dir_all(dir.path().join("specs/001-other")).unwrap();
@@ -85,6 +102,7 @@ mod tests {
 
     #[test]
     fn writes_report_when_plan_exists() {
+        let _guard = CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = TempDir::new().unwrap();
         init(dir.path());
         let feature_dir = dir.path().join("specs/001-test");
@@ -100,6 +118,7 @@ mod tests {
 
     #[test]
     fn dry_run_does_not_write_file() {
+        let _guard = CWD_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let dir = TempDir::new().unwrap();
         init(dir.path());
         let feature_dir = dir.path().join("specs/001-test");

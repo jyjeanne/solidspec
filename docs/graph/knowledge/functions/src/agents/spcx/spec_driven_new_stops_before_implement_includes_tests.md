@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spec_driven_new_stops_before_implement_includes_tests
-resource: src/agents/spcx.rs#L238-L241
+resource: src/agents/spcx.rs#L291-L294
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: intent_driven_new_uses_intent_cli_command_first
-resource: src/agents/spcx.rs#L273-L277
+resource: src/agents/spcx.rs#L338-L342
 visibility: private
 generated:
   by: okf-rs/0.7.0

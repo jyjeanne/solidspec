@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: cli_command_for
-resource: src/agents/spcx.rs#L49-L55
+resource: src/agents/spcx.rs#L52-L58
 visibility: private
 generated:
   by: okf-rs/0.7.0

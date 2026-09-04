@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: parse_security_first_schema
-resource: src/core/schema.rs#L245-L251
+resource: src/core/schema.rs#L254-L260
 visibility: private
 generated:
   by: okf-rs/0.7.0

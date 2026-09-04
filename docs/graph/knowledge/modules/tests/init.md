@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: init
-resource: tests/init.rs#L1-L255
+resource: tests/init.rs#L1-L238
 generated:
   by: okf-rs/0.7.0
 relationships:

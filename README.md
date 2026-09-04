@@ -168,7 +168,7 @@ SolidSpec auto-detects your AI agent (if it has a `.claude/`, `.cursor/`, ... di
 - `.solidspec/` &mdash; constitution, templates, config
 - `specs/` &mdash; where feature artifacts live
 - `solidspec.toml` &mdash; project configuration, including which workflow schema this project defaults to (`minimal` unless you pass `--schema`, e.g. `solidspec init --here --schema spec-driven`)
-- Slash commands in your agent's native format: `/spcx:new`, `/spcx:apply`, `/spcx:finalise` for the project's default schema, `/spcx:explore` always, plus a namespaced `/spcx:<schema>-new`/`-apply`/`-finalise` for every other built-in workflow (`/spcx:tdd-driven-new`, `/spcx:security-first-apply`, ...) in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers
+- Slash commands in your agent's native format: `/spcx:<schema>:new`/`:apply`/`:finalise` for every built-in workflow, reduced-schema-name namespaced (`/spcx:min:new`, `/spcx:sdd:apply`, `/spcx:tdd:finalise`, ...), plus `/spcx:explore` always — three-segment `<namespace>:<domain>:<action>` naming in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers
 - On an existing codebase (anything already in the directory besides the files above): a native knowledge-graph bundle at `.solidspec/knowledge/` and an `okf` MCP server entry in `.mcp.json`, so agents can query the codebase instead of re-reading it cold — skipped on a fresh empty directory; run `solidspec okf generate` yourself later if you add code first and want it sooner. Once a bundle exists, `solidspec pipeline`/`go`/`continue` refresh it automatically right after every code-writing handoff (`implement`, `apex`, `tdd-tests`, `tdd-refactor` — whichever your schema uses), so it never goes stale — `solidspec analyze` cross-checks `tasks.md` against it (see below)
 
 ### 2. Describe your feature
@@ -176,7 +176,7 @@ SolidSpec auto-detects your AI agent (if it has a `.claude/`, `.cursor/`, ... di
 In your AI agent, run:
 
 ```
-/spcx:new "TODO list with CRUD operations and local storage"
+/spcx:min:new "TODO list with CRUD operations and local storage"
 ```
 
 This scaffolds and fills in every artifact through the implement handoff for your project's schema in one pass — `spec.md`, `plan.md`, `tasks.md` for the `minimal` default; also `clarify` and test scaffolds for `spec-driven`. (Prefer the terminal? `solidspec go "..."` does the same thing from the CLI, always on the project's own schema; `solidspec pipeline --new "..." --schema tdd-driven --no-agent` runs any schema explicitly, regardless of the project's default.)
@@ -184,8 +184,8 @@ This scaffolds and fills in every artifact through the implement handoff for you
 ### 3. Implement and ship
 
 ```
-/spcx:apply       # implement the tasks
-/spcx:finalise    # validate, review, and get a SHIP/HOLD decision
+/spcx:min:apply       # implement the tasks
+/spcx:min:finalise    # validate, review, and get a SHIP/HOLD decision
 ```
 
 Or from the terminal: `solidspec continue` to resume at whatever's next, `solidspec status` any time to see where things stand.
@@ -607,28 +607,24 @@ solidspec init --here
 
 ### Available slash commands
 
-The 4 commands below chain the per-phase ones underneath for the project's own default schema (`minimal` unless `solidspec init --schema` said otherwise) — start here:
+Every built-in workflow gets 3 commands that chain the per-phase ones underneath, namespaced `/spcx:<schema>:<action>` (reduced schema name : phase, `<namespace>:<domain>:<action>`-style) — run any workflow's DAG-specific steps without touching `solidspec.toml`'s stored default:
 
 | Slash Command | What it does |
 |---------------|-------------|
-| `/spcx:new` | Start a feature end-to-end through the implement handoff, for the project's default schema |
-| `/spcx:apply` | Implement the feature's tasks |
-| `/spcx:finalise` | Whatever comes after implement for that schema (analyze/review/ship, or nothing for `minimal`) |
-| `/spcx:explore` | Exploratory research and discussion — no files written |
+| `/spcx:min:new` / `:apply` / `:finalise` | Lean spec → plan → tasks → implement, nothing after |
+| `/spcx:sdd:new` / `:apply` / `:finalise` | Full SDD: spec → clarify → plan → tasks → tests → implement → analyze → review → ship |
+| `/spcx:sec:new` / `:apply` / `:finalise` | Adds a mandatory OWASP-audit gate before tasks |
+| `/spcx:tdd:new` / `:apply` / `:finalise` | Real failing tests (RED) before implementation, refactor phase after |
+| `/spcx:intent:new` / `:apply` / `:finalise` | IDSD: intent capture, evidence collection, drift detection |
+| `/spcx:apex:new` / `:apply` / `:finalise` | Structured APEX (Analyze-Plan-Execute-eXamine) implementation |
+| `/spcx:iapex:new` / `:apply` / `:finalise` | Intent-anchored with APEX and evidence collection |
+| `/spcx:explore` | Exploratory research and discussion — no files written, schema-independent |
 
-**Every other built-in workflow gets the same 3 commands too**, namespaced by schema name — run any workflow's DAG-specific steps without changing `solidspec.toml`'s stored default:
+See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd:apply` really does walk you through RED → implement → REFACTOR and `/spcx:min:finalise` really does say there's nothing left to run. `solidspec schemas` prints every schema's `/spcx:<short>:*` commands alongside its description, so you never have to guess a short name.
 
-| Slash Command | What it does |
-|---------------|-------------|
-| `/spcx:minimal-new` / `-apply` / `-finalise` | Lean spec → plan → tasks → implement, nothing after |
-| `/spcx:spec-driven-new` / `-apply` / `-finalise` | Full SDD: spec → clarify → plan → tasks → tests → implement → analyze → review → ship |
-| `/spcx:security-first-new` / `-apply` / `-finalise` | Adds a mandatory OWASP-audit gate before tasks |
-| `/spcx:tdd-driven-new` / `-apply` / `-finalise` | Real failing tests (RED) before implementation, refactor phase after |
-| `/spcx:intent-driven-new` / `-apply` / `-finalise` | IDSD: intent capture, evidence collection, drift detection |
-| `/spcx:apex-driven-new` / `-apply` / `-finalise` | Structured APEX (Analyze-Plan-Execute-eXamine) implementation |
-| `/spcx:intent-apex-new` / `-apply` / `-finalise` | Intent-anchored with APEX and evidence collection |
+A project running a fully custom-named schema (`.solidspec/workflows/<name>/schema.yaml`) gets `/spcx:<name>:*` too — registration and `solidspec schemas` both key off the schema's actual identifier (the directory name / `--schema` value), never a `schema.yaml`'s own possibly-stale internal `name:` field, so a custom schema still gets its commands even if that field was left unedited after copying an existing one. The one exception: if the identifier happens to reduce to the same short name as a built-in (checked case-insensitively, since `.claude/commands/spcx/<short>/` is a real directory and macOS/Windows default to case-insensitive filesystems — e.g. a custom schema literally named `tdd` or `TDD`), `solidspec init`/`upgrade` fail loudly with a rename suggestion instead of silently overwriting the built-in's commands.
 
-See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd-driven-apply` really does walk you through RED → implement → REFACTOR and `/spcx:minimal-finalise` really does say there's nothing left to run.
+`/spcx:<short>:apply`'s generated body also reminds the agent to run `solidspec okf generate` before moving on, when a knowledge-graph bundle exists — the interactive flow edits files directly with no `solidspec pipeline` subprocess call in between (unlike `go`/`continue`/`pipeline`, which refresh an existing bundle automatically right after implement/apex/tdd-tests/tdd-refactor), so without that reminder a `/spcx:<short>:finalise` → `solidspec analyze` run right after would flag the agent's own new code as "orphaned" against a stale graph.
 
 Every individual phase also has its own command, for explicit control or other schemas:
 
@@ -652,9 +648,9 @@ Every individual phase also has its own command, for explicit control or other s
 The short way:
 
 ```
-/spcx:new Simple TODO app with add, edit, delete, and local storage
-/spcx:apply
-/spcx:finalise
+/spcx:min:new Simple TODO app with add, edit, delete, and local storage
+/spcx:min:apply
+/spcx:min:finalise
 ```
 
 Or one phase at a time, for explicit control:
@@ -1183,7 +1179,7 @@ review = "Check for placeholders, ambiguous language, traceability gaps."
 
 ### Core workflow commands
 
-These per-phase commands are what `go`/`continue`/`pipeline` (and, in Claude Code, `/spcx:new`/`/spcx:apply`/`/spcx:finalise`) run under the hood. They're hidden from `solidspec --help` to keep the top-level surface small, but every one of them still works exactly as documented here — useful for scripting a single phase or debugging one in isolation.
+These per-phase commands are what `go`/`continue`/`pipeline` (and, in Claude Code, `/spcx:<schema>:new`/`:apply`/`:finalise`) run under the hood. They're hidden from `solidspec --help` to keep the top-level surface small, but every one of them still works exactly as documented here — useful for scripting a single phase or debugging one in isolation.
 
 | Command | Description |
 |---------|-------------|
@@ -1221,7 +1217,7 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 |---------|-------------|
 | `solidspec go "desc"` | Start a feature end-to-end on the default schema — shorthand for `pipeline --new "desc" --auto` |
 | `solidspec continue [id]` | Resume the current (or given) feature at whatever phase is next — shorthand for `pipeline --auto` |
-| `solidspec schemas` | List every workflow schema and its use case |
+| `solidspec schemas` | List every workflow schema, its use case, and its `/spcx:<short>:*` slash commands |
 | `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--only`, `--auto`, `--no-agent`, `--schema`, `--force`, `--dry-run`) — full control, any schema |
 | `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`) and what to run next; intent drift in IDSD mode |
 | `solidspec ship [id]` | Run parallel fan-out review (4 concurrent AI lanes) → `SHIP` / `HOLD` decision (`--lane`, `--no-agent`, `--fail-on-hold`, `--dry-run`, `--timeout`, `--ignore-timeout`) |

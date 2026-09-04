@@ -85,17 +85,17 @@ fn init_registers_spcx_commands_matching_the_chosen_schema() {
         .assert()
         .success();
 
-    // spec-driven's /spcx:new stops before implement (tests is its last Auto
-    // phase) and /spcx:finalise covers analyze/review/ship — see
+    // spec-driven's /spcx:sdd:new stops before implement (tests is its last
+    // Auto phase) and /spcx:sdd:finalise covers analyze/review/ship — see
     // src/agents/spcx.rs's module doc for why this needs no schema-specific
     // test cases beyond checking the right schema was actually used.
     let new_body =
-        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/new.md")).unwrap();
+        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/sdd/new.md")).unwrap();
     assert!(new_body.contains("--schema spec-driven"));
     assert!(new_body.contains("--to tests"));
 
     let finalise_body =
-        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/finalise.md")).unwrap();
+        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/sdd/finalise.md")).unwrap();
     assert!(finalise_body.contains("solidspec analyze"));
     assert!(finalise_body.contains("solidspec review"));
     assert!(finalise_body.contains("solidspec ship"));
@@ -106,45 +106,28 @@ fn init_registers_namespaced_spcx_commands_for_every_builtin_schema() {
     let dir = TempDir::new().unwrap();
     with_claude_dir(dir.path());
 
-    // Regardless of --schema, init also registers /spcx:<schema>-{new,apply,
+    // Regardless of --schema, init also registers /spcx:<short>:{new,apply,
     // finalise} for every other built-in workflow, so an agent can run any
     // of them explicitly without switching the project's stored default —
-    // see src/agents/registry.rs's register_all_schema_spcx_commands.
+    // see src/agents/registry.rs's all_schema_spcx_commands.
     solidspec()
         .args(["init", "--here", "--no-git", "--schema", "minimal"])
         .current_dir(dir.path())
         .assert()
         .success();
 
-    for schema in [
-        "minimal",
-        "spec-driven",
-        "security-first",
-        "tdd-driven",
-        "intent-driven",
-        "apex-driven",
-        "intent-apex",
-    ] {
+    for short in ["min", "sdd", "sec", "tdd", "intent", "apex", "iapex"] {
         for phase in ["new", "apply", "finalise"] {
             let path = dir
                 .path()
-                .join(format!(".claude/commands/spcx/{schema}-{phase}.md"));
-            assert!(path.exists(), "missing /spcx:{schema}-{phase}");
+                .join(format!(".claude/commands/spcx/{short}/{phase}.md"));
+            assert!(path.exists(), "missing /spcx:{short}:{phase}");
         }
     }
 
-    // The flagless /spcx:new (the project's minimal default) still exists
-    // alongside the namespaced /spcx:minimal-new — both should say the same
-    // thing since minimal is this project's default schema.
-    let flagless =
-        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/new.md")).unwrap();
-    let namespaced =
-        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/minimal-new.md")).unwrap();
-    assert_eq!(flagless, namespaced);
-
     // A different schema's content actually differs.
-    let tdd = std::fs::read_to_string(dir.path().join(".claude/commands/spcx/tdd-driven-apply.md"))
-        .unwrap();
+    let tdd =
+        std::fs::read_to_string(dir.path().join(".claude/commands/spcx/tdd/apply.md")).unwrap();
     assert!(tdd.to_lowercase().contains("red"));
 }
 
