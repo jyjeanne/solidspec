@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: refresh_knowledge_graph
-resource: src/cli/pipeline.rs#L329-L343
+resource: src/cli/pipeline.rs#L338-L352
 visibility: private
 generated:
   by: okf-rs/0.7.0

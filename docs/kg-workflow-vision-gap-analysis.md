@@ -23,9 +23,9 @@ blame.
 
 > **Mise à jour** (postérieure à `4d1258b`) : « aucune étape du DAG ne l'interroge » n'est plus
 > vrai pour `analyze` (recommandation #1), et « le graphe est généré une fois puis oublié »
-> n'est plus vrai non plus — il se rafraîchit après `implement` (recommandation #2). Seule
-> l'absence d'evidence/provenance typée (fait ≠ décision ≠ hypothèse, recommandation #3) tient
-> encore.
+> n'est plus vrai non plus — il se rafraîchit après chaque handoff qui écrit du code
+> (`implement`, `apex`, `tdd-tests`, `tdd-refactor` — recommandation #2). Seule l'absence
+> d'evidence/provenance typée (fait ≠ décision ≠ hypothèse, recommandation #3) tient encore.
 
 ---
 
@@ -152,9 +152,11 @@ faite depuis — voir la synthèse mise à jour ci-dessous.
 ## Synthèse des écarts, par ordre de valeur ajoutée probable
 
 1. ~~**Aucune boucle de rétroaction code → graphe → workflow** (§6)~~ — **fait** :
-   `core::okf::refresh_if_present` régénère le bundle après `implement`
-   (`cli::pipeline::refresh_knowledge_graph`), seulement quand un bundle existe déjà. Voir
-   `docs/okf-rs-integration-plan.md` étape 4.
+   `core::okf::refresh_if_present` régénère le bundle après `implement`, `apex`, `tdd-tests`, et
+   `tdd-refactor` (`cli::pipeline::refresh_knowledge_graph`, câblé sur les quatre phases que le
+   code classe déjà comme handoffs qui écrivent du code réel — pas seulement `implement`, dont
+   la couverture aurait laissé les schémas `apex-driven`/`tdd-driven` sans rafraîchissement),
+   seulement quand un bundle existe déjà. Voir `docs/okf-rs-integration-plan.md` étape 4.
 2. **Aucun lien entre le graphe et spec/plan/decisions** (§2, catégories B et C). Le graphe
    répond à « qu'est-ce qui existe dans le code » mais jamais à « pourquoi » ni « est-ce que ça
    correspond à ce que le spec demande ».
@@ -187,11 +189,15 @@ faite depuis — voir la synthèse mise à jour ci-dessous.
    manuellement sur un vrai projet.
 2. ~~**Étape 4 du plan existant, généralisée**~~ — **fait** : `core::okf::refresh_if_present`
    (ne crée jamais un bundle qui n'existait pas déjà — reste la décision de `solidspec init`) +
-   `cli::pipeline::refresh_knowledge_graph` appelé depuis la branche `"implement"` de
-   `execute_phase`, best-effort, jamais bloquant. Testé (`core::okf`, `cli/pipeline.rs`, et une
-   suite d'intégration bout-en-bout dans `tests/pipeline.rs` couvrant à la fois le
-   rafraîchissement effectif et l'absence de création de bundle non sollicitée) et vérifié
-   manuellement sur un vrai projet (0 → 2 concepts après ajout d'un fichier puis `implement`).
+   `cli::pipeline::refresh_knowledge_graph` appelé depuis les quatre branches handoff de
+   `execute_phase` (`"implement"`, `"apex"`, `"tdd-tests"`, `"tdd-refactor"` — un premier passage
+   n'avait câblé que `"implement"`, laissant `apex-driven`/`tdd-driven` sans rafraîchissement ;
+   corrigé après relecture), best-effort, jamais bloquant. Testé (`core::okf`, `cli/pipeline.rs`,
+   et une suite d'intégration bout-en-bout dans `tests/pipeline.rs` couvrant le rafraîchissement
+   effectif pour les trois schémas concernés, l'absence de création de bundle non sollicitée, et
+   une assertion précise sur le symbole réellement indexé plutôt qu'un test de présence de
+   caractère trop permissif) et vérifié manuellement sur un vrai projet (0 → 2 concepts après
+   ajout d'un fichier puis `implement`).
 3. Ensuite seulement, discuter du modèle **fact/decision/inference** (§3) — c'est un vrai
    changement de format OKF, donc une discussion à avoir avec le dépôt `okf-rs` amont plutôt
    qu'un ajout unilatéral côté SolidSpec. C'est la seule recommandation des trois qui reste à

@@ -1063,6 +1063,8 @@
 - [pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist](../functions/tests/pipeline/pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist.md) — Rust Function
 - [pipeline_new_ignores_stale_feature_env_var](../functions/tests/pipeline/pipeline_new_ignores_stale_feature_env_var.md) — Rust Function
 - [pipeline_refreshes_an_existing_knowledge_graph_after_implement](../functions/tests/pipeline/pipeline_refreshes_an_existing_knowledge_graph_after_implement.md) — Rust Function
+- [pipeline_refreshes_the_knowledge_graph_after_apex_too](../functions/tests/pipeline/pipeline_refreshes_the_knowledge_graph_after_apex_too.md) — Rust Function
+- [pipeline_refreshes_the_knowledge_graph_after_tdd_refactor_too](../functions/tests/pipeline/pipeline_refreshes_the_knowledge_graph_after_tdd_refactor_too.md) — Rust Function
 - [pipeline_sdd_unchanged_no_intent_md](../functions/tests/pipeline/pipeline_sdd_unchanged_no_intent_md.md) — Rust Function
 - [pipeline_status_shows_artifact_table](../functions/tests/pipeline/pipeline_status_shows_artifact_table.md) — Rust Function
 - [setup_project](../functions/tests/pipeline/setup_project.md) — Rust Function

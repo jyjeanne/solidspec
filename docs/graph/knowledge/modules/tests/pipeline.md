@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: pipeline
-resource: tests/pipeline.rs#L1-L528
+resource: tests/pipeline.rs#L1-L628
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -37,6 +37,8 @@ relationships:
 - [pipeline_dry_run_respects_custom_schema_generates_override](../../functions/tests/pipeline/pipeline_dry_run_respects_custom_schema_generates_override.md)
 - [pipeline_refreshes_an_existing_knowledge_graph_after_implement](../../functions/tests/pipeline/pipeline_refreshes_an_existing_knowledge_graph_after_implement.md)
 - [pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist](../../functions/tests/pipeline/pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist.md)
+- [pipeline_refreshes_the_knowledge_graph_after_apex_too](../../functions/tests/pipeline/pipeline_refreshes_the_knowledge_graph_after_apex_too.md)
+- [pipeline_refreshes_the_knowledge_graph_after_tdd_refactor_too](../../functions/tests/pipeline/pipeline_refreshes_the_knowledge_graph_after_tdd_refactor_too.md)
 
 # Imports
 

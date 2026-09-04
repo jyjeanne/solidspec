@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: skip_reason
-resource: src/cli/pipeline.rs#L572-L589
+resource: src/cli/pipeline.rs#L584-L601
 visibility: private
 generated:
   by: okf-rs/0.7.0

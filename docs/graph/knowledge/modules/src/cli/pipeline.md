@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: pipeline
-resource: src/cli/pipeline.rs#L1-L589
+resource: src/cli/pipeline.rs#L1-L601
 generated:
   by: okf-rs/0.7.0
 relationships:

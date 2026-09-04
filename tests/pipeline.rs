@@ -491,11 +491,15 @@ fn pipeline_refreshes_an_existing_knowledge_graph_after_implement() {
         .success()
         .stdout(predicate::str::contains("Knowledge graph refreshed"));
 
-    let index_content =
-        std::fs::read_to_string(dir.path().join(".solidspec/knowledge/index.md")).unwrap();
+    // Precise check that combat.rs's own symbol landed in the bundle —
+    // not just that *some* digit "1" appears in index.md (a stale/broken
+    // refresh could still satisfy that from an unrelated frontmatter field
+    // like source_revision or an existing concept-kind count).
     assert!(
-        index_content.contains("1"), // at least one function now indexed
-        "bundle should have been regenerated to include combat.rs: {index_content}"
+        dir.path()
+            .join(".solidspec/knowledge/functions/combat/calculate_damage.md")
+            .exists(),
+        "bundle should have been regenerated to include combat.rs's calculate_damage()"
     );
 }
 
@@ -525,4 +529,100 @@ fn pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist() {
         .stdout(predicate::str::contains("Knowledge graph refreshed").not());
 
     assert!(!dir.path().join(".solidspec/knowledge").exists());
+}
+
+#[test]
+fn pipeline_refreshes_the_knowledge_graph_after_apex_too() {
+    // Regression: apex-driven schemas replace "implement" with "apex"
+    // entirely (see pipeline_apex_driven_dry_run_excludes_implement_phase
+    // in tests/apex.rs) — a refresh wired only to the "implement" phase
+    // name would never fire for this schema at all.
+    let dir = TempDir::new().unwrap();
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["okf", "generate", ".", "--output", ".solidspec/knowledge"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    std::fs::write(
+        dir.path().join("combat.rs"),
+        "pub fn calculate_damage() {}\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "Apex critical hits",
+            "--auto",
+            "--no-agent",
+            "--to",
+            "apex",
+            "--schema",
+            "apex-driven",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Knowledge graph refreshed"));
+
+    assert!(
+        dir.path()
+            .join(".solidspec/knowledge/functions/combat/calculate_damage.md")
+            .exists()
+    );
+}
+
+#[test]
+fn pipeline_refreshes_the_knowledge_graph_after_tdd_refactor_too() {
+    // Regression: tdd-driven's "tdd-refactor" phase rewrites production
+    // code *after* "implement" already ran — a refresh wired only to
+    // "implement" would leave the graph stale for exactly the schema
+    // most likely to change code in a second, later phase.
+    let dir = TempDir::new().unwrap();
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["okf", "generate", ".", "--output", ".solidspec/knowledge"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    std::fs::write(
+        dir.path().join("combat.rs"),
+        "pub fn calculate_damage() {}\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "TDD critical hits",
+            "--auto",
+            "--no-agent",
+            "--to",
+            "tdd-refactor",
+            "--schema",
+            "tdd-driven",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Knowledge graph refreshed"));
+
+    assert!(
+        dir.path()
+            .join(".solidspec/knowledge/functions/combat/calculate_damage.md")
+            .exists()
+    );
 }
