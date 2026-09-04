@@ -448,3 +448,81 @@ artifacts:
         "plan must be skipped once both plan.md and research.md exist; got: {plan_line:?}"
     );
 }
+
+// ── knowledge-graph refresh after `implement` (docs/kg-workflow-vision-gap-analysis.md
+// recommendation #2 / docs/okf-rs-integration-plan.md step 4) ──────────────────────────
+
+#[test]
+fn pipeline_refreshes_an_existing_knowledge_graph_after_implement() {
+    let dir = TempDir::new().unwrap();
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    // A bundle generated against the project BEFORE combat.rs is added —
+    // simulates the stale-bundle scenario the refresh is meant to fix.
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args(["okf", "generate", ".", "--output", ".solidspec/knowledge"])
+        .current_dir(dir.path())
+        .assert()
+        .success();
+
+    std::fs::write(
+        dir.path().join("combat.rs"),
+        "pub fn calculate_damage() {}\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "Critical hits",
+            "--auto",
+            "--no-agent",
+            "--to",
+            "implement",
+            "--schema",
+            "minimal",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Knowledge graph refreshed"));
+
+    let index_content =
+        std::fs::read_to_string(dir.path().join(".solidspec/knowledge/index.md")).unwrap();
+    assert!(
+        index_content.contains("1"), // at least one function now indexed
+        "bundle should have been regenerated to include combat.rs: {index_content}"
+    );
+}
+
+#[test]
+fn pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist() {
+    let dir = TempDir::new().unwrap();
+    let mut init = Command::cargo_bin("solidspec").unwrap();
+    setup_project(dir.path(), &mut init);
+
+    // No 'solidspec okf generate' run here — the project never opted in.
+    Command::cargo_bin("solidspec")
+        .unwrap()
+        .args([
+            "pipeline",
+            "--new",
+            "No graph feature",
+            "--auto",
+            "--no-agent",
+            "--to",
+            "implement",
+            "--schema",
+            "minimal",
+        ])
+        .current_dir(dir.path())
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Knowledge graph refreshed").not());
+
+    assert!(!dir.path().join(".solidspec/knowledge").exists());
+}

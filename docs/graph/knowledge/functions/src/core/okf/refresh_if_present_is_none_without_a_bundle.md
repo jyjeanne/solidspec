@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: bundle_index_knows_generated_files_and_symbols
-resource: src/core/okf.rs#L188-L200
+title: refresh_if_present_is_none_without_a_bundle
+resource: src/core/okf.rs#L203-L207
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn bundle_index_knows_generated_files_and_symbols()`
+`fn refresh_if_present_is_none_without_a_bundle()`
 
 # Calls
 

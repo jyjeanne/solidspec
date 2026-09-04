@@ -60,7 +60,7 @@ Thin handlers for each CLI subcommand. Each file maps to one command. No busines
 | `analyze.rs` | `analyze` | Run consistency analysis, print report; shows trace tree and intent coverage in IDSD mode |
 | `checklist.rs` | `checklist` | Generate/append quality checklists |
 | `review.rs` | `review` | Preflight spec quality review with dimension scoring (8 dimensions in IDSD mode) |
-| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (8 SDD / 10 IDSD phases) with agent CLI invocation |
+| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (8 SDD / 10 IDSD phases) with agent CLI invocation. `refresh_knowledge_graph()` best-effort-regenerates the project's OKF bundle (`core::okf::refresh_if_present` — only when one already exists) right after the `implement` handoff confirms, keeping `analyze`'s structural cross-check from working against a stale graph |
 | `change.rs` | `change` | Change-based workflow: propose, list, archive (delta specs) |
 | `status.rs` | `status` | DAG-based artifact completion status; shows intent drift in IDSD mode |
 | `check.rs` | `check` | Verify prerequisites |

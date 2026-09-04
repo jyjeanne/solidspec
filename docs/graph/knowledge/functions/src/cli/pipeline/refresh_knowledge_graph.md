@@ -1,13 +1,13 @@
 ---
 type: Rust Function
-title: invoke_or_handoff
-resource: src/cli/pipeline.rs#L510-L570
+title: refresh_knowledge_graph
+resource: src/cli/pipeline.rs#L329-L343
 visibility: private
 generated:
   by: okf-rs/0.7.0
 relationships:
   calls:
-  - target: functions/src/agents/invoker/invoke_agent
+  - target: functions/src/core/okf/refresh_if_present
     resolved_by: tree-sitter
     confidence: exact
   called_by:
@@ -18,11 +18,11 @@ relationships:
 
 # Signature
 
-`fn invoke_or_handoff( agent_id: &str, phase: &str, feature_dir_name: &str, project_root: &std::path::Path, description: Option<&str>, auto: bool, ) -> Result<()>`
+`fn refresh_knowledge_graph(project_root: &std::path::Path)`
 
 # Calls
 
-- [invoke_agent](../../../../functions/src/agents/invoker/invoke_agent.md)
+- [refresh_if_present](../../../../functions/src/core/okf/refresh_if_present.md)
 
 # Called by
 

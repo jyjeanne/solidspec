@@ -188,6 +188,7 @@
 - [check_agent_availability](../functions/src/cli/pipeline/check_agent_availability.md) — Rust Function
 - [execute_phase](../functions/src/cli/pipeline/execute_phase.md) — Rust Function
 - [invoke_or_handoff](../functions/src/cli/pipeline/invoke_or_handoff.md) — Rust Function
+- [refresh_knowledge_graph](../functions/src/cli/pipeline/refresh_knowledge_graph.md) — Rust Function
 - [run](../functions/src/cli/pipeline/run.md) — Rust Function
 - [skip_reason](../functions/src/cli/pipeline/skip_reason.md) — Rust Function
 - [run](../functions/src/cli/plan/run.md) — Rust Function
@@ -560,6 +561,9 @@
 - [generate](../functions/src/core/okf/generate.md) — Rust Function
 - [generate_is_incremental_on_a_second_run](../functions/src/core/okf/generate_is_incremental_on_a_second_run.md) — Rust Function
 - [generate_writes_a_bundle_with_expected_concepts](../functions/src/core/okf/generate_writes_a_bundle_with_expected_concepts.md) — Rust Function
+- [refresh_if_present](../functions/src/core/okf/refresh_if_present.md) — Rust Function
+- [refresh_if_present_is_none_without_a_bundle](../functions/src/core/okf/refresh_if_present_is_none_without_a_bundle.md) — Rust Function
+- [refresh_if_present_regenerates_an_existing_bundle_in_place](../functions/src/core/okf/refresh_if_present_regenerates_an_existing_bundle_in_place.md) — Rust Function
 - [validate](../functions/src/core/okf/validate.md) — Rust Function
 - [validate_reports_no_issues_for_a_freshly_generated_bundle](../functions/src/core/okf/validate_reports_no_issues_for_a_freshly_generated_bundle.md) — Rust Function
 - [validation_should_fail](../functions/src/core/okf/validation_should_fail.md) — Rust Function
@@ -1056,7 +1060,9 @@
 - [pipeline_dry_run_respects_custom_schema_generates_override](../functions/tests/pipeline/pipeline_dry_run_respects_custom_schema_generates_override.md) — Rust Function
 - [pipeline_idsd_generates_intent_before_spec](../functions/tests/pipeline/pipeline_idsd_generates_intent_before_spec.md) — Rust Function
 - [pipeline_intent_apex_uses_single_feature_dir](../functions/tests/pipeline/pipeline_intent_apex_uses_single_feature_dir.md) — Rust Function
+- [pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist](../functions/tests/pipeline/pipeline_never_creates_a_knowledge_graph_that_did_not_already_exist.md) — Rust Function
 - [pipeline_new_ignores_stale_feature_env_var](../functions/tests/pipeline/pipeline_new_ignores_stale_feature_env_var.md) — Rust Function
+- [pipeline_refreshes_an_existing_knowledge_graph_after_implement](../functions/tests/pipeline/pipeline_refreshes_an_existing_knowledge_graph_after_implement.md) — Rust Function
 - [pipeline_sdd_unchanged_no_intent_md](../functions/tests/pipeline/pipeline_sdd_unchanged_no_intent_md.md) — Rust Function
 - [pipeline_status_shows_artifact_table](../functions/tests/pipeline/pipeline_status_shows_artifact_table.md) — Rust Function
 - [setup_project](../functions/tests/pipeline/setup_project.md) — Rust Function

@@ -114,18 +114,29 @@ exécutés réellement sur le dépôt SolidSpec lui-même.
 - Rester conservateur : ne rien enregistrer si `okf-rs`/`okf-mcp` n'est pas détecté sur le système au moment
   de `init` — l'agent découvrira l'absence à l'exécution plutôt que SolidSpec ne devine.
 
-## Étape 4 — Hook pipeline avant `plan` (génération, jamais bloquant)
+## Étape 4 — Boucle de régénération après `implement` — fait ✅ (reformulée)
 
-- `src/core/pipeline.rs` : une étape *facultative*, activée seulement si le preset `okf` est présent dans le
-  projet (présence de `okf.toml`), qui lance `okf-rs generate --no-cache=false` avant la phase `plan`.
-  - Best-effort : un échec (binaire absent, erreur de parsing) logge un avertissement et n'interrompt jamais
-    le pipeline — cohérent avec le fait que `plan` doit rester utilisable sans `okf-rs`.
-  - Le prompt de la commande `plan` (`templates/commands/plan.md`) mentionne, seulement si le bundle existe,
-    qu'un graphe d'appels structurel est disponible via MCP/`okf-rs explore` pour éviter de re-lire des
-    fichiers à froid.
-- Pas de nouvelle dépendance obligatoire dans `Cargo.toml` : `okf-rs` reste un binaire externe détecté via
-  `which`, invoqué en sous-processus (`std::process::Command`), exactement comme les CLIs d'agents dans
-  `src/agents/invoker.rs`.
+**Reformulée par rapport au texte initial** (qui prévoyait un hook *avant* `plan`, conditionné à un preset
+`okf.toml` et à un binaire `okf-rs` externe) : après l'étape 5, il est apparu plus utile de régénérer
+*après* `implement` plutôt qu'avant `plan` — c'est exactement le moment où le code vient de changer, et
+c'est ce qui rend la vérification structurelle de l'étape 5 fiable dans la durée plutôt que basée sur un
+graphe figé à `init`. Voir la boucle de rétroaction (recommandation #2 de
+`docs/kg-workflow-vision-gap-analysis.md`).
+
+Implémenté nativement, dans le même style que l'étape 5 :
+- `src/core/okf.rs::refresh_if_present(project_root)` régénère le bundle à
+  `project_root.join(DEFAULT_BUNDLE_DIR)` **seulement s'il existe déjà** — ne crée jamais de bundle pour un
+  projet qui n'a pas opté (cette décision reste celle de `solidspec init` / de la commande manuelle `solidspec
+  okf generate`). Retourne `None` sans effet quand il n'y a rien à rafraîchir.
+- `src/cli/pipeline.rs::refresh_knowledge_graph` appelle cette fonction depuis la branche `"implement"` de
+  `execute_phase`, juste après la confirmation utilisateur (`--auto` ou "Press Enter") — c'est le seul point
+  du pipeline où le code vient effectivement d'être modifié par l'agent IA. Best-effort : une erreur affiche
+  un avertissement et n'interrompt jamais le pipeline.
+- La commande standalone `solidspec implement` (hors pipeline) n'a **pas** reçu ce hook : elle imprime les
+  tâches en attente puis retourne immédiatement, avant que l'agent IA n'ait rien modifié — il n'y a pas de
+  point de confirmation "le code vient de changer" dans ce process-là.
+- Pas de nouvelle dépendance : aucun binaire externe, aucun preset requis — juste une fonction du module déjà
+  vendorisé (`core::okf`).
 
 ## Étape 5 — Vérification structurelle dans `analyze` — fait ✅
 
@@ -167,10 +178,9 @@ Recoupe la recommandation #1 de `docs/kg-workflow-vision-gap-analysis.md`.
 2. ✅ Étape 2 (faite)
 3. ✅ Étape 5 (faite) — n'a finalement pas eu besoin d'attendre l'étape 4 : `okf_parser::read_bundle`
    suffisait, aucun mécanisme d'invocation partagé avec un futur hook `plan` n'était nécessaire.
-4. Étape 4 — le hook de régénération (avant `plan`, et surtout après `implement` — voir la boucle de
-   rétroaction #6 de `docs/kg-workflow-vision-gap-analysis.md`) reste la prochaine étape la plus directe :
-   sans lui, la vérification structurelle de l'étape 5 s'appuie sur un graphe qui ne se rafraîchit jamais
-   tout seul.
+4. ✅ Étape 4 (faite, reformulée — après `implement` plutôt qu'avant `plan`) — ferme la boucle de
+   rétroaction : la vérification structurelle de l'étape 5 s'appuie désormais sur un graphe qui se
+   rafraîchit tout seul après chaque implémentation, au lieu de rester figé depuis `init`.
 5. Étape 3 — MCP natif, une fois qu'on sait quels agents dans `AGENTS` le supportent réellement (l'entrée
    `.mcp.json` écrite par `solidspec init` aujourd'hui pointe vers un `okf-mcp` externe non vendorisé —
    voir `docs/kg-workflow-vision-gap-analysis.md` §1)

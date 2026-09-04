@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: validation_should_fail
-resource: src/core/okf.rs#L94-L96
+resource: src/core/okf.rs#L117-L119
 generated:
   by: okf-rs/0.7.0
 relationships:

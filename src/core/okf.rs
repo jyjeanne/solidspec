@@ -87,6 +87,29 @@ pub fn validate(bundle_dir: &Path) -> Result<okf_validator::ValidationReport> {
         .with_context(|| format!("failed to validate bundle at {}", bundle_dir.display()))
 }
 
+/// Best-effort regeneration of `project_root`'s OKF bundle at
+/// [`DEFAULT_BUNDLE_DIR`] — but only when one is already there. This is the
+/// "feedback loop" half of `docs/kg-workflow-vision-gap-analysis.md`'s
+/// recommendation #2 (`docs/okf-rs-integration-plan.md` step 4,
+/// generalized): without it, a bundle generated once at `init` time (or by
+/// hand) silently goes stale the moment code changes, and
+/// `analyzer::structural_cross_check` ends up fact-checking `tasks.md`
+/// against a graph that no longer matches reality.
+///
+/// Deliberately never *creates* a bundle where none existed — that opt-in
+/// decision belongs to `solidspec init`'s existing-codebase detection
+/// (`cli::init::generate_knowledge_graph_and_mcp_config`), not to a phase
+/// buried inside the pipeline. Returns `None` when there's nothing to
+/// refresh (no bundle dir) so the caller can stay silent rather than
+/// printing a message about a feature the project never opted into.
+pub fn refresh_if_present(project_root: &Path) -> Option<Result<GenerateReport>> {
+    let bundle_dir = project_root.join(DEFAULT_BUNDLE_DIR);
+    if !bundle_dir.exists() {
+        return None;
+    }
+    Some(generate(project_root, &bundle_dir))
+}
+
 /// Whether `report` should fail a run, given `--ci`'s promotion of
 /// orphaned-concept warnings to failures. Mirrors `okf-rs validate --ci`
 /// exactly (see okf-rs issue #23: every other warning class stays
@@ -174,6 +197,38 @@ mod tests {
         assert!(index.has_symbol("new"));
         assert!(!index.has_file("nonexistent.rs"));
         assert!(!index.has_symbol("TotallyMadeUpSymbol"));
+    }
+
+    #[test]
+    fn refresh_if_present_is_none_without_a_bundle() {
+        let project_dir = TempDir::new().unwrap();
+        write_sample_project(project_dir.path());
+        assert!(refresh_if_present(project_dir.path()).is_none());
+    }
+
+    #[test]
+    fn refresh_if_present_regenerates_an_existing_bundle_in_place() {
+        let project_dir = TempDir::new().unwrap();
+        write_sample_project(project_dir.path());
+        let bundle_dir = project_dir.path().join(DEFAULT_BUNDLE_DIR);
+        generate(project_dir.path(), &bundle_dir).unwrap();
+
+        // A second concept lands after the bundle was first generated —
+        // simulates code written during an "implement" phase.
+        std::fs::write(
+            project_dir.path().join("extra.rs"),
+            "pub fn newly_added() {}\n",
+        )
+        .unwrap();
+
+        let report = refresh_if_present(project_dir.path()).unwrap().unwrap();
+        assert!(report.total_concepts > 0);
+
+        let index = BundleIndex::load(&bundle_dir).unwrap().unwrap();
+        assert!(
+            index.has_symbol("newly_added"),
+            "refresh should pick up code added since the bundle was first generated"
+        );
     }
 
     #[test]

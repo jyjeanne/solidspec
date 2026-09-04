@@ -22,8 +22,10 @@ connaît que des faits structurels exacts (tree-sitter), sans lien vers spec/pla
 blame.
 
 > **Mise à jour** (postérieure à `4d1258b`) : « aucune étape du DAG ne l'interroge » n'est plus
-> vrai pour `analyze` — voir §8/recommandation #1, implémenté depuis. Le reste du verdict
-> (pas de boucle de rétroaction, pas d'evidence typée) tient toujours.
+> vrai pour `analyze` (recommandation #1), et « le graphe est généré une fois puis oublié »
+> n'est plus vrai non plus — il se rafraîchit après `implement` (recommandation #2). Seule
+> l'absence d'evidence/provenance typée (fait ≠ décision ≠ hypothèse, recommandation #3) tient
+> encore.
 
 ---
 
@@ -136,22 +138,23 @@ discussion. État réel de ses étapes :
 | 1. Remplacer `graphify` par `okf-rs` natif | ✅ Fait |
 | 2. Extension `okf` optionnelle (scaffolding) | ✅ Fait |
 | 3. Enregistrement MCP par agent | ⚠️ **Partiellement fait, hors plan initial** — cette session a ajouté l'écriture de `.mcp.json` dans `solidspec init` lui-même (`src/cli/init.rs::write_okf_mcp_config`), pas gated par un « preset okf actif » comme prévu, et seulement pour Claude Code (pas de champ `supports_mcp` par agent). |
-| 4. Hook de régénération avant `plan` | ❌ Non fait |
+| 4. Hook de régénération (reformulé : après `implement`, pas avant `plan`) | ✅ **Fait** (voir recommandation #2, mise en œuvre depuis) |
 | 5. Vérification structurelle dans `analyze` (symboles de `tasks.md` existent réellement dans le graphe) | ✅ **Fait** (voir recommandation #1 ci-dessous, mise en œuvre depuis) |
 | 6. Rapport d'impact dans `review`/`ship` | ❌ Non fait |
 
 L'étape 5 est exactement le « fact-checking » que la vision met en avant — implémentée nativement via
 `okf_parser::read_bundle` (pas besoin de `okf-rs search`/`explore` ni de shell-out, contrairement à ce que
-la formulation initiale du plan supposait). L'étape 4 (la « boucle ») reste la plus structurante des
-lacunes restantes — voir écart #1 ci-dessous, inchangé.
+la formulation initiale du plan supposait). L'étape 4 (la « boucle »), elle aussi identifiée, est également
+faite depuis — voir la synthèse mise à jour ci-dessous.
 
 ---
 
 ## Synthèse des écarts, par ordre de valeur ajoutée probable
 
-1. **Aucune boucle de rétroaction code → graphe → workflow** (§6). C'est l'écart le plus
-   structurant : sans lui, le graphe devient obsolète dès le premier `implement` et personne ne
-   le sait.
+1. ~~**Aucune boucle de rétroaction code → graphe → workflow** (§6)~~ — **fait** :
+   `core::okf::refresh_if_present` régénère le bundle après `implement`
+   (`cli::pipeline::refresh_knowledge_graph`), seulement quand un bundle existe déjà. Voir
+   `docs/okf-rs-integration-plan.md` étape 4.
 2. **Aucun lien entre le graphe et spec/plan/decisions** (§2, catégories B et C). Le graphe
    répond à « qu'est-ce qui existe dans le code » mais jamais à « pourquoi » ni « est-ce que ça
    correspond à ce que le spec demande ».
@@ -182,15 +185,14 @@ lacunes restantes — voir écart #1 ci-dessous, inchangé.
    `src/core/analyzer.rs::structural_cross_check` (backticks → noms de symboles, chemins de
    fichiers → extensions reconnues), tous deux testés (`cargo test`, 585 tests) et vérifiés
    manuellement sur un vrai projet.
-2. **Étape 4 du plan existant, généralisée** — pas seulement un hook avant `plan`, mais un
-   appel à `core::okf::generate` après `implement` dans `cli/pipeline.rs::execute_phase`
-   (best-effort, jamais bloquant, comme le reste du code d'intégration OKF) : c'est la boucle
-   de rétroaction (§6), et c'est un ajout localisé (quelques lignes dans une fonction qui
-   existe déjà) plutôt qu'un nouveau sous-système. Rendue plus utile encore par l'étape 1 : sans
-   régénération automatique, la vérification structurelle s'appuie sur un graphe qui ne se
-   rafraîchit jamais tout seul.
+2. ~~**Étape 4 du plan existant, généralisée**~~ — **fait** : `core::okf::refresh_if_present`
+   (ne crée jamais un bundle qui n'existait pas déjà — reste la décision de `solidspec init`) +
+   `cli::pipeline::refresh_knowledge_graph` appelé depuis la branche `"implement"` de
+   `execute_phase`, best-effort, jamais bloquant. Testé (`core::okf`, `cli/pipeline.rs`, et une
+   suite d'intégration bout-en-bout dans `tests/pipeline.rs` couvrant à la fois le
+   rafraîchissement effectif et l'absence de création de bundle non sollicitée) et vérifié
+   manuellement sur un vrai projet (0 → 2 concepts après ajout d'un fichier puis `implement`).
 3. Ensuite seulement, discuter du modèle **fact/decision/inference** (§3) — c'est un vrai
    changement de format OKF, donc une discussion à avoir avec le dépôt `okf-rs` amont plutôt
-   qu'un ajout unilatéral côté SolidSpec.
-
-Prochaine étape suggérée : le point 2 (boucle de rétroaction post-`implement`).
+   qu'un ajout unilatéral côté SolidSpec. C'est la seule recommandation des trois qui reste à
+   faire.

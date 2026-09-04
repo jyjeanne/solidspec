@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: BundleIndex
-resource: src/core/okf.rs#L106-L109
+resource: src/core/okf.rs#L129-L132
 generated:
   by: okf-rs/0.7.0
 ---

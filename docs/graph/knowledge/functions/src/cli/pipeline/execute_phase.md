@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: execute_phase
-resource: src/cli/pipeline.rs#L319-L479
+resource: src/cli/pipeline.rs#L346-L507
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -11,6 +11,9 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/cli/pipeline/invoke_or_handoff
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/cli/pipeline/refresh_knowledge_graph
     resolved_by: tree-sitter
     confidence: exact
   called_by:
@@ -27,6 +30,7 @@ relationships:
 
 - [run_for_existing](../../../../functions/src/cli/specify/run_for_existing.md)
 - [invoke_or_handoff](../../../../functions/src/cli/pipeline/invoke_or_handoff.md)
+- [refresh_knowledge_graph](../../../../functions/src/cli/pipeline/refresh_knowledge_graph.md)
 
 # Called by
 

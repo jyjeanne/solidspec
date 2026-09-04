@@ -1,7 +1,7 @@
 ---
 type: Rust Method
 title: has_file
-resource: src/core/okf.rs#L134-L136
+resource: src/core/okf.rs#L157-L159
 generated:
   by: okf-rs/0.7.0
 relationships:
