@@ -126,6 +126,7 @@
 - [write_command_file](../functions/src/agents/registry/write_command_file.md) — Rust Function
 - [write_commands_for_agent](../functions/src/agents/registry/write_commands_for_agent.md) — Rust Function
 - [write_custom_schema](../functions/src/agents/registry/write_custom_schema.md) — Rust Function
+- [apply_reminds_the_agent_to_refresh_the_knowledge_graph](../functions/src/agents/spcx/apply_reminds_the_agent_to_refresh_the_knowledge_graph.md) — Rust Function
 - [artifact_id_for_phase](../functions/src/agents/spcx/artifact_id_for_phase.md) — Rust Function
 - [cli_command_for](../functions/src/agents/spcx/cli_command_for.md) — Rust Function
 - [every_builtin_schema_generates_without_error](../functions/src/agents/spcx/every_builtin_schema_generates_without_error.md) — Rust Function

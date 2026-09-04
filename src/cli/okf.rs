@@ -15,13 +15,13 @@ pub enum OkfCommands {
         path: PathBuf,
 
         /// Bundle output directory
-        #[arg(long, default_value = ".solidspec/knowledge")]
+        #[arg(long, default_value = okf::DEFAULT_BUNDLE_DIR)]
         output: PathBuf,
     },
     /// Validate that a directory is a conformant OKF bundle
     Validate {
         /// Bundle directory to validate
-        #[arg(default_value = ".solidspec/knowledge")]
+        #[arg(default_value = okf::DEFAULT_BUNDLE_DIR)]
         bundle: PathBuf,
 
         /// Treat orphaned-concept warnings as failures too (for CI gating)

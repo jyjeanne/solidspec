@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_project_dir
-resource: src/cli/init.rs#L209-L220
+resource: src/cli/init.rs#L204-L215
 visibility: private
 generated:
   by: okf-rs/0.7.0

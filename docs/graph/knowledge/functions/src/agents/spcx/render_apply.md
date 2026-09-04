@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: render_apply
-resource: src/agents/spcx.rs#L189-L214
+resource: src/agents/spcx.rs#L189-L230
 visibility: private
 generated:
   by: okf-rs/0.7.0

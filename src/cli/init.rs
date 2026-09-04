@@ -6,15 +6,10 @@ use anyhow::Result;
 use crate::agents::registry;
 use crate::config::{InitOptions, ProjectInternalConfig, RootConfig};
 use crate::core::git;
+use crate::core::okf::DEFAULT_BUNDLE_DIR as OKF_BUNDLE_DIR;
 use crate::core::schema;
 use crate::extensions;
 use crate::templates;
-
-/// Bundle location `init`'s OKF auto-generation writes to (task 15/16) —
-/// same convention the `okf` extension (`extensions/okf/`) already uses,
-/// so the two never disagree about where the project's knowledge graph
-/// lives.
-const OKF_BUNDLE_DIR: &str = ".solidspec/knowledge";
 
 pub fn run(
     name: Option<String>,

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_okf_mcp_config
-resource: src/cli/init.rs#L177-L207
+resource: src/cli/init.rs#L172-L202
 visibility: private
 generated:
   by: okf-rs/0.7.0

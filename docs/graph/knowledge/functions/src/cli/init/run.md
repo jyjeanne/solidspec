@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: run
-resource: src/cli/init.rs#L19-L131
+resource: src/cli/init.rs#L14-L126
 generated:
   by: okf-rs/0.7.0
 relationships:

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: security_first_new_includes_security_review_step
-resource: src/agents/spcx.rs#L289-L293
+resource: src/agents/spcx.rs#L305-L309
 visibility: private
 generated:
   by: okf-rs/0.7.0

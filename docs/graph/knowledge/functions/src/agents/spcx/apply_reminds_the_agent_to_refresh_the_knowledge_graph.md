@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: intent_driven_new_uses_intent_cli_command_first
-resource: src/agents/spcx.rs#L338-L342
+title: apply_reminds_the_agent_to_refresh_the_knowledge_graph
+resource: src/agents/spcx.rs#L326-L335
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn intent_driven_new_uses_intent_cli_command_first()`
+`fn apply_reminds_the_agent_to_refresh_the_knowledge_graph()`
 
 # Calls
 

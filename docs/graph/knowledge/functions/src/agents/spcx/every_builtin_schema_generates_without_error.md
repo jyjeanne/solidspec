@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: every_builtin_schema_generates_without_error
-resource: src/agents/spcx.rs#L342-L348
+resource: src/agents/spcx.rs#L370-L376
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -194,12 +194,28 @@ fn render_apply(short: &str, phases: &[&ArtifactNode], nothing_after: bool) -> S
          Confirms tasks.md exists and shows which artifacts are ready.\n"
         .to_string();
 
+    let next_step = phases.len() + 2;
     for (i, node) in phases.iter().enumerate() {
         if node.instruction.is_empty() {
             continue;
         }
         out.push_str(&format!("{}. {}\n", i + 2, node.instruction));
     }
+
+    // Unlike `solidspec pipeline`/`go`/`continue` (which refresh an existing
+    // knowledge-graph bundle in-process right after implement/apex/tdd-tests/
+    // tdd-refactor — see CLAUDE.md), this flow has the agent edit files
+    // directly with no CLI subprocess call in between, so nothing else
+    // refreshes the bundle. Without this step, a `/spcx:<short>:finalise` →
+    // `solidspec analyze` run right after would flag every symbol/file the
+    // agent just added as "orphaned" against the now-stale graph
+    // (`structural_cross_check` in src/core/analyzer.rs) — a false alarm on
+    // the exact step meant to catch real issues.
+    out.push_str(&format!(
+        "{next_step}. If a knowledge-graph bundle exists (.solidspec/knowledge/ or \
+         docs/graph/knowledge/), run `solidspec okf generate` to refresh it — otherwise skip \
+         this step.\n"
+    ));
 
     if nothing_after {
         out.push_str(
@@ -304,6 +320,18 @@ mod tests {
         let bodies = generate_bodies(&schema("tdd-driven")).unwrap();
         assert!(bodies.apply.contains("tdd-tests") || bodies.apply.to_lowercase().contains("red"));
         assert!(bodies.apply.contains("Next: /spcx:tdd:finalise"));
+    }
+
+    #[test]
+    fn apply_reminds_the_agent_to_refresh_the_knowledge_graph() {
+        // The interactive /spcx:<short>:apply flow has the agent edit files
+        // directly (no `solidspec pipeline` subprocess call in between, so
+        // no in-process auto-refresh) — unlike `solidspec pipeline`'s own
+        // CLI path, so the body must say to run `solidspec okf generate`
+        // itself, or a finalise/analyze right after would flag the agent's
+        // own new code as orphaned against a stale bundle.
+        let bodies = generate_bodies(&schema("spec-driven")).unwrap();
+        assert!(bodies.apply.contains("solidspec okf generate"));
     }
 
     #[test]
