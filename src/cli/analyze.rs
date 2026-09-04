@@ -16,6 +16,18 @@ pub fn run(feature_id: Option<&str>) -> Result<()> {
     let report = analyzer::analyze_feature(&feature_dir, &project_root)?;
     let output = analyzer::format_report(&report);
 
+    // Persist the report so DAG-based completion detection
+    // (`ArtifactGraph::compute_states`/`first_ready`, consulted by `solidspec
+    // status`, the pipeline's "Next:" hint, and `ship`'s analyze/review gate)
+    // can see this artifact as done — matches `analysis-report.md` declared
+    // in every schema.yaml's `analyze` node, and mirrors `review.rs` writing
+    // review-report.md. Without this, analyze never registers as complete
+    // even immediately after running, and the "Next" hint loops forever on
+    // "analyze" instead of advancing to `ship`.
+    let report_path = feature_dir.join("analysis-report.md");
+    std::fs::write(&report_path, &output)?;
+    println!("Report written to specs/{feature_dir_name}/analysis-report.md\n");
+
     println!("{output}");
 
     let coverage_str = report

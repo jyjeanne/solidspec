@@ -61,8 +61,15 @@ pub fn run(force: bool) -> Result<()> {
         }
     }
 
-    // Refresh agent commands for detected agents
-    let registered = agent_registry::register_all(&project_root, None)?;
+    // Refresh agent commands for detected agents, using whichever schema
+    // the project is currently configured for (solidspec.toml's
+    // [pipeline].schema, defaulted by 'solidspec init --schema') so the
+    // refreshed /spcx:* commands stay in sync if that ever changes.
+    let root_config = config::RootConfig::load(&project_root.join("solidspec.toml"))
+        .unwrap_or_else(|_| config::RootConfig::new(&project_root.to_string_lossy()));
+    let (workflow_schema, _) =
+        crate::core::schema::resolve_schema(&root_config.pipeline.schema, &project_root)?;
+    let registered = agent_registry::register_all(&project_root, None, &workflow_schema)?;
     if !registered.is_empty() {
         println!("  Refreshed agent commands for: {}", registered.join(", "));
     }

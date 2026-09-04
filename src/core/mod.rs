@@ -9,6 +9,7 @@ pub mod fan_out;
 pub mod feature;
 pub mod git;
 pub mod intent_parser;
+pub mod okf;
 pub mod pipeline;
 pub mod review;
 pub mod schema;

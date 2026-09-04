@@ -60,7 +60,7 @@ Thin handlers for each CLI subcommand. Each file maps to one command. No busines
 | `analyze.rs` | `analyze` | Run consistency analysis, print report; shows trace tree and intent coverage in IDSD mode |
 | `checklist.rs` | `checklist` | Generate/append quality checklists |
 | `review.rs` | `review` | Preflight spec quality review with dimension scoring (8 dimensions in IDSD mode) |
-| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (8 SDD / 10 IDSD phases) with agent CLI invocation |
+| `pipeline.rs` | `pipeline` | Multi-agent pipeline orchestrator (8 SDD / 10 IDSD phases) with agent CLI invocation. `refresh_knowledge_graph()` best-effort-regenerates the project's OKF bundle (`core::okf::refresh_if_present` — only when one already exists) right after every code-writing handoff confirms — `implement`, `apex`, `tdd-tests`, `tdd-refactor` — keeping `analyze`'s structural cross-check from working against a stale graph regardless of which schema's handoff phase actually changed the code |
 | `change.rs` | `change` | Change-based workflow: propose, list, archive (delta specs) |
 | `status.rs` | `status` | DAG-based artifact completion status; shows intent drift in IDSD mode |
 | `check.rs` | `check` | Verify prerequisites |
@@ -87,7 +87,7 @@ Pure business logic with no CLI dependency. Can be used as a library.
 | `task_generator.rs` | Generate `TaskList` from spec + plan, organize by phases |
 | `test_generator.rs` | Extract Given/When/Then scenarios, detect framework, generate test scaffolds |
 | `pipeline.rs` | Phase list constants (`PHASES` 8-phase SDD, `PHASES_IDSD` 10-phase), skip conditions, phase type (Auto/Handoff), filtering, log generation |
-| `analyzer.rs` | Cross-artifact consistency validation, severity heuristics. **[IDSD]** `compute_drift()` — intent evidence vs implemented tests; `AnalysisReport` gains `trace_graph: Option<TraceGraph>` and `intent_coverage: Option<f64>`; orphaned-FR findings when tasks.md exists but doesn't reference a spec requirement |
+| `analyzer.rs` | Cross-artifact consistency validation, severity heuristics. **[IDSD]** `compute_drift()` — intent evidence vs implemented tests; `AnalysisReport` gains `trace_graph: Option<TraceGraph>` and `intent_coverage: Option<f64>`; orphaned-FR findings when tasks.md exists but doesn't reference a spec requirement. `structural_cross_check()` — cross-checks tasks.md's backtick-quoted symbols and referenced source files against the project's OKF bundle (`okf::BundleIndex`, reads an already-generated bundle via `okf_parser::read_bundle` — no re-analysis, no `okf-rs search`/`explore`), rendered as its own `analysis-report.md` section; `None`/omitted entirely when no bundle exists |
 | `feature.rs` | Feature numbering, branch name generation, 4-level resolution |
 | `git.rs` | Git operations: init, branch creation, current branch detection |
 | `errors.rs` | Typed error enum `SolidSpecError` with what/where/fix |
@@ -100,10 +100,10 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 
 | File | Responsibility |
 |------|---------------|
-| `config.rs` | `AGENTS` const table — 20 agents with ID, dir, format, placeholder, CLI binary/flags |
+| `config.rs` | `AGENTS` const table — 19 agents with ID, dir, format, placeholder, CLI binary/flags |
 | `registry.rs` | Detection, registration, unregistration of commands (phase-specific prompts) |
 | `registrar.rs` | Re-exports from registry |
-| `formats.rs` | Markdown/TOML/Vibe-skill rendering, placeholder translation, path adjustment |
+| `formats.rs` | Markdown/TOML/OpenCode-skill rendering, placeholder translation, path adjustment |
 | `invoker.rs` | Non-interactive CLI invocation of AI agents, phase-specific prompt generation with 300s timeout |
 | `personas.rs` | 8 role-based agent personas (Spec Writer, Architect, Implementer, Code Reviewer, etc.) with verification checklists |
 | `guardrails.rs` | Anti-rationalization table + mandatory compliance checklist injected into every prompt |
@@ -111,7 +111,6 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 **Agent-specific handling** (in `registry.rs`):
 - **Copilot**: `.agent.md` + companion `.prompt.md`
 - **Kimi**: Directory-based skills with dot-separator (`.kimi/skills/solidspec.specify/SKILL.md`)
-- **Vibe**: Directory-based skills with hyphen-separator (`.vibe/skills/solidspec-specify/SKILL.md`), `user-invocable: true` frontmatter
 - **OpenCode**: Directory-based skills with hyphen-separator (`.opencode/skills/solidspec-specify/SKILL.md`), `name:` + `description:` YAML frontmatter
 - **Gemini/Tabnine**: TOML format with `{{args}}`
 
@@ -119,7 +118,7 @@ Manages 20 AI coding agents with data-driven configuration and CLI invocation.
 - Builds detailed, phase-specific prompts (not generic "execute the workflow")
 - Invokes agent CLI via `std::process::Command` with non-interactive flags
 - Returns `Success`/`NotAvailable`/`Failed` — pipeline falls back to handoff on failure
-- Agent-specific invocation: `claude -p`, `vibe -p`, `codex exec`, `kimi --yolo`, etc.
+- Agent-specific invocation: `claude -p`, `opencode -p`, `codex exec`, `kimi --yolo`, etc.
 
 ### `src/templates/` — Template Engine
 
@@ -489,7 +488,7 @@ Pipeline Auto phase
 │  3. Check binary exists in PATH (which::which)  │
 │  4. Build Command:                              │
 │     ├── claude: claude -p "prompt" --allowedTools│
-│     ├── vibe:   vibe -p "prompt" --max-turns 25 │
+│     ├── opencode: opencode -p "prompt"           │
 │     ├── codex:  codex exec "prompt"             │
 │     ├── kimi:   kimi --yolo "prompt"            │
 │     └── others: {binary} {flag} "prompt"        │
@@ -545,7 +544,7 @@ solidspec status [feature-id] [--schema X]
 
 ### 1. Data-driven agent config
 
-All 20 agents are defined in a single `AGENTS` const array. Adding a new agent requires only adding an `AgentConfig` entry — no new code files needed. Special behaviors (Copilot, Kimi, Cursor) are handled by ID checks in `registry.rs`.
+All 19 agents are defined in a single `AGENTS` const array. Adding a new agent requires only adding an `AgentConfig` entry — no new code files needed. Special behaviors (Copilot, Kimi, Cursor) are handled by ID checks in `registry.rs`.
 
 ### 2. Template auto-escaping disabled
 
@@ -583,9 +582,9 @@ Each pipeline phase has a detailed, unique prompt (in `invoker.rs`) telling the 
 
 Agent CLI invocation returns a three-variant enum (`Success`/`NotAvailable`/`Failed`). When an agent's CLI is not installed or fails, the pipeline falls back to handoff mode (shows the manual `/solidspec-*` command to run). This means the pipeline never crashes due to a missing agent — it degrades gracefully.
 
-### 11. Vibe directory-based skills
+### 11. OpenCode directory-based skills
 
-Mistral Vibe uses a skills system with directory-based discovery (`.vibe/skills/<name>/SKILL.md`), unlike most agents that use flat command files. The `SKILL.md` requires `user-invocable: true` and `allowed-tools:` in YAML frontmatter. SolidSpec generates these with the correct format so skills appear in Vibe's slash command list.
+OpenCode uses a skills system with directory-based discovery (`.opencode/skills/<name>/SKILL.md`), unlike most agents that use flat command files. The `SKILL.md` requires `name:` and `description:` in YAML frontmatter. SolidSpec generates these with the correct format so skills appear in OpenCode's slash command list.
 
 ### 12. Prompt layering (personas + guardrails + context)
 

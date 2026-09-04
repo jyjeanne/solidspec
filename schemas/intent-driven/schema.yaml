@@ -4,6 +4,7 @@
 name: intent-driven
 version: "1.0"
 description: "Intent-Driven Development workflow (IDSD) — intent-first with drift detection"
+use_case: "Product features with uncertain scope — captures WHY before WHAT, measures intent drift after implementation."
 
 artifacts:
   - id: intent

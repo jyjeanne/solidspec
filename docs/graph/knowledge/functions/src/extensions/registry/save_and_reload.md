@@ -1,0 +1,12 @@
+---
+type: Rust Function
+title: save_and_reload
+resource: src/extensions/registry.rs#L292-L301
+visibility: private
+generated:
+  by: okf-rs/0.7.0
+---
+
+# Signature
+
+`fn save_and_reload()`

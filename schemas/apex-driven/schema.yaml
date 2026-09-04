@@ -4,6 +4,7 @@
 name: apex-driven
 version: "1.0"
 description: "APEX-enhanced SDD workflow — structured Analyze-Plan-Execute-eXamine replaces the implement handoff"
+use_case: "Complex features where implementation itself needs structured A-P-E-X cycling and adversarial review, without a manual handoff."
 
 artifacts:
   - id: spec

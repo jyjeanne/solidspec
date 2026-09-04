@@ -14,7 +14,7 @@
     <a href="#install">Install</a> &bull;
     <a href="#parallel-fan-out-ship-gate">Ship Gate</a> &bull;
     <a href="#using-with-claude-code">Claude Code</a> &bull;
-    <a href="#using-with-mistral-vibe">Mistral Vibe</a> &bull;
+    <a href="#using-with-opencode">OpenCode</a> &bull;
     <a href="#using-with-github-copilot">Copilot</a> &bull;
     <a href="#use-cases">Use Cases</a> &bull;
     <a href="#all-commands">Commands</a>
@@ -36,13 +36,165 @@ You describe a feature to your AI coding agent. It generates code. But the code 
 - Tackling a complex feature that needs structured implementation? Use `apex-driven`.
 - Need all of the above? Use `intent-apex`.
 
-**SolidSpec works with 20 AI agents** (Claude Code, Copilot, Vibe, Gemini, Cursor, Windsurf, Codex, and more), registers slash commands in each agent's native format, and can invoke them automatically via a fully automated or mixed-mode pipeline.
+**SolidSpec works with 19 AI agents** (Claude Code, Copilot, OpenCode, Gemini, Cursor, Windsurf, Codex, and more), registers slash commands in each agent's native format, and can invoke them automatically via a fully automated or mixed-mode pipeline.
+
+---
+
+## Install
+
+### Linux / macOS — one line, no Rust toolchain
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jyjeanne/solidspec/master/scripts/install.sh | sh
+```
+
+Downloads the prebuilt binary for your platform from [GitHub Releases](https://github.com/jyjeanne/solidspec/releases) into `~/.local/bin`. Override the location with `INSTALL_DIR=/some/path`.
+
+### Any platform — with Rust installed
+
+```bash
+cargo install --git https://github.com/jyjeanne/solidspec
+```
+
+Not published to crates.io yet — SolidSpec vendors [okf-rs](https://github.com/jyjeanne/okf-rs)'s knowledge-graph crates as git dependencies (see `docs/okf-rs-integration-plan.md`), and crates.io requires every dependency to itself be a published crate. `cargo install --git` has no such restriction.
+
+### Windows
+
+Download `solidspec-x86_64-pc-windows-msvc.zip` from the [latest release](https://github.com/jyjeanne/solidspec/releases/latest), extract it, and add the folder to your `PATH` — see below.
+
+<details>
+<summary>Build from source, or manual PATH setup</summary>
+
+```bash
+git clone https://github.com/jyjeanne/solidspec.git
+cd solidspec
+cargo build --release
+```
+
+The compiled binary is placed at `target/release/solidspec` (Linux/macOS) or `target\release\solidspec.exe` (Windows).
+
+---
+
+### Add to PATH — Linux / macOS
+
+**Option A — copy to a system directory (recommended)**
+
+```bash
+sudo cp target/release/solidspec /usr/local/bin/solidspec
+```
+
+**Option B — add the build output directory to your shell profile**
+
+```bash
+# Bash (~/.bashrc or ~/.bash_profile)
+echo 'export PATH="$PATH:$HOME/solidspec/target/release"' >> ~/.bashrc
+source ~/.bashrc
+
+# Zsh (~/.zshrc)
+echo 'export PATH="$PATH:$HOME/solidspec/target/release"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+---
+
+### Add to PATH — Windows
+
+**Option A — copy to a permanent directory, then add it to the system PATH (recommended)**
+
+```powershell
+# 1. Create a directory for CLI tools (skip if it already exists)
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin"
+
+# 2. Copy the binary
+Copy-Item .\target\release\solidspec.exe "$env:USERPROFILE\bin\solidspec.exe"
+
+# 3. Add the directory to the permanent user PATH (takes effect in new shells)
+[Environment]::SetEnvironmentVariable(
+    "PATH",
+    "$env:PATH;$env:USERPROFILE\bin",
+    [EnvironmentVariableTarget]::User
+)
+```
+
+**Verify the installation:**
+
+```bash
+solidspec --version
+```
+
+</details>
+
+---
+
+## Quick Reference — Most Used Commands
+
+```bash
+# Bootstrap a new project
+solidspec init --here
+
+# Start a feature end-to-end (spec, plan, tasks, implement handoff — or
+# whichever phases the project's schema has; minimal by default)
+solidspec go "Your feature description"
+
+# See what's ready to work on, and what to run next
+solidspec status
+
+# Resume wherever you left off
+solidspec continue
+
+# List every workflow schema and when to use each
+solidspec schemas
+
+# Need a specific methodology instead of the default? Use pipeline directly:
+solidspec pipeline --new "Feature name" --schema tdd-driven --no-agent
+solidspec pipeline --new "Feature name" --schema security-first --no-agent
+
+# Propose a change to an existing feature (brownfield)
+solidspec change propose "Add social login" --feature-id 001
+```
+
+---
+
+## Quick Start (3 steps)
+
+### 1. Initialize your project
+
+```bash
+mkdir my-app && cd my-app
+solidspec init --here
+```
+
+SolidSpec auto-detects your AI agent (if it has a `.claude/`, `.cursor/`, ... directory or CLI already on `PATH` — create an empty one first if this is a brand-new project and you want a specific agent registered) and creates:
+- `.solidspec/` &mdash; constitution, templates, config
+- `specs/` &mdash; where feature artifacts live
+- `solidspec.toml` &mdash; project configuration, including which workflow schema this project defaults to (`minimal` unless you pass `--schema`, e.g. `solidspec init --here --schema spec-driven`)
+- Slash commands in your agent's native format: `/spcx:new`, `/spcx:apply`, `/spcx:finalise` for the project's default schema, `/spcx:explore` always, plus a namespaced `/spcx:<schema>-new`/`-apply`/`-finalise` for every other built-in workflow (`/spcx:tdd-driven-new`, `/spcx:security-first-apply`, ...) in Claude Code — see [Workflows and Methodologies](#workflows-and-methodologies) below for what each schema covers
+- On an existing codebase (anything already in the directory besides the files above): a native knowledge-graph bundle at `.solidspec/knowledge/` and an `okf` MCP server entry in `.mcp.json`, so agents can query the codebase instead of re-reading it cold — skipped on a fresh empty directory; run `solidspec okf generate` yourself later if you add code first and want it sooner. Once a bundle exists, `solidspec pipeline`/`go`/`continue` refresh it automatically right after every code-writing handoff (`implement`, `apex`, `tdd-tests`, `tdd-refactor` — whichever your schema uses), so it never goes stale — `solidspec analyze` cross-checks `tasks.md` against it (see below)
+
+### 2. Describe your feature
+
+In your AI agent, run:
+
+```
+/spcx:new "TODO list with CRUD operations and local storage"
+```
+
+This scaffolds and fills in every artifact through the implement handoff for your project's schema in one pass — `spec.md`, `plan.md`, `tasks.md` for the `minimal` default; also `clarify` and test scaffolds for `spec-driven`. (Prefer the terminal? `solidspec go "..."` does the same thing from the CLI, always on the project's own schema; `solidspec pipeline --new "..." --schema tdd-driven --no-agent` runs any schema explicitly, regardless of the project's default.)
+
+### 3. Implement and ship
+
+```
+/spcx:apply       # implement the tasks
+/spcx:finalise    # validate, review, and get a SHIP/HOLD decision
+```
+
+Or from the terminal: `solidspec continue` to resume at whatever's next, `solidspec status` any time to see where things stand.
 
 ---
 
 ## Workflows and Methodologies
 
-SolidSpec ships **7 built-in workflows** covering the full spectrum from lightweight to rigorous. All share the same DAG engine, schema format, agent registration, and pipeline infrastructure.
+SolidSpec ships **7 built-in workflows** covering the full spectrum from lightweight to rigorous. All share the same DAG engine, schema format, agent registration, and pipeline infrastructure. Run `solidspec schemas` any time for this same list with each one's use case, from the terminal.
 
 ### At a Glance
 
@@ -58,9 +210,9 @@ SolidSpec ships **7 built-in workflows** covering the full spectrum from lightwe
 
 ---
 
-### `minimal` — Lean Specification
+### `minimal` — Lean Specification (default)
 
-The fastest path from idea to implementation. No test scaffolds, no review phase, no ship gate. Four artifacts, minimal ceremony.
+The fastest path from idea to implementation, and what `solidspec init` picks when `--schema` is left unset. No test scaffolds, no review phase, no ship gate. Four artifacts, minimal ceremony.
 
 ```
   spec.md → plan.md → tasks.md → implement
@@ -71,12 +223,13 @@ The fastest path from idea to implementation. No test scaffolds, no review phase
 - Hackathon projects or time-boxed spikes
 - The requirements are fully known by the implementer
 - You want the discipline of a written spec but not the full SDD ceremony
+- You're unsure which schema to pick and want to start light — `solidspec init --schema spec-driven` (or any other schema) any time you know you need more
 
-**Avoid when:** quality gates, traceability, or external stakeholders matter.
+**Avoid when:** quality gates, traceability, or external stakeholders matter — pick `spec-driven` (or a stricter schema below) instead.
 
 ---
 
-### `spec-driven` — Full Specification-Driven Development (default)
+### `spec-driven` — Full Specification-Driven Development
 
 The standard SolidSpec workflow. Structured spec, architecture plan, phased tasks, test scaffolds, cross-artifact consistency check, preflight review, and a 4-lane parallel ship gate.
 
@@ -89,7 +242,7 @@ The standard SolidSpec workflow. Structured spec, architecture plan, phased task
 - Adding a new capability to an existing codebase
 - You need traceability from requirements to tasks but not full intent-to-evidence traceability
 - Brownfield features (combine with `solidspec change propose` for delta specs)
-- The default if you're unsure which schema to pick
+- Quality gates, traceability, or external stakeholders matter more than getting started fast
 
 ---
 
@@ -240,138 +393,6 @@ The most comprehensive workflow: intent-anchored requirements, evidence-based va
 > Use **`intent-driven`** when you need to prove *why* it was built.
 > Use **`apex-driven`** when the implementation itself is the hard part.
 > Use **`intent-apex`** when all of the above apply.
-
----
-
-## Install
-
-### Build from source
-
-```bash
-git clone https://github.com/jyjeanne/solidspec.git
-cd solidspec
-cargo build --release
-```
-
-The compiled binary is placed at `target/release/solidspec` (Linux/macOS) or `target\release\solidspec.exe` (Windows).
-
----
-
-### Add to PATH — Linux / macOS
-
-**Option A — copy to a system directory (recommended)**
-
-```bash
-sudo cp target/release/solidspec /usr/local/bin/solidspec
-```
-
-**Option B — add the build output directory to your shell profile**
-
-```bash
-# Bash (~/.bashrc or ~/.bash_profile)
-echo 'export PATH="$PATH:$HOME/solidspec/target/release"' >> ~/.bashrc
-source ~/.bashrc
-
-# Zsh (~/.zshrc)
-echo 'export PATH="$PATH:$HOME/solidspec/target/release"' >> ~/.zshrc
-source ~/.zshrc
-```
-
----
-
-### Add to PATH — Windows
-
-**Option A — copy to a permanent directory, then add it to the system PATH (recommended)**
-
-```powershell
-# 1. Create a directory for CLI tools (skip if it already exists)
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin"
-
-# 2. Copy the binary
-Copy-Item .\target\release\solidspec.exe "$env:USERPROFILE\bin\solidspec.exe"
-
-# 3. Add the directory to the permanent user PATH (takes effect in new shells)
-[Environment]::SetEnvironmentVariable(
-    "PATH",
-    "$env:PATH;$env:USERPROFILE\bin",
-    [EnvironmentVariableTarget]::User
-)
-```
-
-**Verify the installation:**
-
-```bash
-solidspec --version
-```
-
----
-
-## Quick Reference — Most Used Commands
-
-```bash
-# Bootstrap a new project
-solidspec init --here
-
-# Create a feature spec (auto-numbers to 001, 002, ...)
-solidspec specify "Your feature description"
-
-# See what's ready to work on (DAG-based)
-solidspec status
-
-# Run the full pipeline automatically (scaffold only, no AI agent)
-solidspec pipeline --new "Feature name" --no-agent
-
-# Run with a specific workflow schema
-solidspec pipeline --new "Feature name" --schema tdd-driven --no-agent
-solidspec pipeline --new "Feature name" --schema intent-driven --no-agent
-solidspec pipeline --new "Feature name" --schema security-first --no-agent
-
-# Propose a change to an existing feature (brownfield)
-solidspec change propose "Add social login" --feature-id 001
-```
-
----
-
-## Quick Start (3 commands)
-
-### 1. Initialize your project
-
-```bash
-mkdir my-app && cd my-app
-
-# Create .claude/ or .vibe/ or .github/ directory for your agent
-mkdir .claude
-
-# Initialize SolidSpec (auto-detects your AI agent)
-solidspec init --here
-```
-
-SolidSpec creates:
-- `.solidspec/` &mdash; constitution, templates, config
-- `specs/` &mdash; where feature artifacts live
-- `solidspec.toml` &mdash; project configuration
-- `.claude/commands/solidspec-*.md` &mdash; slash commands for your agent
-
-### 2. Choose your workflow and describe your feature
-
-```bash
-# Standard workflow (spec-driven is the default)
-solidspec specify "TODO list with CRUD operations and local storage"
-
-# Or run the full pipeline for a specific workflow in one command
-solidspec pipeline --new "TODO list with CRUD" --schema spec-driven --no-agent
-solidspec pipeline --new "Payment checkout flow" --schema tdd-driven --no-agent
-solidspec pipeline --new "User auth system" --schema security-first --no-agent
-solidspec pipeline --new "Task manager feature" --schema intent-driven --no-agent
-```
-
-### 3. Let your AI agent build it
-
-Use the slash command in your AI agent:
-
-```
-/solidspec-implement
-```
 
 ---
 
@@ -586,6 +607,31 @@ solidspec init --here
 
 ### Available slash commands
 
+The 4 commands below chain the per-phase ones underneath for the project's own default schema (`minimal` unless `solidspec init --schema` said otherwise) — start here:
+
+| Slash Command | What it does |
+|---------------|-------------|
+| `/spcx:new` | Start a feature end-to-end through the implement handoff, for the project's default schema |
+| `/spcx:apply` | Implement the feature's tasks |
+| `/spcx:finalise` | Whatever comes after implement for that schema (analyze/review/ship, or nothing for `minimal`) |
+| `/spcx:explore` | Exploratory research and discussion — no files written |
+
+**Every other built-in workflow gets the same 3 commands too**, namespaced by schema name — run any workflow's DAG-specific steps without changing `solidspec.toml`'s stored default:
+
+| Slash Command | What it does |
+|---------------|-------------|
+| `/spcx:minimal-new` / `-apply` / `-finalise` | Lean spec → plan → tasks → implement, nothing after |
+| `/spcx:spec-driven-new` / `-apply` / `-finalise` | Full SDD: spec → clarify → plan → tasks → tests → implement → analyze → review → ship |
+| `/spcx:security-first-new` / `-apply` / `-finalise` | Adds a mandatory OWASP-audit gate before tasks |
+| `/spcx:tdd-driven-new` / `-apply` / `-finalise` | Real failing tests (RED) before implementation, refactor phase after |
+| `/spcx:intent-driven-new` / `-apply` / `-finalise` | IDSD: intent capture, evidence collection, drift detection |
+| `/spcx:apex-driven-new` / `-apply` / `-finalise` | Structured APEX (Analyze-Plan-Execute-eXamine) implementation |
+| `/spcx:intent-apex-new` / `-apply` / `-finalise` | Intent-anchored with APEX and evidence collection |
+
+See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd-driven-apply` really does walk you through RED → implement → REFACTOR and `/spcx:minimal-finalise` really does say there's nothing left to run.
+
+Every individual phase also has its own command, for explicit control or other schemas:
+
 | Slash Command | What it does |
 |---------------|-------------|
 | `/solidspec-specify` | Create a new feature spec from a description |
@@ -602,6 +648,16 @@ solidspec init --here
 | `/solidspec-checklist` | Generate quality validation checklist |
 
 ### Step-by-step with Claude Code
+
+The short way:
+
+```
+/spcx:new Simple TODO app with add, edit, delete, and local storage
+/spcx:apply
+/spcx:finalise
+```
+
+Or one phase at a time, for explicit control:
 
 **Step 1** &mdash; Specify your feature:
 
@@ -635,16 +691,16 @@ solidspec init --here
 
 ---
 
-## Using with Mistral Vibe
+## Using with OpenCode
 
-Mistral Vibe gets skills registered as directories in `.vibe/skills/`.
+OpenCode gets skills registered as directories in `.opencode/skills/`.
 
 ```bash
-mkdir -p .vibe
+mkdir -p .opencode
 solidspec init --here
 ```
 
-Skills are created at `.vibe/skills/solidspec-*/SKILL.md`. Usage is identical to Claude Code but with Vibe's `/skill-name` format.
+Skills are created at `.opencode/skills/solidspec-*/SKILL.md`. Usage is identical to Claude Code but with OpenCode's `/skill-name` format.
 
 ---
 
@@ -661,12 +717,11 @@ solidspec init --here
 
 ## Using Multiple Agents Together
 
-SolidSpec registers commands for **all detected agents simultaneously**. If your project has both `.claude/` and `.vibe/`:
+SolidSpec registers commands for **all detected agents simultaneously**. If your project has both `.claude/` and `.opencode/`:
 
 ```bash
-mkdir .claude .vibe
+mkdir .claude .opencode
 solidspec init --here
-# Registered commands for 2 agent(s): claude, vibe
 ```
 
 Both agents get the same commands and work from the same spec artifacts. The artifacts in `specs/` are agent-agnostic — any agent can read and build from them.
@@ -768,7 +823,7 @@ solidspec tasks 001 --schema security-first   # Blocked until security-review.md
 solidspec implement 001
 ```
 
-`--schema security-first` is required on `solidspec tasks` for the gate to apply — without it, `tasks` defaults to the `spec-driven` schema (no security-review dependency) and will generate `tasks.md` regardless of whether `security-review.md` exists.
+`--schema security-first` is required on `solidspec tasks` for the gate to apply unless the project was already initialized with `solidspec init --schema security-first` (which makes it the project's stored default — see `solidspec.toml`'s `[pipeline].schema`). Without either, `tasks` falls back to whatever schema *is* the project's default (`spec-driven` for a pre-existing project, `minimal` for one initialized without `--schema`) — neither has a security-review dependency, so `tasks.md` would be generated regardless of whether `security-review.md` exists.
 
 ---
 
@@ -870,7 +925,7 @@ specify = "claude"
 plan    = "claude"
 tasks   = "claude"
 tests   = "claude"
-implement = "vibe"
+implement = "opencode"
 analyze = "claude"
 review  = "claude"
 ```
@@ -985,6 +1040,15 @@ specs/001-feature-name/
   security-review.md       # OWASP audit — findings by severity
   tasks.md                 # Every finding has a mitigation task
 ```
+
+### Project-level (all schemas)
+
+```
+.solidspec/knowledge/       # OKF knowledge-graph bundle (existing codebase only — see Quick Start)
+.mcp.json                   # okf MCP server entry (Claude Code)
+```
+
+`analysis-report.md` gains a "Structural cross-check (okf-rs)" section whenever `.solidspec/knowledge/` exists — it's the one part of `analyze`'s output that's about the codebase's knowledge graph, not `tasks.md`'s own text.
 
 ---
 
@@ -1119,9 +1183,11 @@ review = "Check for placeholders, ambiguous language, traceability gaps."
 
 ### Core workflow commands
 
+These per-phase commands are what `go`/`continue`/`pipeline` (and, in Claude Code, `/spcx:new`/`/spcx:apply`/`/spcx:finalise`) run under the hood. They're hidden from `solidspec --help` to keep the top-level surface small, but every one of them still works exactly as documented here — useful for scripting a single phase or debugging one in isolation.
+
 | Command | Description |
 |---------|-------------|
-| `solidspec init [name]` | Initialize project with constitution, templates, agent commands |
+| `solidspec init [name]` | Initialize project with constitution, templates, agent commands (`--schema`, default `minimal`; on an existing codebase, also generates a knowledge-graph bundle and registers it as an MCP server — see below) |
 | `solidspec specify <desc>` | Create feature spec with user stories and quality checklist |
 | `solidspec clarify [id]` | Resolve `[NEEDS CLARIFICATION]` markers |
 | `solidspec plan [id]` | Generate plan + research + data model + contracts |
@@ -1129,7 +1195,7 @@ review = "Check for placeholders, ambiguous language, traceability gaps."
 | `solidspec tasks [id]` | Generate phased task breakdown with `[P]` parallel markers (`--schema` enforces DAG gates, e.g. security-first's security-review requirement) |
 | `solidspec tests [id]` | Generate test scaffolds from Given/When/Then scenarios (`--framework`) |
 | `solidspec implement [id]` | Execute tasks with hook support |
-| `solidspec analyze [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode |
+| `solidspec analyze [id]` | Validate consistency with severity levels; trace tree and drift in IDSD mode; cross-checks `tasks.md` against the project's OKF knowledge graph if one exists (alias: `validate`) |
 | `solidspec review [id]` | Review spec quality with dimension scoring |
 | `solidspec checklist [id]` | Generate/append quality checklists |
 
@@ -1153,8 +1219,11 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 
 | Command | Description |
 |---------|-------------|
-| `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--only`, `--auto`, `--no-agent`, `--schema`, `--force`, `--dry-run`) |
-| `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`); intent drift in IDSD mode |
+| `solidspec go "desc"` | Start a feature end-to-end on the default schema — shorthand for `pipeline --new "desc" --auto` |
+| `solidspec continue [id]` | Resume the current (or given) feature at whatever phase is next — shorthand for `pipeline --auto` |
+| `solidspec schemas` | List every workflow schema and its use case |
+| `solidspec pipeline [id]` | Run multi-agent pipeline (`--new`, `--from`, `--to`, `--only`, `--auto`, `--no-agent`, `--schema`, `--force`, `--dry-run`) — full control, any schema |
+| `solidspec status [id]` | Show artifact completion status (DAG-based, `--schema`) and what to run next; intent drift in IDSD mode |
 | `solidspec ship [id]` | Run parallel fan-out review (4 concurrent AI lanes) → `SHIP` / `HOLD` decision (`--lane`, `--no-agent`, `--fail-on-hold`, `--dry-run`, `--timeout`, `--ignore-timeout`) |
 
 ### Project management commands
@@ -1164,20 +1233,29 @@ Both commands accept `--dry-run` (print scaffold without writing files) and an o
 | `solidspec change <cmd>` | Manage changes: `propose "Title"`, `list`, `archive <slug>` (`--feature-id`) |
 | `solidspec preset <cmd>` | Manage presets (`add`, `remove`, `list`, `search`, `info`) |
 | `solidspec extension <cmd>` | Manage extensions (`add`, `remove`, `enable`, `disable`, `list`) |
+| `solidspec okf <cmd>` | Generate/validate an OKF knowledge-graph bundle natively (`generate`, `validate`) — see [`extensions/okf/`](extensions/okf/) |
 | `solidspec upgrade` | Refresh templates + agent commands after update |
 | `solidspec completions <shell>` | Generate shell completions (bash, zsh, fish, powershell) |
 | `solidspec check` | Verify system prerequisites |
 
 Feature ID is auto-detected from git branch or latest spec if omitted.
 
+`solidspec init` already generates this bundle automatically for an existing codebase (see step 1 above) —
+no extension needed for that. A bundled example extension at [`extensions/okf/`](extensions/okf/) exists
+for the same generation via its `after_init` hook on a project that skipped it (e.g. `init` ran before any
+code existed) or wants it to fire again on a later `init` re-run; install into a project with
+`solidspec extension add extensions/okf --dev`. Either way it's the same native `solidspec okf
+generate`/`validate` commands (vendored library crates — no external binary) so AI agents can query the
+bundle instead of re-reading files cold.
+
 ---
 
-## Supported AI Agents (20)
+## Supported AI Agents (19)
 
 | Agent | Directory | Format |
 |-------|-----------|--------|
 | Claude Code | `.claude/commands/` | Markdown |
-| Mistral Vibe | `.vibe/skills/` | Markdown (directory-based) |
+| OpenCode | `.opencode/skills/` | Markdown (SKILL.md) |
 | GitHub Copilot | `.github/agents/` | Markdown + `.prompt.md` |
 | Gemini CLI | `.gemini/commands/` | TOML |
 | Cursor | `.cursor/commands/` | Markdown |
@@ -1187,7 +1265,6 @@ Feature ID is auto-detected from git branch or latest spec if omitted.
 | Kimi Code | `.kimi/skills/` | Markdown (directory-based) |
 | Tabnine CLI | `.tabnine/agent/commands/` | TOML |
 | Qwen Code | `.qwen/commands/` | Markdown |
-| opencode | `.opencode/skills/` | Markdown (SKILL.md) |
 | Kilo Code | `.kilocode/workflows/` | Markdown |
 | Auggie CLI | `.augment/commands/` | Markdown |
 | Roo Code | `.roo/commands/` | Markdown |
@@ -1210,6 +1287,12 @@ version = "0.1.0"
 
 [ai]
 default_agent = "claude"
+
+[pipeline]
+# The project's default workflow — set by 'solidspec init --schema <name>'
+# ("minimal" if omitted). go/continue/status/tasks/pipeline all fall back
+# to this when --schema is left unset.
+schema = "minimal"
 
 [git]
 auto_branch = true
@@ -1256,16 +1339,18 @@ solidspec completions fish > ~/.config/fish/completions/solidspec.fish
 src/
   cli/          Command handlers (clap derive) — one module per subcommand
   core/         All business logic: spec parser, planner, task generator, test generator,
-                tdd (RED/REFACTOR scaffolding), pipeline, analyzer, constitution,
-                intent_parser, evidence, artifact_graph (DAG + trace), fan_out (ship gate)
-  agents/       20-agent config table, detection, format translation, registration, CLI invoker
+                tdd (RED/REFACTOR scaffolding), pipeline, analyzer (incl. OKF structural
+                cross-check), constitution, intent_parser, evidence, artifact_graph (DAG +
+                trace), fan_out (ship gate), okf (native knowledge-graph generate/validate/refresh)
+  agents/       19-agent config table, detection, format translation, registration, CLI invoker,
+                spcx (schema-aware /spcx:* body generator)
   templates/    Tera rendering + 4-layer resolver (project-local → embedded default)
   presets/      Manifest validation, registry, manager
   extensions/   Manifest, registry, hooks, manager
   config/       TOML configuration handling (RootConfig, ProjectInternalConfig, FanOutConfig)
 schemas/
   spec-driven/    Default 9-artifact SDD workflow
-  minimal/        4-artifact lightweight workflow
+  minimal/        4-artifact lightweight workflow (the actual `solidspec init` default)
   security-first/ 5-artifact workflow with mandatory OWASP security review
   tdd-driven/     10-artifact AI-TDD workflow (RED-GREEN-REFACTOR)
   intent-driven/  11-artifact IDSD workflow (intent + evidence + drift detection)
@@ -1274,6 +1359,9 @@ schemas/
 docs/
   idsd-workflow-guide.md              Complete IDSD walkthrough with Task Manager example
   Parallel-Fan-out_orchestration-plan.md  Fan-out ship gate design spec
+  okf-rs-integration-plan.md          Native knowledge-graph integration: what's vendored, what's next
+  kg-workflow-vision-gap-analysis.md  Knowledge-graph/workflow architecture review and roadmap
+  graph/                              This repo's own OKF knowledge-graph bundle (dogfooded)
   tdd/                                TDD skill documentation
 ```
 

@@ -1,0 +1,96 @@
+---
+type: Rust Function
+title: generate_bodies
+resource: src/agents/spcx.rs#L69-L122
+generated:
+  by: okf-rs/0.7.0
+relationships:
+  calls:
+  - target: functions/src/core/schema/WorkflowSchema/into_graph
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/core/pipeline/phases_for_schema
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/artifact_id_for_phase
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/core/pipeline/phase_type
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/render_new
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/render_apply
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/render_finalise
+    resolved_by: tree-sitter
+    confidence: exact
+  called_by:
+  - target: functions/src/agents/registry/register_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/registry/all_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/minimal_finalise_has_nothing_to_run
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/minimal_apply_says_schema_ends_here
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/spec_driven_new_stops_before_implement_includes_tests
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/spec_driven_finalise_includes_analyze_review_and_ship
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/security_first_new_includes_security_review_step
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/security_first_finalise_has_nothing_to_run
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/tdd_driven_apply_covers_all_three_handoff_phases
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/intent_driven_new_uses_intent_cli_command_first
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: functions/src/agents/spcx/every_builtin_schema_generates_without_error
+    resolved_by: tree-sitter
+    confidence: exact
+---
+
+# Signature
+
+`pub fn generate_bodies(schema: &WorkflowSchema) -> Result<SpcxBodies>`
+
+# Calls
+
+- [into_graph](../../../../functions/src/core/schema/WorkflowSchema/into_graph.md)
+- [phases_for_schema](../../../../functions/src/core/pipeline/phases_for_schema.md)
+- [artifact_id_for_phase](../../../../functions/src/agents/spcx/artifact_id_for_phase.md)
+- [phase_type](../../../../functions/src/core/pipeline/phase_type.md)
+- [render_new](../../../../functions/src/agents/spcx/render_new.md)
+- [render_apply](../../../../functions/src/agents/spcx/render_apply.md)
+- [render_finalise](../../../../functions/src/agents/spcx/render_finalise.md)
+
+# Called by
+
+- [register_spcx_commands](../../../../functions/src/agents/registry/register_spcx_commands.md)
+- [all_schema_spcx_commands](../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
+- [minimal_new_covers_specify_plan_tasks_and_stops_before_implement](../../../../functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement.md)
+- [minimal_finalise_has_nothing_to_run](../../../../functions/src/agents/spcx/minimal_finalise_has_nothing_to_run.md)
+- [minimal_apply_says_schema_ends_here](../../../../functions/src/agents/spcx/minimal_apply_says_schema_ends_here.md)
+- [spec_driven_new_stops_before_implement_includes_tests](../../../../functions/src/agents/spcx/spec_driven_new_stops_before_implement_includes_tests.md)
+- [spec_driven_finalise_includes_analyze_review_and_ship](../../../../functions/src/agents/spcx/spec_driven_finalise_includes_analyze_review_and_ship.md)
+- [security_first_new_includes_security_review_step](../../../../functions/src/agents/spcx/security_first_new_includes_security_review_step.md)
+- [security_first_finalise_has_nothing_to_run](../../../../functions/src/agents/spcx/security_first_finalise_has_nothing_to_run.md)
+- [tdd_driven_apply_covers_all_three_handoff_phases](../../../../functions/src/agents/spcx/tdd_driven_apply_covers_all_three_handoff_phases.md)
+- [intent_driven_new_uses_intent_cli_command_first](../../../../functions/src/agents/spcx/intent_driven_new_uses_intent_cli_command_first.md)
+- [every_builtin_schema_generates_without_error](../../../../functions/src/agents/spcx/every_builtin_schema_generates_without_error.md)

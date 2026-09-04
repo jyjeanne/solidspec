@@ -378,6 +378,19 @@ pub fn find_project_root(start: &Path) -> Option<PathBuf> {
     }
 }
 
+/// The workflow schema a project defaults to when a command's `--schema`
+/// flag is left unset: `solidspec.toml`'s `[pipeline].schema`, as recorded
+/// by `solidspec init --schema <name>` (see `src/cli/init.rs`). Falls back
+/// to `default_schema()` ("spec-driven") when no project is found or its
+/// config can't be read — the same default `RootConfig::new` itself uses,
+/// so a project initialized before this existed behaves exactly as before.
+pub fn project_default_schema(start: &Path) -> String {
+    find_project_root(start)
+        .and_then(|root| RootConfig::load(&root.join("solidspec.toml")).ok())
+        .map(|c| c.pipeline.schema)
+        .unwrap_or_else(default_schema)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

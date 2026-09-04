@@ -9,7 +9,7 @@ pub struct AgentConfig {
     pub format: AgentFormat,
     pub arg_placeholder: &'static str,
     /// True for CLI-only agents (Claude, Gemini, Codex, ...); false for
-    /// IDE-integrated agents (Copilot, Cursor, Vibe, ...) — some of the
+    /// IDE-integrated agents (Copilot, Cursor, Windsurf, ...) — some of the
     /// latter still declare a non-empty `cli_binary` for detection purposes
     /// without strictly needing it. Tested (`cli_agents_have_requires_cli_true`,
     /// `ide_agents_have_requires_cli_false`) but not yet read by any runtime
@@ -285,20 +285,6 @@ pub const AGENTS: &[AgentConfig] = &[
         cli_extra_flags: &[],
     },
     AgentConfig {
-        id: "vibe",
-        name: "Mistral Vibe",
-        command_dir: ".vibe",
-        commands_subdir: "skills",
-        extension: "/SKILL.md",
-        format: AgentFormat::Markdown,
-        arg_placeholder: "$ARGUMENTS",
-        requires_cli: false,
-        aliases: &[],
-        cli_binary: "vibe",
-        cli_prompt_flag: "-p",
-        cli_extra_flags: &["--max-turns", "25"],
-    },
-    AgentConfig {
         id: "bob",
         name: "IBM Bob",
         command_dir: ".bob",
@@ -330,7 +316,7 @@ mod tests {
 
     #[test]
     fn config_table_has_20_agents() {
-        assert_eq!(AGENTS.len(), 20); // Generic agent handled via --ai-commands-dir flag, not in table
+        assert_eq!(AGENTS.len(), 19); // Generic agent handled via --ai-commands-dir flag, not in table
     }
 
     #[test]
@@ -396,9 +382,7 @@ mod tests {
 
     #[test]
     fn ide_agents_have_requires_cli_false() {
-        let ide_agents = [
-            "cursor", "windsurf", "kilocode", "roo", "copilot", "bob", "vibe",
-        ];
+        let ide_agents = ["cursor", "windsurf", "kilocode", "roo", "copilot", "bob"];
         for id in &ide_agents {
             let agent = find_agent(id).unwrap_or_else(|| panic!("Agent {id} not found"));
             assert!(!agent.requires_cli, "{id} should have requires_cli=false");

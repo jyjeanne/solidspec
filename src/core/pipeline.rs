@@ -201,13 +201,65 @@ pub fn phase_type(phase: &str) -> PhaseType {
     }
 }
 
-/// Filter phases by --from and --to range for the given schema.
-pub fn filter_phases(
-    schema: &str,
-    from: Option<&str>,
-    to: Option<&str>,
-) -> Result<Vec<&'static str>> {
-    let all: &[&str] = match schema {
+/// Renders the "Next: solidspec ..." hint from an `ArtifactGraph::first_ready`
+/// result. `ship` is deliberately excluded from every `PHASES*` list above —
+/// it's always a separate top-level command, never a phase `solidspec
+/// continue`/`pipeline` executes — so a `first_ready` hit on `ship` must be
+/// pointed at `solidspec ship` directly rather than `solidspec continue`
+/// (which would silently skip every already-done phase and never invoke
+/// ship, leaving the user stuck re-running `continue` forever).
+pub fn next_step_hint(next: Option<&super::artifact_graph::ArtifactNode>) -> String {
+    match next {
+        Some(node) if node.id == "ship" => "Next: solidspec ship".to_string(),
+        Some(node) => format!("Next: solidspec continue   (next phase: {})", node.id),
+        None => "Next: solidspec ship".to_string(),
+    }
+}
+
+#[cfg(test)]
+mod next_step_hint_tests {
+    use super::*;
+    use crate::core::artifact_graph::ArtifactNode;
+
+    fn node(id: &str) -> ArtifactNode {
+        ArtifactNode {
+            id: id.to_string(),
+            generates: vec![],
+            requires: vec![],
+            instruction: String::new(),
+            template: None,
+        }
+    }
+
+    #[test]
+    fn points_at_ship_directly_instead_of_continue() {
+        let n = node("ship");
+        assert_eq!(next_step_hint(Some(&n)), "Next: solidspec ship");
+    }
+
+    #[test]
+    fn points_at_continue_for_a_regular_phase() {
+        let n = node("plan");
+        assert_eq!(
+            next_step_hint(Some(&n)),
+            "Next: solidspec continue   (next phase: plan)"
+        );
+    }
+
+    #[test]
+    fn falls_back_to_ship_when_nothing_is_ready() {
+        assert_eq!(next_step_hint(None), "Next: solidspec ship");
+    }
+}
+
+/// The narrative/execution-order phase list for a schema name — the same
+/// order `execute_phase`/`filter_phases` run phases in, as opposed to
+/// `ArtifactGraph::topological_order`'s merely-DAG-valid order (which can
+/// (and for `spec-driven` does) interleave `analyze`/`review` before
+/// `tasks`/`implement` since they only declare `requires: ["spec"]`).
+/// `ship` is deliberately excluded — see `next_step_hint`'s doc comment.
+pub fn phases_for_schema(schema: &str) -> &'static [&'static str] {
+    match schema {
         "intent-driven" => PHASES_IDSD,
         "apex-driven" => PHASES_APEX,
         "intent-apex" => PHASES_APEX_IDSD,
@@ -215,7 +267,16 @@ pub fn filter_phases(
         "minimal" => PHASES_MINIMAL,
         "security-first" => PHASES_SECURITY_FIRST,
         _ => PHASES, // spec-driven, custom, unknown
-    };
+    }
+}
+
+/// Filter phases by --from and --to range for the given schema.
+pub fn filter_phases(
+    schema: &str,
+    from: Option<&str>,
+    to: Option<&str>,
+) -> Result<Vec<&'static str>> {
+    let all: &[&str] = phases_for_schema(schema);
     let from_idx = if let Some(f) = from {
         all.iter().position(|p| *p == f).ok_or_else(|| {
             anyhow::anyhow!("Unknown phase '{}'. Valid phases: {}", f, all.join(", "))
@@ -542,7 +603,7 @@ mod tests {
         .unwrap();
         let results = vec![PhaseResult {
             name: "analyze".into(),
-            agent: "vibe".into(),
+            agent: "opencode".into(),
             status: PhaseStatus::Done,
             duration_ms: 300,
             output: "100%".into(),
@@ -550,7 +611,7 @@ mod tests {
         write_log(dir.path(), "001", &results).unwrap();
         let content = std::fs::read_to_string(dir.path().join("pipeline-log.md")).unwrap();
         assert!(content.contains("old content"));
-        assert!(content.contains("| analyze | vibe | done |"));
+        assert!(content.contains("| analyze | opencode | done |"));
     }
 
     // ── APEX phase tests ──────────────────────────────────────────────────────

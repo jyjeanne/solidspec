@@ -260,6 +260,14 @@ pub fn run(
         agent_list.join(", ")
     );
     println!("Log: specs/{feature_dir_name}/pipeline-log.md");
+
+    let completed = artifact_graph.detect_completion(&feature_dir);
+    let states = artifact_graph.compute_states(&completed);
+    println!(
+        "{}",
+        pipeline::next_step_hint(artifact_graph.first_ready(&states))
+    );
+
     Ok(())
 }
 
@@ -303,6 +311,42 @@ fn check_agent_availability(
     } else {
         AgentMode::Mixed {
             handoff_phases: handoff,
+        }
+    }
+}
+
+/// Best-effort: regenerate the project's OKF knowledge-graph bundle after a
+/// handoff phase actually changed code, but only when a bundle already
+/// exists (`core::okf::refresh_if_present` never creates one from scratch —
+/// see its doc comment). Called from every phase `check_agent_availability`
+/// (above) itself classifies as "always a handoff" because the AI agent
+/// edits files outside SolidSpec's control — `implement`, `apex`,
+/// `tdd-tests` (writes real test files in the TDD RED phase), and
+/// `tdd-refactor` — not just `implement`: `apex-driven`/`intent-apex`
+/// schemas replace `implement` with `apex` entirely, and `tdd-driven`'s
+/// `tdd-refactor` phase rewrites production code *after* `implement`, so
+/// limiting this to `implement` alone would leave the graph stale for
+/// exactly the schemas most likely to have one.
+///
+/// This is the pipeline half of the "boucle de rétroaction" from
+/// `docs/kg-workflow-vision-gap-analysis.md`'s recommendation #2: without
+/// it, `solidspec analyze`'s structural cross-check (step 5) keeps
+/// fact-checking `tasks.md` against a graph that stops reflecting reality
+/// the moment the AI agent starts editing files. Never fails the pipeline —
+/// same best-effort posture as every other OKF touchpoint (`cli::init`'s
+/// existing-codebase generation, the `okf` extension's `after_init` hook).
+fn refresh_knowledge_graph(project_root: &std::path::Path) {
+    match crate::core::okf::refresh_if_present(project_root) {
+        None => {} // no bundle for this project — nothing to refresh, stay silent
+        Some(Ok(report)) => {
+            println!(
+                "    ↻ Knowledge graph refreshed: {} concept(s) in {}/",
+                report.total_concepts,
+                crate::core::okf::DEFAULT_BUNDLE_DIR
+            );
+        }
+        Some(Err(e)) => {
+            println!("    Warning: knowledge graph refresh skipped: {e}");
         }
     }
 }
@@ -403,6 +447,7 @@ fn execute_phase(
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
             }
+            refresh_knowledge_graph(project_root);
             Ok("user-confirmed".into())
         }
         "apex" => {
@@ -420,6 +465,7 @@ fn execute_phase(
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
             }
+            refresh_knowledge_graph(project_root);
             Ok("user-confirmed".into())
         }
         "tdd-tests" => {
@@ -436,6 +482,7 @@ fn execute_phase(
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
             }
+            refresh_knowledge_graph(project_root);
             Ok("user-confirmed".into())
         }
         "tdd-refactor" => {
@@ -452,6 +499,7 @@ fn execute_phase(
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
             }
+            refresh_knowledge_graph(project_root);
             Ok("user-confirmed".into())
         }
         "evidence" => {

@@ -1,0 +1,22 @@
+schema_version: "1.0"
+extension:
+  id: okf
+  name: "OKF Knowledge Graph"
+  version: "0.2.0"
+  description: "Generates an Open Knowledge Format knowledge-graph bundle for this project natively (vendored okf-rs library crates — no external binary) for AI agents to query instead of re-reading files cold."
+  author: "SolidSpec"
+  tags:
+    - knowledge-graph
+    - okf-rs
+    - context
+requires:
+  solidspec_version: ">=0.3.0"
+provides:
+  commands:
+    - name: solidspec.okf.init
+      file: hooks/after-init.sh
+      description: "Generate the OKF knowledge-graph bundle via 'solidspec okf generate' (fired automatically after `solidspec init`)"
+hooks:
+  after_init:
+    command: solidspec.okf.init
+    optional: true

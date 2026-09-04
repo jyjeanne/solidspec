@@ -38,12 +38,17 @@ fn create_feature(dir: &std::path::Path, name: &str) -> std::path::PathBuf {
 // ── A1: apex subcommand is registered in the CLI ─────────────────────────────
 
 #[test]
-fn apex_command_appears_in_help() {
+fn apex_command_is_hidden_from_top_level_help_but_still_registered() {
+    // `apex` is one of the per-phase commands intentionally hidden from the
+    // top-level --help (docs/simplification-study-openspec.md): the CLI's
+    // front door is now init/status/validate/pipeline/okf, with apex-driven
+    // demoted to an advanced recipe. Hidden, not removed — `apex --help`
+    // below proves it's still fully registered and callable.
     solidspec()
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("apex"));
+        .stdout(predicate::str::contains("apex").not());
 }
 
 #[test]

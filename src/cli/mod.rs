@@ -5,15 +5,19 @@ pub mod check;
 pub mod checklist;
 pub mod clarify;
 pub mod completions;
+pub mod continue_cmd;
 pub mod evidence;
 pub mod extension;
+pub mod go;
 pub mod implement;
 pub mod init;
 pub mod intent;
+pub mod okf;
 pub mod pipeline;
 pub mod plan;
 pub mod preset;
 pub mod review;
+pub mod schemas;
 pub mod security_review;
 pub mod ship;
 pub mod specify;
@@ -65,9 +69,40 @@ pub enum Commands {
         /// Target AI agent (e.g., copilot, claude, cursor). Auto-detected if omitted.
         #[arg(long)]
         agent: Option<String>,
+
+        /// Workflow schema (run 'solidspec schemas' to list them). Default: minimal.
+        /// Stored as the project's default so status/pipeline/go/continue pick it up
+        /// without repeating --schema.
+        #[arg(long)]
+        schema: Option<String>,
+    },
+
+    /// Start a new feature end-to-end (the project's default workflow schema;
+    /// scaffold + fill every phase through the implement handoff) —
+    /// shorthand for 'pipeline --new "..." --auto'
+    Go {
+        /// Feature description
+        description: String,
+
+        /// Scaffold only — skip AI agent invocation
+        #[arg(long)]
+        no_agent: bool,
+    },
+
+    /// Resume the current (or given) feature at whatever phase is next
+    /// (the project's default workflow schema) — shorthand for 'pipeline --auto'
+    #[command(name = "continue")]
+    Continue {
+        /// Feature ID (e.g., 001) — auto-detected if omitted
+        feature_id: Option<String>,
+
+        /// Scaffold only — skip AI agent invocation
+        #[arg(long)]
+        no_agent: bool,
     },
 
     /// Capture the intent for a new or existing feature (IDSD workflow)
+    #[command(hide = true)]
     Intent {
         /// Intent title — describes why this capability should exist
         #[arg(name = "title")]
@@ -79,6 +114,7 @@ pub enum Commands {
     },
 
     /// Create a new feature specification
+    #[command(hide = true)]
     Specify {
         /// Feature description
         #[arg(name = "feature-name")]
@@ -86,18 +122,21 @@ pub enum Commands {
     },
 
     /// Resolve ambiguities in a specification
+    #[command(hide = true)]
     Clarify {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Generate an architecture plan from a specification
+    #[command(hide = true)]
     Plan {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Run an OWASP Top 10 heuristic security audit of plan.md (security-first workflow)
+    #[command(hide = true)]
     SecurityReview {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -108,16 +147,19 @@ pub enum Commands {
     },
 
     /// Generate a story-driven task breakdown from the plan
+    #[command(hide = true)]
     Tasks {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
 
-        /// Workflow schema to use for DAG gate checks (default: spec-driven)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use for DAG gate checks (default: the
+        /// project's own default — see 'solidspec schemas')
+        #[arg(long)]
+        schema: Option<String>,
     },
 
     /// Execute tasks from the task breakdown
+    #[command(hide = true)]
     Implement {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -128,6 +170,7 @@ pub enum Commands {
     },
 
     /// Launch the APEX implementation workflow (Analyze-Plan-Execute-eXamine)
+    #[command(hide = true)]
     Apex {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -146,6 +189,7 @@ pub enum Commands {
     },
 
     /// Generate real failing tests for every acceptance criterion (TDD RED phase)
+    #[command(hide = true)]
     TddTests {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -156,6 +200,7 @@ pub enum Commands {
     },
 
     /// Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)
+    #[command(hide = true)]
     TddRefactor {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -166,6 +211,7 @@ pub enum Commands {
     },
 
     /// Generate test scaffolds from acceptance scenarios
+    #[command(hide = true)]
     Tests {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -184,6 +230,7 @@ pub enum Commands {
     },
 
     /// Collect evidence satisfaction from implemented test scaffolds (IDSD workflow)
+    #[command(hide = true)]
     Evidence {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -193,19 +240,22 @@ pub enum Commands {
         update: bool,
     },
 
-    /// Validate cross-artifact consistency (read-only)
+    /// Validate cross-artifact consistency; writes analysis-report.md
+    #[command(alias = "validate")]
     Analyze {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Review spec quality with preflight heuristics
+    #[command(hide = true)]
     Review {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
     },
 
     /// Generate a quality validation checklist
+    #[command(hide = true)]
     Checklist {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
@@ -252,10 +302,14 @@ pub enum Commands {
         #[arg(long)]
         no_agent: bool,
 
-        /// Workflow schema to use (default: spec-driven; use intent-driven for IDSD)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use (default: the project's own default — see
+        /// 'solidspec schemas'; use intent-driven for IDSD)
+        #[arg(long)]
+        schema: Option<String>,
     },
+
+    /// List all workflow schemas and their use cases
+    Schemas,
 
     /// Manage workflow presets
     Preset {
@@ -273,6 +327,13 @@ pub enum Commands {
     Extension {
         #[command(subcommand)]
         command: extension::ExtensionCommands,
+    },
+
+    /// Generate/validate an Open Knowledge Format (OKF) knowledge-graph
+    /// bundle for this project (native — no external `okf-rs` binary)
+    Okf {
+        #[command(subcommand)]
+        command: okf::OkfCommands,
     },
 
     /// Refresh templates and scripts after a SolidSpec update
@@ -296,9 +357,10 @@ pub enum Commands {
         /// Feature ID (e.g., 001) — auto-detected if omitted
         feature_id: Option<String>,
 
-        /// Workflow schema to use (default: spec-driven)
-        #[arg(long, default_value = "spec-driven")]
-        schema: String,
+        /// Workflow schema to use (default: the project's own default — see
+        /// 'solidspec schemas')
+        #[arg(long)]
+        schema: Option<String>,
     },
 
     /// Run concurrent parallel fan-out review and produce a SHIP / HOLD decision
@@ -348,6 +410,20 @@ pub enum Commands {
     },
 }
 
+/// Resolve an optional `--schema` flag to the schema a command should
+/// actually run: the flag's value when given, otherwise the current
+/// project's own stored default (`solidspec.toml`'s `[pipeline].schema`,
+/// set by `solidspec init --schema <name>` — see
+/// `config::project_default_schema`), falling back to "spec-driven" when no
+/// project is found at all (e.g. commands run outside any SolidSpec
+/// project, same as before this existed).
+fn resolved_schema(schema: Option<String>) -> String {
+    schema.unwrap_or_else(|| {
+        let cwd = std::env::current_dir().unwrap_or_default();
+        crate::config::project_default_schema(&cwd)
+    })
+}
+
 pub fn run(cli: Cli) -> Result<()> {
     // Logger already initialized in main() based on --debug flag
 
@@ -358,7 +434,16 @@ pub fn run(cli: Cli) -> Result<()> {
             no_git,
             force,
             agent,
-        } => init::run(name, here, no_git, force, agent),
+            schema,
+        } => init::run(name, here, no_git, force, agent, schema),
+        Commands::Go {
+            description,
+            no_agent,
+        } => go::run(&description, no_agent),
+        Commands::Continue {
+            feature_id,
+            no_agent,
+        } => continue_cmd::run(feature_id.as_deref(), no_agent),
         Commands::Intent { title, feature } => intent::run(&title, feature.as_deref()),
         Commands::Specify { feature_name } => specify::run(&feature_name),
         Commands::Clarify { feature_id } => clarify::run(feature_id.as_deref()),
@@ -367,7 +452,9 @@ pub fn run(cli: Cli) -> Result<()> {
             feature_id,
             dry_run,
         } => security_review::run(feature_id.as_deref(), dry_run),
-        Commands::Tasks { feature_id, schema } => tasks::run(feature_id.as_deref(), &schema),
+        Commands::Tasks { feature_id, schema } => {
+            tasks::run(feature_id.as_deref(), &resolved_schema(schema))
+        }
         Commands::Implement { feature_id, pass } => implement::run(feature_id.as_deref(), pass),
         Commands::Apex {
             feature_id,
@@ -419,15 +506,19 @@ pub fn run(cli: Cli) -> Result<()> {
             dry_run,
             auto,
             no_agent,
-            &schema,
+            &resolved_schema(schema),
         ),
+        Commands::Schemas => schemas::run(),
         Commands::Preset { command } => preset::run(command),
         Commands::Change { command } => change::run(command),
         Commands::Extension { command } => extension::run(command),
+        Commands::Okf { command } => okf::run(command),
         Commands::Upgrade { force } => upgrade::run(force),
         Commands::Completions { shell } => completions::run(&shell),
         Commands::Check => check::run(),
-        Commands::Status { feature_id, schema } => status::run(feature_id.as_deref(), &schema),
+        Commands::Status { feature_id, schema } => {
+            status::run(feature_id.as_deref(), &resolved_schema(schema))
+        }
         Commands::Ship {
             feature_id,
             lane,

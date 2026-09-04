@@ -5,6 +5,7 @@
 name: intent-apex
 version: "1.0"
 description: "Intent-APEX workflow — IDSD intent-first methodology with APEX replacing the implement handoff"
+use_case: "Enterprise/compliance-critical features needing maximum traceability — intent anchoring plus structured APEX implementation."
 
 artifacts:
   - id: intent

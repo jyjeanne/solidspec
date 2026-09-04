@@ -36,12 +36,12 @@ No Makefile, no justfile — Cargo is the only task runner.
 
 ## Agent config
 
-20+ AI agents are defined as a **data-driven `const` table** in `src/agents/config.rs`. To add a new agent, edit that table — no code changes needed elsewhere.
+19 AI agents are defined as a **data-driven `const` table** in `src/agents/config.rs`. To add a new agent, edit that table — no code changes needed elsewhere.
 
 ## Tests
 
 - **Unit tests**: inline `#[cfg(test)] mod tests` blocks inside each source file.
-- **Integration tests**: in `tests/` directory (`tests/change.rs`, `tests/check.rs`, `tests/completions.rs`, `tests/pipeline.rs`, `tests/status.rs`), using `assert_cmd` + `predicates` + `tempfile`. These require `CARGO_BIN_EXE_solidspec` which is only available to files in `tests/`.
+- **Integration tests**: one file per feature area in `tests/` (`apex.rs`, `change.rs`, `check.rs`, `completions.rs`, `evidence.rs`, `init.rs`, `okf_extension.rs`, `pipeline.rs`, `security_first_minimal.rs`, `ship.rs`, `status.rs`, `tdd.rs`, `traceability.rs`), using `assert_cmd` + `predicates` + `tempfile`, plus shared helpers in `tests/common/mod.rs`. These require `CARGO_BIN_EXE_solidspec` which is only available to files in `tests/`.
 - Run a single test file: `cargo test --test <name>` (e.g., `cargo test --test pipeline`).
 - Run inline unit tests: `cargo test --bin solidspec`.
 
