@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L1184
+resource: src/agents/registry.rs#L1-L1279
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -93,6 +93,8 @@ relationships:
 - [register_all_registers_per_schema_spcx_commands_too](../../../functions/src/agents/registry/register_all_registers_per_schema_spcx_commands_too.md)
 - [unregister_removes_per_schema_spcx_commands](../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
 - [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../../../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md)
+- [default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting](../../../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting.md)
+- [unregister_removes_custom_named_default_schema_spcx_commands_too](../../../functions/src/agents/registry/unregister_removes_custom_named_default_schema_spcx_commands_too.md)
 - [apex_command_file_contains_apex_workflow_text](../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)
 
 # Imports

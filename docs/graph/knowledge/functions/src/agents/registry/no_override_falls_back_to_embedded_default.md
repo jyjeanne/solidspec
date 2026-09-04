@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: no_override_falls_back_to_embedded_default
-resource: src/agents/registry.rs#L709-L718
+resource: src/agents/registry.rs#L758-L767
 visibility: private
 generated:
   by: okf-rs/0.7.0

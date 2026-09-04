@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: default_schema_named_outside_the_7_builtins_still_gets_spcx_commands
-resource: src/agents/registry.rs#L1146-L1166
+resource: src/agents/registry.rs#L1195-L1215
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_markdown_agent_creates_md_files
-resource: src/agents/registry.rs#L666-L680
+resource: src/agents/registry.rs#L715-L729
 visibility: private
 generated:
   by: okf-rs/0.7.0

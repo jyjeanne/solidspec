@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all
-resource: src/agents/registry.rs#L530-L576
+resource: src/agents/registry.rs#L579-L625
 generated:
   by: okf-rs/0.7.0
 relationships:

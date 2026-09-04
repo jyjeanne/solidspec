@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: project_local_override_wins_over_embedded_command_body
-resource: src/agents/registry.rs#L691-L706
+resource: src/agents/registry.rs#L740-L755
 visibility: private
 generated:
   by: okf-rs/0.7.0

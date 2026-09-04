@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_all_schema_spcx_commands
-resource: src/agents/registry.rs#L466-L527
+resource: src/agents/registry.rs#L501-L576
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -27,7 +27,7 @@ relationships:
 
 # Signature
 
-`fn unregister_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()>`
+`fn unregister_all_schema_spcx_commands( project_root: &Path, agent: &AgentConfig, default_schema: Option<&crate::core::schema::WorkflowSchema>, ) -> Result<()>`
 
 # Calls
 

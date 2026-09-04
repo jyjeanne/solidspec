@@ -81,6 +81,7 @@
 - [command_files_contain_compliance_guardrails](../functions/src/agents/registry/command_files_contain_compliance_guardrails.md) — Rust Function
 - [copilot_creates_agent_md_and_prompt_md](../functions/src/agents/registry/copilot_creates_agent_md_and_prompt_md.md) — Rust Function
 - [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md) — Rust Function
+- [default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting](../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting.md) — Rust Function
 - [detect_agents](../functions/src/agents/registry/detect_agents.md) — Rust Function
 - [detect_claude_when_dir_exists](../functions/src/agents/registry/detect_claude_when_dir_exists.md) — Rust Function
 - [detect_multiple_agents](../functions/src/agents/registry/detect_multiple_agents.md) — Rust Function
@@ -118,6 +119,7 @@
 - [unregister_removes_apex_skill_directory](../functions/src/agents/registry/unregister_removes_apex_skill_directory.md) — Rust Function
 - [unregister_removes_claude_spcx_explore_file](../functions/src/agents/registry/unregister_removes_claude_spcx_explore_file.md) — Rust Function
 - [unregister_removes_copilot_files](../functions/src/agents/registry/unregister_removes_copilot_files.md) — Rust Function
+- [unregister_removes_custom_named_default_schema_spcx_commands_too](../functions/src/agents/registry/unregister_removes_custom_named_default_schema_spcx_commands_too.md) — Rust Function
 - [unregister_removes_kimi_dirs](../functions/src/agents/registry/unregister_removes_kimi_dirs.md) — Rust Function
 - [unregister_removes_opencode_skills](../functions/src/agents/registry/unregister_removes_opencode_skills.md) — Rust Function
 - [unregister_removes_per_schema_spcx_commands](../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md) — Rust Function

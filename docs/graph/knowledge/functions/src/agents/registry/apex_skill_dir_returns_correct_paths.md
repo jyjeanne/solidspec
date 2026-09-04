@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: apex_skill_dir_returns_correct_paths
-resource: src/agents/registry.rs#L912-L928
+resource: src/agents/registry.rs#L961-L977
 visibility: private
 generated:
   by: okf-rs/0.7.0

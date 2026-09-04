@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: all_schema_spcx_commands
-resource: src/agents/registry.rs#L192-L215
+resource: src/agents/registry.rs#L192-L233
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -29,6 +29,9 @@ relationships:
   - target: functions/src/agents/registry/register_all_schema_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting
+    resolved_by: tree-sitter
+    confidence: exact
 ---
 
 # Signature
@@ -47,3 +50,4 @@ relationships:
 
 - [register_all](../../../../functions/src/agents/registry/register_all.md)
 - [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)
+- [default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting](../../../../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting.md)

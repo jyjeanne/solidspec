@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: command_body_generic_fallback_for_unknown_phase
-resource: src/agents/registry.rs#L683-L688
+resource: src/agents/registry.rs#L732-L737
 visibility: private
 generated:
   by: okf-rs/0.7.0

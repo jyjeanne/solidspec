@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_also_registers_apex_skill_for_claude
-resource: src/agents/registry.rs#L975-L985
+resource: src/agents/registry.rs#L1024-L1034
 visibility: private
 generated:
   by: okf-rs/0.7.0

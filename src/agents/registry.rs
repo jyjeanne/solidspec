@@ -103,7 +103,7 @@ const COMMANDS: &[(&str, &str)] = &[
         "Refactor implementation while keeping all tests GREEN (TDD REFACTOR phase)",
     ),
     // /spcx:explore: the one meta command with no schema-specific content
-    // (see `super::spcx` and `SPCX_DYNAMIC_COMMANDS` below for the other 3).
+    // (see `super::spcx` and `all_schema_spcx_commands` below for the other 3).
     (
         "spcx-explore",
         "Exploratory research and discussion — no files written",
@@ -208,6 +208,24 @@ fn all_schema_spcx_commands(
     // through a file yet, e.g. in a test).
     if !crate::core::schema::builtin::names().contains(&default_schema.name.as_str()) {
         let short = super::spcx::schema_short_name(&default_schema.name);
+        // A custom schema whose short name collides with a built-in's (e.g.
+        // named exactly "tdd", matching tdd-driven's reduced name) would
+        // otherwise silently clobber that built-in's /spcx:<short>:* files —
+        // write_commands_for_agent writes both to the identical path with no
+        // warning. Fail loudly instead, same as init's own unknown-schema
+        // check, rather than let one workflow's commands overwrite another's.
+        if crate::core::schema::builtin::names()
+            .iter()
+            .any(|builtin_name| super::spcx::schema_short_name(builtin_name) == short)
+        {
+            anyhow::bail!(
+                "Schema '{}' has the same short name ('{short}') as a built-in workflow's \
+                 /spcx:{short}:* commands — rename it to avoid overwriting the built-in's slash \
+                 commands (e.g. '{}-custom').",
+                default_schema.name,
+                default_schema.name
+            );
+        }
         push_spcx_commands(&mut commands, &short, default_schema)?;
     }
 
@@ -394,10 +412,20 @@ pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> 
 
 /// Unregister all SolidSpec commands for a specific agent.
 ///
+/// `default_schema` should mirror whatever was passed to the `register_all`
+/// call that wrote these files — pass `Some` when the project might be
+/// running a fully custom-named schema (not one of the 7 built-ins) so its
+/// `/spcx:<name>:*` files get cleaned up too, `None` to only ever touch the
+/// 7 built-ins' files.
+///
 /// Tested (see `mod tests` below) but not yet called from any CLI command —
 /// candidate for a future `solidspec agent remove <id>`.
 #[allow(dead_code)]
-pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
+pub fn unregister_commands(
+    project_root: &Path,
+    agent: &AgentConfig,
+    default_schema: Option<&crate::core::schema::WorkflowSchema>,
+) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
         .join(agent.commands_subdir);
@@ -453,17 +481,28 @@ pub fn unregister_commands(project_root: &Path, agent: &AgentConfig) -> Result<(
         }
     }
 
-    unregister_all_schema_spcx_commands(project_root, agent)?;
+    unregister_all_schema_spcx_commands(project_root, agent, default_schema)?;
     unregister_apex_skill(agent.id, project_root)?;
 
     Ok(())
 }
 
-/// Remove the per-schema-namespaced `/spcx:<schema>-*` command files written
+/// Remove the per-schema-namespaced `/spcx:<short>:*` command files written
 /// via `all_schema_spcx_commands` in `register_all`. Mirrors
 /// `unregister_commands`'s per-agent path logic but iterates the dynamic
 /// per-schema name set instead of the static `COMMANDS` table.
-fn unregister_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig) -> Result<()> {
+///
+/// Covers the same schema set `all_schema_spcx_commands` would have written
+/// for `default_schema` — the 7 built-ins, plus `default_schema` itself when
+/// it names something outside that set — so a custom-named schema's files
+/// don't linger as orphans after "removal". `default_schema: None` (no
+/// caller currently has one on hand) only ever touches the 7 built-ins'
+/// files, same as before this parameter existed.
+fn unregister_all_schema_spcx_commands(
+    project_root: &Path,
+    agent: &AgentConfig,
+    default_schema: Option<&crate::core::schema::WorkflowSchema>,
+) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
         .join(agent.commands_subdir);
@@ -471,7 +510,17 @@ fn unregister_all_schema_spcx_commands(project_root: &Path, agent: &AgentConfig)
         return Ok(());
     }
 
-    for schema_name in crate::core::schema::builtin::names() {
+    let mut schema_names: Vec<String> = crate::core::schema::builtin::names()
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    if let Some(schema) = default_schema
+        && !schema_names.contains(&schema.name)
+    {
+        schema_names.push(schema.name.clone());
+    }
+
+    for schema_name in &schema_names {
         let short = super::spcx::schema_short_name(schema_name);
         for (phase, _) in SPCX_PHASES {
             let cmd_name = format!("spcx-{short}-{phase}");
@@ -778,7 +827,7 @@ mod tests {
         assert!(agent_file.exists());
         assert!(prompt_file.exists());
 
-        unregister_commands(dir.path(), copilot).unwrap();
+        unregister_commands(dir.path(), copilot, None).unwrap();
         assert!(!agent_file.exists());
         assert!(!prompt_file.exists());
     }
@@ -788,7 +837,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let kimi = find_agent("kimi").unwrap();
         register_commands(dir.path(), kimi).unwrap();
-        unregister_commands(dir.path(), kimi).unwrap();
+        unregister_commands(dir.path(), kimi, None).unwrap();
 
         let skill = dir.path().join(".kimi/skills/solidspec.specify");
         assert!(!skill.exists());
@@ -863,7 +912,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let opencode = find_agent("opencode").unwrap();
         register_commands(dir.path(), opencode).unwrap();
-        unregister_commands(dir.path(), opencode).unwrap();
+        unregister_commands(dir.path(), opencode, None).unwrap();
 
         let skill = dir.path().join(".opencode/skills/solidspec-specify");
         assert!(!skill.exists());
@@ -994,7 +1043,7 @@ mod tests {
         let apex_dir = dir.path().join(".claude/commands/apex");
         assert!(apex_dir.exists());
 
-        unregister_commands(dir.path(), claude).unwrap();
+        unregister_commands(dir.path(), claude, None).unwrap();
         assert!(
             !apex_dir.exists(),
             "APEX dir should be removed by unregister_commands"
@@ -1040,7 +1089,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
-        unregister_commands(dir.path(), claude).unwrap();
+        unregister_commands(dir.path(), claude, None).unwrap();
 
         assert!(!dir.path().join(".claude/commands/spcx/explore.md").exists());
     }
@@ -1122,7 +1171,7 @@ mod tests {
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
         register_all_schema_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
-        unregister_commands(dir.path(), claude).unwrap();
+        unregister_commands(dir.path(), claude, None).unwrap();
 
         for schema_name in crate::core::schema::builtin::names() {
             let short = crate::agents::spcx::schema_short_name(schema_name);
@@ -1163,6 +1212,52 @@ mod tests {
                 .join(format!(".claude/commands/spcx/my-flow/{phase}.md"));
             assert!(path.exists(), "missing /spcx:my-flow:{phase}");
         }
+    }
+
+    #[test]
+    fn default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting() {
+        // A custom schema literally named "tdd" would reduce to the same
+        // short name as the built-in tdd-driven's "tdd" — silently writing
+        // both to .claude/commands/spcx/tdd/*.md would let the second one
+        // clobber the first with no warning. Must fail loudly instead.
+        let dir = TempDir::new().unwrap();
+
+        let mut custom = spec_driven_schema();
+        custom.name = "tdd".to_string();
+
+        let result = all_schema_spcx_commands(dir.path(), &custom);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+            err.contains("tdd"),
+            "error should name the collision: {err}"
+        );
+    }
+
+    #[test]
+    fn unregister_removes_custom_named_default_schema_spcx_commands_too() {
+        // Symmetric with `default_schema_named_outside_the_7_builtins_still_gets_spcx_commands`:
+        // whatever register_all wrote for a custom-named default schema,
+        // unregister_commands (given the same schema) must clean up too —
+        // otherwise those files linger as orphans forever.
+        let dir = TempDir::new().unwrap();
+        let claude = find_agent("claude").unwrap();
+        register_commands(dir.path(), claude).unwrap();
+
+        let mut custom = spec_driven_schema();
+        custom.name = "my-flow".to_string();
+        register_all_schema_spcx_commands(dir.path(), claude, &custom).unwrap();
+
+        let custom_dir = dir.path().join(".claude/commands/spcx/my-flow");
+        assert!(custom_dir.join("new.md").exists());
+
+        unregister_commands(dir.path(), claude, Some(&custom)).unwrap();
+
+        assert!(!custom_dir.join("new.md").exists());
+        assert!(
+            !custom_dir.exists(),
+            "empty my-flow/ dir should be cleaned up too"
+        );
     }
 
     #[test]

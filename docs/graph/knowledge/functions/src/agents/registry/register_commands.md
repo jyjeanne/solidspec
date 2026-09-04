@@ -67,6 +67,9 @@ relationships:
   - target: functions/src/agents/registry/unregister_removes_per_schema_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/registry/unregister_removes_custom_named_default_schema_spcx_commands_too
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/registry/apex_command_file_contains_apex_workflow_text
     resolved_by: tree-sitter
     confidence: exact
@@ -101,4 +104,5 @@ relationships:
 - [other_agents_get_flat_explore_command](../../../../functions/src/agents/registry/other_agents_get_flat_explore_command.md)
 - [unregister_removes_claude_spcx_explore_file](../../../../functions/src/agents/registry/unregister_removes_claude_spcx_explore_file.md)
 - [unregister_removes_per_schema_spcx_commands](../../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
+- [unregister_removes_custom_named_default_schema_spcx_commands_too](../../../../functions/src/agents/registry/unregister_removes_custom_named_default_schema_spcx_commands_too.md)
 - [apex_command_file_contains_apex_workflow_text](../../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)

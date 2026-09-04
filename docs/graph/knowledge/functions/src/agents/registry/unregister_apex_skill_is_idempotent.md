@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_apex_skill_is_idempotent
-resource: src/agents/registry.rs#L967-L972
+resource: src/agents/registry.rs#L1016-L1021
 visibility: private
 generated:
   by: okf-rs/0.7.0
