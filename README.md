@@ -1041,6 +1041,15 @@ specs/001-feature-name/
   tasks.md                 # Every finding has a mitigation task
 ```
 
+### Project-level (all schemas)
+
+```
+.solidspec/knowledge/       # OKF knowledge-graph bundle (existing codebase only — see Quick Start)
+.mcp.json                   # okf MCP server entry (Claude Code)
+```
+
+`analysis-report.md` gains a "Structural cross-check (okf-rs)" section whenever `.solidspec/knowledge/` exists — it's the one part of `analyze`'s output that's about the codebase's knowledge graph, not `tasks.md`'s own text.
+
 ---
 
 ## Agent Guardrails
@@ -1279,6 +1288,12 @@ version = "0.1.0"
 [ai]
 default_agent = "claude"
 
+[pipeline]
+# The project's default workflow — set by 'solidspec init --schema <name>'
+# ("minimal" if omitted). go/continue/status/tasks/pipeline all fall back
+# to this when --schema is left unset.
+schema = "minimal"
+
 [git]
 auto_branch = true
 auto_commit = true
@@ -1324,16 +1339,18 @@ solidspec completions fish > ~/.config/fish/completions/solidspec.fish
 src/
   cli/          Command handlers (clap derive) — one module per subcommand
   core/         All business logic: spec parser, planner, task generator, test generator,
-                tdd (RED/REFACTOR scaffolding), pipeline, analyzer, constitution,
-                intent_parser, evidence, artifact_graph (DAG + trace), fan_out (ship gate)
-  agents/       20-agent config table, detection, format translation, registration, CLI invoker
+                tdd (RED/REFACTOR scaffolding), pipeline, analyzer (incl. OKF structural
+                cross-check), constitution, intent_parser, evidence, artifact_graph (DAG +
+                trace), fan_out (ship gate), okf (native knowledge-graph generate/validate/refresh)
+  agents/       19-agent config table, detection, format translation, registration, CLI invoker,
+                spcx (schema-aware /spcx:* body generator)
   templates/    Tera rendering + 4-layer resolver (project-local → embedded default)
   presets/      Manifest validation, registry, manager
   extensions/   Manifest, registry, hooks, manager
   config/       TOML configuration handling (RootConfig, ProjectInternalConfig, FanOutConfig)
 schemas/
   spec-driven/    Default 9-artifact SDD workflow
-  minimal/        4-artifact lightweight workflow
+  minimal/        4-artifact lightweight workflow (the actual `solidspec init` default)
   security-first/ 5-artifact workflow with mandatory OWASP security review
   tdd-driven/     10-artifact AI-TDD workflow (RED-GREEN-REFACTOR)
   intent-driven/  11-artifact IDSD workflow (intent + evidence + drift detection)
@@ -1342,6 +1359,9 @@ schemas/
 docs/
   idsd-workflow-guide.md              Complete IDSD walkthrough with Task Manager example
   Parallel-Fan-out_orchestration-plan.md  Fan-out ship gate design spec
+  okf-rs-integration-plan.md          Native knowledge-graph integration: what's vendored, what's next
+  kg-workflow-vision-gap-analysis.md  Knowledge-graph/workflow architecture review and roadmap
+  graph/                              This repo's own OKF knowledge-graph bundle (dogfooded)
   tdd/                                TDD skill documentation
 ```
 

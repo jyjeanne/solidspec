@@ -2,7 +2,36 @@
 
 ## Current: v0.3.1
 
-SolidSpec has evolved from a single-methodology SDD tool into a **multi-methodology AI development platform**. Seven built-in schemas cover the full spectrum from lightweight spikes to fully-traced, intent-anchored, TDD-enforced production workflows.
+SolidSpec has evolved from a single-methodology SDD tool into a **multi-methodology AI development platform**. Seven built-in schemas cover the full spectrum from lightweight spikes to fully-traced, intent-anchored, TDD-enforced production workflows — backed by a native, git-friendly knowledge graph of your own codebase that keeps `analyze` honest about what actually exists.
+
+### Unreleased — CLI Simplification & Native Knowledge Graph
+
+Two threads of work landed on top of v0.3.1, not yet cut as a tagged release: making the CLI's common case flagless (inspired by a comparison against [OpenSpec](https://github.com/Fission-AI/openspec) — see `docs/simplification-study-openspec.md`), and giving SolidSpec its own native, in-process knowledge graph of the codebase it's scaffolding (see `docs/okf-rs-integration-plan.md` and `docs/kg-workflow-vision-gap-analysis.md`).
+
+**CLI simplification**
+
+| Change | Description |
+|--------|-------------|
+| `solidspec go "desc"` / `solidspec continue [id]` | Flagless shortcuts for the common case — `go` wraps `pipeline --new "desc" --auto`, `continue` wraps `pipeline --auto` on whatever's next. Both run on the project's own default schema. |
+| Per-phase commands hidden from `--help` | 14 subcommands (`specify`, `plan`, `implement`, `apex`, `tdd-tests`, ...) still work exactly as before but no longer clutter `solidspec --help` — the top-level surface is now `init`/`go`/`continue`/`status`/`schemas`/`pipeline`/`ship`/`okf`/... |
+| `solidspec schemas` | One command listing all 7 workflow schemas with version, source, use case, and artifact count — replaces reading a README table before running anything. |
+| `--schema` on `solidspec init`, persisted | Recorded in `solidspec.toml`'s `[pipeline].schema`. `go`/`continue`/`status`/`tasks`/`pipeline` all resolve an unset `--schema` flag to this stored default instead of each independently hardcoding `spec-driven`. |
+| `minimal` is the default schema | Omitting `--schema` on `init` now scaffolds the lean 4-artifact workflow rather than the full 9-artifact one — start light, opt into more ceremony explicitly. |
+| Schema-aware `/spcx:*` commands | `/spcx:new`/`apply`/`finalise` for the project's default schema, plus a namespaced `/spcx:<schema>-{new,apply,finalise}` for every one of the 7 built-in schemas (`/spcx:tdd-driven-apply`, `/spcx:security-first-new`, ...) — generated straight from each schema's own DAG (`src/agents/spcx.rs`), so the body always matches what that schema actually does. |
+| "Next: solidspec X" hints | Every phase-producing command ends with what to run next, computed from the artifact graph's own topological order rather than hardcoded per command. |
+| `analyze` is primary again | After a dedicated study of `check` vs `validate` vs `analyze`'s actual purposes, the earlier `validate` rename was reverted — `analyze` is the canonical name, `validate` remains a `clap` alias. |
+| Mistral Vibe removed, OpenCode promoted | 19 supported agents (from 20) — Vibe had no meaningful adoption signal; OpenCode's directory-based skills format is now a first-class example throughout the docs. |
+| README reorganized | Pitch → install → quick example → full reference, OpenSpec-style, instead of reference-first. |
+
+**Native knowledge graph (OKF)**
+
+| Change | Description |
+|--------|-------------|
+| `solidspec okf generate` / `validate` | [okf-rs](https://github.com/jyjeanne/okf-rs)'s generator/analyzer/validator crates vendored as pinned git dependencies and wrapped in-process (`src/core/okf.rs`) — **no external `okf-rs` binary**. Extraction is local tree-sitter AST parsing across 11 languages; nothing leaves the machine. Output is a plain Markdown+YAML bundle, one file per concept, committable and diffable like any other file. |
+| Auto-generation on `init` | An existing codebase (anything already in the target directory) gets `.solidspec/knowledge/` generated automatically and registered as an `okf` MCP server in `.mcp.json` — an empty/fresh directory skips this; `solidspec okf generate` remains available on demand. |
+| Structural cross-check in `analyze` | Cross-checks `tasks.md`'s backtick-quoted symbols and referenced source files against the bundle (`core::okf::BundleIndex`, reads the bundle back via `okf_parser::read_bundle` — no re-analysis, no external `search`/`explore`/`okf-mcp`), rendered as its own "Structural cross-check (okf-rs)" report section. Catches an orphaned/hallucinated reference a purely textual read of `tasks.md` can't. |
+| Post-handoff refresh loop | `implement`, `apex`, `tdd-tests`, and `tdd-refactor` all regenerate an already-existing bundle in place right after their confirmation step — the point where the AI agent has just finished changing code — so the graph never goes stale for any schema that changes code, not only `implement`. Never creates a bundle where none existed. |
+| `docs/kg-workflow-vision-gap-analysis.md` | Full architecture review comparing the codebase against a "knowledge graph answers what's true, DAG answers what's next, connected via MCP" vision — what's already in place, what's a real gap, and a prioritized recommendation list (2 of 3 near-term items already shipped above). |
 
 ### v0.3.1 — Security-First Fixes
 
@@ -20,8 +49,9 @@ SolidSpec has evolved from a single-methodology SDD tool into a **multi-methodol
 | Feature | Status | Description |
 |---------|--------|-------------|
 | DAG Artifact Graph | ✅ | Kahn's algorithm topological sort, completion detection, `solidspec status` |
-| Schema-Driven Workflows | ✅ | 7 built-in schemas (YAML-customizable), 3-level resolution (project-local → built-in → default) |
-| Multi-Agent Support (20) | ✅ | Auto-detection, format translation, slash command registration per agent |
+| Schema-Driven Workflows | ✅ | 7 built-in schemas (YAML-customizable), 3-level resolution (project-local → built-in → default), `minimal` as the actual `init` default |
+| Multi-Agent Support (19) | ✅ | Auto-detection, format translation, slash command registration per agent |
+| Schema-Aware `/spcx:*` Commands | ✅ | Project-default `/spcx:new`/`apply`/`finalise` plus a namespaced variant per built-in schema, generated from each schema's own DAG (`src/agents/spcx.rs`) |
 | Multi-Agent Pipeline | ✅ | Automated pipeline with CLI invocation, timeout, mixed-mode and scaffold-only modes |
 | Agent Timeout | ✅ | 300s `try_wait()` polling loop, process killed on timeout |
 | Constitution Gates | ✅ | Simplicity, Anti-Abstraction, Integration-First — auto-checked in plan phase |
@@ -33,6 +63,22 @@ SolidSpec has evolved from a single-methodology SDD tool into a **multi-methodol
 | Change-Based Workflow | ✅ | Delta specs (ADDED/MODIFIED/REMOVED), propose → list → archive lifecycle |
 | OpenCode Skills | ✅ | Directory-based `.opencode/skills/` with `name:` + `description:` SKILL.md format |
 | Template System | ✅ | Tera rendering, 4-layer resolver (project-local → preset → extension → embedded default) |
+
+---
+
+### Implemented — Native Knowledge Graph (OKF)
+
+Zero external binary — [okf-rs](https://github.com/jyjeanne/okf-rs)'s generator/analyzer/validator/parser crates are vendored as pinned git dependencies and wrapped in-process (`src/core/okf.rs`). See `docs/okf-rs-integration-plan.md` for the full integration history and `docs/kg-workflow-vision-gap-analysis.md` for what's still a gap against the broader vision.
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| `solidspec okf generate` / `validate` | ✅ | Native tree-sitter extraction (11 languages) → a plain Markdown+YAML bundle, one file per concept, cross-linked and diffable in a PR. Incremental cache (`.okf-cache.json`) re-parses only changed files. |
+| Auto-generation on `init` | ✅ | An existing codebase gets `.solidspec/knowledge/` and a registered `okf` MCP server (`.mcp.json`) automatically; a fresh empty directory skips it. |
+| Structural cross-check | ✅ | `solidspec analyze` flags a `tasks.md` symbol/file reference absent from the bundle, as its own report section — never blocks, never merges into the textual heuristics. |
+| Post-handoff refresh loop | ✅ | Bundle regenerates automatically after `implement`/`apex`/`tdd-tests`/`tdd-refactor`, only when one already exists — closes the "graph goes stale the moment code changes" gap. |
+| `search`/`explore`/`graph`/`impact`/`diff` | External CLI only | Not vendored (would pull in tantivy, an active LSP client, a PDF renderer) — `cargo install --git https://github.com/jyjeanne/okf-rs okf-cli` for these. |
+| Native MCP server | 📋 Planned | `.mcp.json`'s `okf` entry still points at an external, unvendored `okf-mcp` binary and only covers Claude Code — see Next below. |
+| Fact/decision/inference provenance | 📋 Planned (upstream) | Every OKF fact today is `confidence: exact` tree-sitter output; distinguishing fact from decision from hypothesis needs new `okf-rs` concept kinds — an upstream discussion, not a SolidSpec-only change. |
 
 ---
 
@@ -134,10 +180,14 @@ Workflows: `apex-driven` (9 artifacts), `intent-apex` (11 artifacts)
 |----------|---------|-------------|-----|
 | **HIGH** | Doubt-Driven Development | 16h | In-flight adversarial review (3-cycle bounded) that catches implementation problems mid-cycle. Complements TDD by challenging the agent's design assumptions during the GREEN phase. |
 | **HIGH** | Spec Import from Issues | 8h | `solidspec import --github 42` — pre-fill spec from GitHub Issues / Jira tickets. Speeds up the specify phase for teams that already capture requirements in issue trackers. |
-| **MEDIUM** | `evidence` → code source link | 6h | Parse implemented test files to extract which source files they exercise; add `test → src` layer to the IDSD traceability chain, closing the last gap in `INT → FR → T → test → src`. |
+| **MEDIUM** | Native MCP registration per agent | 6h | Extend `AGENTS` (`src/agents/config.rs`) with a `supports_mcp` field and write a real, per-agent MCP config — today `.mcp.json`'s `okf` entry only covers Claude Code and points at an external, unvendored `okf-mcp` binary. See `docs/kg-workflow-vision-gap-analysis.md` §1 / `docs/okf-rs-integration-plan.md` step 3. |
+| **MEDIUM** | `evidence` → code source link | 6h | Parse implemented test files to extract which source files they exercise; add `test → src` layer to the IDSD traceability chain, closing the last gap in `INT → FR → T → test → src`. The OKF bundle's file/symbol index (`core::okf::BundleIndex`) is already in place as the lookup this would build on. |
 | **MEDIUM** | TDD: Cycle Progress Tracking | 4h | `solidspec tdd-status` shows RED/GREEN/REFACTOR progress: tests written vs. passing, refactor candidates resolved vs. pending. |
+| **LOW** | Structural impact report in `review`/`ship` | 6h | Optional lane surfacing blast-radius of changed functions from the OKF bundle, attached to `review-report.md`/`ship-report.md` — particularly useful for `security-first`'s audit. See `docs/okf-rs-integration-plan.md` step 6. |
 | **LOW** | Shell Completions Enhancement | 4h | `solidspec completions install <shell>` — one-command install that writes to the correct profile file. |
 | **LOW** | MSRV Declaration | 1h | Declare Minimum Supported Rust Version in `Cargo.toml`. |
+
+Also tracked, but deliberately not SolidSpec's alone to schedule: **fact/decision/inference OKF provenance** (`docs/kg-workflow-vision-gap-analysis.md` §3) needs new concept kinds in `okf-rs` itself — an upstream discussion, not a local task with an effort estimate.
 
 ---
 
@@ -148,7 +198,7 @@ Workflows: `apex-driven` (9 artifacts), `intent-apex` (11 artifacts)
 | Feature | Difficulty | Impact | Description |
 |---------|-----------|--------|-------------|
 | Interactive TUI Builder | Medium | High | `ratatui`-based guided workflow: spec + intent creation with real-time quality scoring. Workflow selector shows the comparison matrix and recommends a schema based on answers. |
-| Live Traceability Matrix (AST) | Very High | Very High | Scan source code via tree-sitter AST → map requirement IDs to actual code locations, closing the last gap in the full `INT → FR → T → test → src_function` chain |
+| Live Traceability Matrix (AST) | Medium (was Very High) | Very High | Map requirement IDs to actual code locations, closing the last gap in the full `INT → FR → T → test → src_function` chain. The tree-sitter AST scan this needs already exists as the native OKF knowledge graph (`core::okf`) — this is now "link FR-### to a `BundleIndex` symbol" rather than building an extractor from scratch. |
 | IDSD: Drift Alerts in CI | Medium | High | `solidspec analyze --fail-on-drift 30` exits non-zero when drift exceeds threshold; designed for CI gates on long-lived IDSD features |
 | TDD: Mutation Testing Integration | Medium | High | `solidspec tdd-mutate` runs a mutation testing tool (mutants, cargo-mutants, pitest) and adds the mutation score to `tdd-refactor-report.md`; strengthens the REFACTOR quality gate |
 | IDSD: Intent Versioning | Medium | Medium | Track intent evolution over time (`intent-v1.md`, `intent-v2.md`), diff constraints and evidence across versions, flag when intent changes would invalidate existing FRs |
@@ -173,3 +223,6 @@ Workflows: `apex-driven` (9 artifacts), `intent-apex` (11 artifacts)
 
 See [docs/idsd-workflow-guide.md](docs/idsd-workflow-guide.md) for the complete IDSD walkthrough.
 See [docs/tdd/](docs/tdd/) for the TDD skill documentation.
+See [docs/okf-rs-integration-plan.md](docs/okf-rs-integration-plan.md) for the native knowledge-graph integration history and what's still external-CLI-only.
+See [docs/kg-workflow-vision-gap-analysis.md](docs/kg-workflow-vision-gap-analysis.md) for the full architecture review behind the "Next" items above.
+See [docs/simplification-study-openspec.md](docs/simplification-study-openspec.md) for the UX study behind the CLI-simplification changes.

@@ -544,7 +544,7 @@ solidspec status [feature-id] [--schema X]
 
 ### 1. Data-driven agent config
 
-All 20 agents are defined in a single `AGENTS` const array. Adding a new agent requires only adding an `AgentConfig` entry — no new code files needed. Special behaviors (Copilot, Kimi, Cursor) are handled by ID checks in `registry.rs`.
+All 19 agents are defined in a single `AGENTS` const array. Adding a new agent requires only adding an `AgentConfig` entry — no new code files needed. Special behaviors (Copilot, Kimi, Cursor) are handled by ID checks in `registry.rs`.
 
 ### 2. Template auto-escaping disabled
 
