@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+use crate::agents::spcx::schema_short_name;
 use crate::config;
 use crate::core::schema;
 
@@ -36,6 +37,14 @@ pub fn run() -> Result<()> {
         if !s.use_case.is_empty() {
             println!("  Use when: {}", s.use_case);
         }
+        // The reduced name /spcx:<short>:* slash commands are namespaced
+        // under (src/agents/spcx.rs's schema_short_name) — the same string
+        // templates/commands/spcx/explore.md points agents at, so that
+        // pointer actually resolves to a real command.
+        println!(
+            "  Slash commands: /spcx:{}:new / :apply / :finalise",
+            schema_short_name(&s.name)
+        );
         println!();
     }
     println!("Run 'solidspec pipeline --new \"...\" --schema <name>' to use one.");

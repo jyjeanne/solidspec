@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: other_agents_get_flat_explore_command
-resource: src/agents/registry.rs#L1075-L1085
+resource: src/agents/registry.rs#L1115-L1125
 visibility: private
 generated:
   by: okf-rs/0.7.0

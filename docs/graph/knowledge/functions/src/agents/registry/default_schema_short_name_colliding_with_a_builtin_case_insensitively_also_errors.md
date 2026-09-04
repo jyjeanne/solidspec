@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting
-resource: src/agents/registry.rs#L1260-L1275
+title: default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors
+resource: src/agents/registry.rs#L1278-L1289
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting()`
+`fn default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors()`
 
 # Calls
 

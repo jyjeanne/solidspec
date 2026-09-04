@@ -170,20 +170,33 @@ const SPCX_PHASES: &[(&str, &str)] = &[
 /// `[pipeline].schema`. There is deliberately no flagless `/spcx:new`
 /// shorthand any more: the schema is always a namespace segment
 /// (`<namespace>:<domain>:<action>`), never baked into the action name or
-/// left implicit, so `default_schema` below only matters when it names a
-/// schema outside the 7 built-ins.
+/// left implicit, so `default_schema_name` below only matters when it names
+/// a schema outside the 7 built-ins.
 ///
 /// Project-local overrides at `.solidspec/workflows/<name>/schema.yaml`
 /// (via `schema::resolve_schema`) apply here too, same as everywhere else a
 /// schema name is resolved — a customized `spec-driven` changes what
 /// `/spcx:sdd:*` says without this function needing to know that.
 ///
-/// `default_schema` is the project's actually-configured schema
-/// (`solidspec.toml`'s `[pipeline].schema`, already resolved by the
-/// caller). It's folded into the 7 built-in names so a project running a
-/// fully custom-named schema (one not among the 7) still gets its own
-/// `/spcx:<name>:*` commands instead of none — the built-ins alone would
-/// silently drop it now that there's no flagless fallback to catch it.
+/// `default_schema_name` is the project's actually-configured schema
+/// *identifier* — `solidspec.toml`'s `[pipeline].schema` string, the same
+/// one `schema::resolve_schema` takes to locate a `.solidspec/workflows/`
+/// override or a built-in on disk — not a `WorkflowSchema.name` read back
+/// out of already-parsed YAML. Those two can disagree: nothing enforces
+/// that a project-local `schema.yaml`'s own `name:` field matches the
+/// directory it lives in (e.g. a custom schema started as a copy of
+/// `spec-driven`'s `schema.yaml` with the `name:` field left unedited), and
+/// namespacing this function's output by the wrong one would either drop
+/// the custom schema's commands entirely or generate them under the wrong
+/// short name. Resolving by identifier here — the same string used to look
+/// the file up in the first place — is what keeps `/spcx:<name>:*` in sync
+/// with whatever `--schema <name>` / `solidspec.toml` actually names.
+///
+/// `default_schema_name` is folded into the 7 built-in names so a project
+/// running a fully custom-named schema (one not among the 7) still gets its
+/// own `/spcx:<name>:*` commands instead of none — the built-ins alone
+/// would silently drop it now that there's no flagless fallback to catch
+/// it.
 ///
 /// Schema-independent of any one agent — callers compute this once and
 /// pass it to `write_commands_for_agent` per agent (see `register_all`)
@@ -191,7 +204,7 @@ const SPCX_PHASES: &[(&str, &str)] = &[
 /// per agent for identical output.
 fn all_schema_spcx_commands(
     project_root: &Path,
-    default_schema: &crate::core::schema::WorkflowSchema,
+    default_schema_name: &str,
 ) -> Result<Vec<(String, &'static str, String)>> {
     let mut commands = Vec::new();
 
@@ -201,32 +214,35 @@ fn all_schema_spcx_commands(
         push_spcx_commands(&mut commands, &short, &schema)?;
     }
 
-    // `default_schema` names something outside the 7 built-ins (a fully
-    // custom `.solidspec/workflows/<name>/schema.yaml`) — reuse the
-    // already-resolved schema the caller passed in instead of re-resolving
-    // it from disk by name (the caller may hold one that hasn't round-tripped
-    // through a file yet, e.g. in a test).
-    if !crate::core::schema::builtin::names().contains(&default_schema.name.as_str()) {
-        let short = super::spcx::schema_short_name(&default_schema.name);
+    // `default_schema_name` names something outside the 7 built-ins (a
+    // fully custom `.solidspec/workflows/<name>/schema.yaml`).
+    if !crate::core::schema::builtin::names().contains(&default_schema_name) {
+        let short = super::spcx::schema_short_name(default_schema_name);
         // A custom schema whose short name collides with a built-in's (e.g.
-        // named exactly "tdd", matching tdd-driven's reduced name) would
-        // otherwise silently clobber that built-in's /spcx:<short>:* files —
-        // write_commands_for_agent writes both to the identical path with no
-        // warning. Fail loudly instead, same as init's own unknown-schema
-        // check, rather than let one workflow's commands overwrite another's.
+        // named exactly "tdd", matching tdd-driven's reduced name — compared
+        // case-insensitively since `.claude/commands/spcx/<short>/` is a
+        // real directory and several common filesystems, including macOS's
+        // default APFS and Windows's NTFS, are case-insensitive, so "TDD"
+        // and "tdd" would collide on disk even though they compare unequal
+        // as plain strings) would otherwise silently clobber that built-in's
+        // /spcx:<short>:* files — write_commands_for_agent writes both to
+        // the identical path with no warning. Fail loudly instead, same as
+        // init's own unknown-schema check, rather than let one workflow's
+        // commands overwrite another's.
         if crate::core::schema::builtin::names()
             .iter()
-            .any(|builtin_name| super::spcx::schema_short_name(builtin_name) == short)
+            .any(|builtin_name| {
+                super::spcx::schema_short_name(builtin_name).eq_ignore_ascii_case(&short)
+            })
         {
             anyhow::bail!(
-                "Schema '{}' has the same short name ('{short}') as a built-in workflow's \
-                 /spcx:{short}:* commands — rename it to avoid overwriting the built-in's slash \
-                 commands (e.g. '{}-custom').",
-                default_schema.name,
-                default_schema.name
+                "Schema '{default_schema_name}' has the same short name ('{short}') as a \
+                 built-in workflow's /spcx:{short}:* commands — rename it to avoid overwriting \
+                 the built-in's slash commands (e.g. '{default_schema_name}-custom')."
             );
         }
-        push_spcx_commands(&mut commands, &short, default_schema)?;
+        let (schema, _) = crate::core::schema::resolve_schema(default_schema_name, project_root)?;
+        push_spcx_commands(&mut commands, &short, &schema)?;
     }
 
     Ok(commands)
@@ -412,11 +428,11 @@ pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> 
 
 /// Unregister all SolidSpec commands for a specific agent.
 ///
-/// `default_schema` should mirror whatever was passed to the `register_all`
-/// call that wrote these files — pass `Some` when the project might be
-/// running a fully custom-named schema (not one of the 7 built-ins) so its
-/// `/spcx:<name>:*` files get cleaned up too, `None` to only ever touch the
-/// 7 built-ins' files.
+/// `default_schema_name` should mirror whatever identifier was passed to
+/// the `register_all` call that wrote these files — pass `Some` when the
+/// project might be running a fully custom-named schema (not one of the 7
+/// built-ins) so its `/spcx:<name>:*` files get cleaned up too, `None` to
+/// only ever touch the 7 built-ins' files.
 ///
 /// Tested (see `mod tests` below) but not yet called from any CLI command —
 /// candidate for a future `solidspec agent remove <id>`.
@@ -424,7 +440,7 @@ pub fn unregister_apex_skill(agent_id: &str, project_root: &Path) -> Result<()> 
 pub fn unregister_commands(
     project_root: &Path,
     agent: &AgentConfig,
-    default_schema: Option<&crate::core::schema::WorkflowSchema>,
+    default_schema_name: Option<&str>,
 ) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -481,7 +497,7 @@ pub fn unregister_commands(
         }
     }
 
-    unregister_all_schema_spcx_commands(project_root, agent, default_schema)?;
+    unregister_all_schema_spcx_commands(project_root, agent, default_schema_name)?;
     unregister_apex_skill(agent.id, project_root)?;
 
     Ok(())
@@ -493,15 +509,16 @@ pub fn unregister_commands(
 /// per-schema name set instead of the static `COMMANDS` table.
 ///
 /// Covers the same schema set `all_schema_spcx_commands` would have written
-/// for `default_schema` — the 7 built-ins, plus `default_schema` itself when
-/// it names something outside that set — so a custom-named schema's files
-/// don't linger as orphans after "removal". `default_schema: None` (no
-/// caller currently has one on hand) only ever touches the 7 built-ins'
-/// files, same as before this parameter existed.
+/// for `default_schema_name` — the 7 built-ins, plus `default_schema_name`
+/// itself when it names something outside that set — so a custom-named
+/// schema's files don't linger as orphans after "removal".
+/// `default_schema_name: None` (no caller currently has one on hand) only
+/// ever touches the 7 built-ins' files, same as before this parameter
+/// existed.
 fn unregister_all_schema_spcx_commands(
     project_root: &Path,
     agent: &AgentConfig,
-    default_schema: Option<&crate::core::schema::WorkflowSchema>,
+    default_schema_name: Option<&str>,
 ) -> Result<()> {
     let cmd_dir = project_root
         .join(agent.command_dir)
@@ -514,10 +531,10 @@ fn unregister_all_schema_spcx_commands(
         .iter()
         .map(|s| s.to_string())
         .collect();
-    if let Some(schema) = default_schema
-        && !schema_names.contains(&schema.name)
+    if let Some(name) = default_schema_name
+        && !schema_names.iter().any(|s| s == name)
     {
-        schema_names.push(schema.name.clone());
+        schema_names.push(name.to_string());
     }
 
     for schema_name in &schema_names {
@@ -576,21 +593,29 @@ fn unregister_all_schema_spcx_commands(
 }
 
 /// Register commands for all detected agents.
+///
+/// `schema_name` is the project's configured schema *identifier*
+/// (`solidspec.toml`'s `[pipeline].schema`, or a `--schema` flag value) —
+/// the same string `schema::resolve_schema` uses to find the schema on
+/// disk, resolved internally by `all_schema_spcx_commands` rather than
+/// pre-resolved by the caller, so command namespacing can never drift from
+/// a `WorkflowSchema.name` that happens to disagree with it (see that
+/// function's doc comment).
 pub fn register_all(
     project_root: &Path,
     target_agent: Option<&str>,
-    schema: &crate::core::schema::WorkflowSchema,
+    schema_name: &str,
 ) -> Result<Vec<String>> {
     let mut registered = Vec::new();
 
     // Computed once and reused for every agent below: the (name,
     // description, body) triples for every /spcx:<short>:* command (the 7
-    // built-in schemas plus `schema` itself if it names something outside
-    // that set) are agent-independent (only write_commands_for_agent's
+    // built-in schemas plus `schema_name` itself if it names something
+    // outside that set) are agent-independent (only write_commands_for_agent's
     // placement differs per agent) — resolving each schema and generating
     // its bodies again per agent would redo the same schema.yaml reads and
     // DAG walks once per detected agent for no behavioral difference.
-    let schema_spcx_commands = all_schema_spcx_commands(project_root, schema)?;
+    let schema_spcx_commands = all_schema_spcx_commands(project_root, schema_name)?;
 
     if let Some(agent_id) = target_agent {
         // Register for a specific agent
@@ -660,12 +685,7 @@ pub fn find_binary(name: &str) -> Option<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::schema::{WorkflowSchema, builtin};
     use tempfile::TempDir;
-
-    fn spec_driven_schema() -> WorkflowSchema {
-        WorkflowSchema::parse(builtin::SPEC_DRIVEN).unwrap()
-    }
 
     /// Test-only equivalent of what `register_all` does for the per-schema
     /// `/spcx:*` commands: compute them once, write them for one agent.
@@ -674,10 +694,30 @@ mod tests {
     fn register_all_schema_spcx_commands(
         project_root: &Path,
         agent: &AgentConfig,
-        default_schema: &WorkflowSchema,
+        default_schema_name: &str,
     ) -> Result<()> {
-        let commands = all_schema_spcx_commands(project_root, default_schema)?;
+        let commands = all_schema_spcx_commands(project_root, default_schema_name)?;
         write_commands_for_agent(project_root, agent, &commands)
+    }
+
+    /// Write a fully custom project-local schema at
+    /// `.solidspec/workflows/<dir_name>/schema.yaml`, using spec-driven's
+    /// own content verbatim — including its internal `name: spec-driven`
+    /// field, deliberately left mismatched from `dir_name`. That mismatch is
+    /// the exact scenario `all_schema_spcx_commands`/`resolve_schema` must
+    /// handle by identifier (`dir_name`, matching what
+    /// `.solidspec/workflows/<name>/schema.yaml` and `[pipeline].schema` use)
+    /// rather than by the parsed `WorkflowSchema.name` label, which a
+    /// project author could easily leave unedited after copying an existing
+    /// schema.yaml as a starting point.
+    fn write_custom_schema(project_root: &Path, dir_name: &str) {
+        let dir = project_root.join(".solidspec/workflows").join(dir_name);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("schema.yaml"),
+            crate::core::schema::builtin::SPEC_DRIVEN,
+        )
+        .unwrap();
     }
 
     #[test]
@@ -846,7 +886,7 @@ mod tests {
     #[test]
     fn register_all_with_specific_agent() {
         let dir = TempDir::new().unwrap();
-        let registered = register_all(dir.path(), Some("claude"), &spec_driven_schema()).unwrap();
+        let registered = register_all(dir.path(), Some("claude"), "spec-driven").unwrap();
         assert_eq!(registered, vec!["claude"]);
         assert!(
             dir.path()
@@ -858,7 +898,7 @@ mod tests {
     #[test]
     fn register_all_with_invalid_agent_returns_error() {
         let dir = TempDir::new().unwrap();
-        let result = register_all(dir.path(), Some("nonexistent"), &spec_driven_schema());
+        let result = register_all(dir.path(), Some("nonexistent"), "spec-driven");
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("Unknown agent"));
@@ -871,7 +911,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join(".claude")).unwrap();
         std::fs::create_dir_all(dir.path().join(".cursor")).unwrap();
 
-        let registered = register_all(dir.path(), None, &spec_driven_schema()).unwrap();
+        let registered = register_all(dir.path(), None, "spec-driven").unwrap();
         assert!(registered.contains(&"claude".to_string()));
         assert!(registered.contains(&"cursor".to_string()));
     }
@@ -1023,7 +1063,7 @@ mod tests {
     #[test]
     fn register_all_also_registers_apex_skill_for_claude() {
         let dir = TempDir::new().unwrap();
-        register_all(dir.path(), Some("claude"), &spec_driven_schema()).unwrap();
+        register_all(dir.path(), Some("claude"), "spec-driven").unwrap();
 
         let apex_dir = dir.path().join(".claude/commands/apex");
         assert!(
@@ -1103,7 +1143,7 @@ mod tests {
     fn register_all_schema_spcx_commands_covers_every_builtin_schema() {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
-        register_all_schema_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
+        register_all_schema_spcx_commands(dir.path(), claude, "spec-driven").unwrap();
 
         for schema_name in crate::core::schema::builtin::names() {
             let short = crate::agents::spcx::schema_short_name(schema_name);
@@ -1120,7 +1160,7 @@ mod tests {
     fn per_schema_spcx_bodies_actually_differ_by_schema() {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
-        register_all_schema_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
+        register_all_schema_spcx_commands(dir.path(), claude, "spec-driven").unwrap();
 
         let minimal_new =
             std::fs::read_to_string(dir.path().join(".claude/commands/spcx/min/new.md")).unwrap();
@@ -1143,7 +1183,7 @@ mod tests {
     fn other_agents_get_flat_per_schema_spcx_commands() {
         let dir = TempDir::new().unwrap();
         let cursor = find_agent("cursor").unwrap();
-        register_all_schema_spcx_commands(dir.path(), cursor, &spec_driven_schema()).unwrap();
+        register_all_schema_spcx_commands(dir.path(), cursor, "spec-driven").unwrap();
 
         let flat = dir
             .path()
@@ -1155,7 +1195,7 @@ mod tests {
     fn register_all_registers_per_schema_spcx_commands_too() {
         let dir = TempDir::new().unwrap();
         std::fs::create_dir_all(dir.path().join(".claude")).unwrap();
-        register_all(dir.path(), None, &spec_driven_schema()).unwrap();
+        register_all(dir.path(), None, "spec-driven").unwrap();
 
         assert!(dir.path().join(".claude/commands/spcx/min/new.md").exists());
         assert!(
@@ -1170,7 +1210,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
-        register_all_schema_spcx_commands(dir.path(), claude, &spec_driven_schema()).unwrap();
+        register_all_schema_spcx_commands(dir.path(), claude, "spec-driven").unwrap();
         unregister_commands(dir.path(), claude, None).unwrap();
 
         for schema_name in crate::core::schema::builtin::names() {
@@ -1197,14 +1237,16 @@ mod tests {
         // is not one of the 7 built-ins, so it wouldn't be covered by
         // `all_schema_spcx_commands` iterating `builtin::names()` alone —
         // it must still get its own /spcx:<name>:* commands since there is no
-        // flagless /spcx:new fallback left to catch it.
+        // flagless /spcx:new fallback left to catch it. Its schema.yaml's own
+        // `name:` field (spec-driven's, unedited — see `write_custom_schema`)
+        // deliberately does NOT match "my-flow": registration must key off
+        // the identifier (the directory name / `--schema` value), not that
+        // label, or this would silently register nothing.
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
+        write_custom_schema(dir.path(), "my-flow");
 
-        let mut custom = spec_driven_schema();
-        custom.name = "my-flow".to_string();
-
-        register_all_schema_spcx_commands(dir.path(), claude, &custom).unwrap();
+        register_all_schema_spcx_commands(dir.path(), claude, "my-flow").unwrap();
 
         for phase in ["new", "apply", "finalise"] {
             let path = dir
@@ -1221,17 +1263,29 @@ mod tests {
         // both to .claude/commands/spcx/tdd/*.md would let the second one
         // clobber the first with no warning. Must fail loudly instead.
         let dir = TempDir::new().unwrap();
+        write_custom_schema(dir.path(), "tdd");
 
-        let mut custom = spec_driven_schema();
-        custom.name = "tdd".to_string();
-
-        let result = all_schema_spcx_commands(dir.path(), &custom);
+        let result = all_schema_spcx_commands(dir.path(), "tdd");
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("tdd"),
             "error should name the collision: {err}"
         );
+    }
+
+    #[test]
+    fn default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors() {
+        // .claude/commands/spcx/<short>/ is a real directory, and several
+        // common filesystems (macOS APFS, Windows NTFS) are case-insensitive
+        // by default, so "TDD" and "tdd" would collide on disk even though
+        // they compare unequal as plain strings — the guard must catch this
+        // case too, not just an exact-string match.
+        let dir = TempDir::new().unwrap();
+        write_custom_schema(dir.path(), "TDD");
+
+        let result = all_schema_spcx_commands(dir.path(), "TDD");
+        assert!(result.is_err());
     }
 
     #[test]
@@ -1243,15 +1297,13 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let claude = find_agent("claude").unwrap();
         register_commands(dir.path(), claude).unwrap();
-
-        let mut custom = spec_driven_schema();
-        custom.name = "my-flow".to_string();
-        register_all_schema_spcx_commands(dir.path(), claude, &custom).unwrap();
+        write_custom_schema(dir.path(), "my-flow");
+        register_all_schema_spcx_commands(dir.path(), claude, "my-flow").unwrap();
 
         let custom_dir = dir.path().join(".claude/commands/spcx/my-flow");
         assert!(custom_dir.join("new.md").exists());
 
-        unregister_commands(dir.path(), claude, Some(&custom)).unwrap();
+        unregister_commands(dir.path(), claude, Some("my-flow")).unwrap();
 
         assert!(!custom_dir.join("new.md").exists());
         assert!(

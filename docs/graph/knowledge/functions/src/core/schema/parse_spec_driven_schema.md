@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: parse_spec_driven_schema
-resource: src/core/schema.rs#L230-L235
+resource: src/core/schema.rs#L239-L244
 visibility: private
 generated:
   by: okf-rs/0.7.0

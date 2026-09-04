@@ -81,6 +81,7 @@
 - [command_files_contain_compliance_guardrails](../functions/src/agents/registry/command_files_contain_compliance_guardrails.md) — Rust Function
 - [copilot_creates_agent_md_and_prompt_md](../functions/src/agents/registry/copilot_creates_agent_md_and_prompt_md.md) — Rust Function
 - [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md) — Rust Function
+- [default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors](../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors.md) — Rust Function
 - [default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting](../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting.md) — Rust Function
 - [detect_agents](../functions/src/agents/registry/detect_agents.md) — Rust Function
 - [detect_claude_when_dir_exists](../functions/src/agents/registry/detect_claude_when_dir_exists.md) — Rust Function
@@ -110,7 +111,6 @@
 - [register_commands](../functions/src/agents/registry/register_commands.md) — Rust Function
 - [register_markdown_agent_creates_md_files](../functions/src/agents/registry/register_markdown_agent_creates_md_files.md) — Rust Function
 - [register_toml_agent_creates_toml_files](../functions/src/agents/registry/register_toml_agent_creates_toml_files.md) — Rust Function
-- [spec_driven_schema](../functions/src/agents/registry/spec_driven_schema.md) — Rust Function
 - [unregister_all_schema_spcx_commands](../functions/src/agents/registry/unregister_all_schema_spcx_commands.md) — Rust Function
 - [unregister_apex_skill](../functions/src/agents/registry/unregister_apex_skill.md) — Rust Function
 - [unregister_apex_skill_is_idempotent](../functions/src/agents/registry/unregister_apex_skill_is_idempotent.md) — Rust Function
@@ -125,6 +125,7 @@
 - [unregister_removes_per_schema_spcx_commands](../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md) — Rust Function
 - [write_command_file](../functions/src/agents/registry/write_command_file.md) — Rust Function
 - [write_commands_for_agent](../functions/src/agents/registry/write_commands_for_agent.md) — Rust Function
+- [write_custom_schema](../functions/src/agents/registry/write_custom_schema.md) — Rust Function
 - [artifact_id_for_phase](../functions/src/agents/spcx/artifact_id_for_phase.md) — Rust Function
 - [cli_command_for](../functions/src/agents/spcx/cli_command_for.md) — Rust Function
 - [every_builtin_schema_generates_without_error](../functions/src/agents/spcx/every_builtin_schema_generates_without_error.md) — Rust Function
@@ -690,6 +691,7 @@
 - [list_available_schemas](../functions/src/core/schema/list_available_schemas.md) — Rust Function
 - [list_available_schemas_includes_apex_schemas](../functions/src/core/schema/list_available_schemas_includes_apex_schemas.md) — Rust Function
 - [list_available_schemas_includes_builtins](../functions/src/core/schema/list_available_schemas_includes_builtins.md) — Rust Function
+- [list_available_schemas_project_local_uses_directory_name_not_yaml_label](../functions/src/core/schema/list_available_schemas_project_local_uses_directory_name_not_yaml_label.md) — Rust Function
 - [load_graph](../functions/src/core/schema/load_graph.md) — Rust Function
 - [load_graph_one_step](../functions/src/core/schema/load_graph_one_step.md) — Rust Function
 - [names](../functions/src/core/schema/names.md) — Rust Function
@@ -1075,6 +1077,7 @@
 - [pipeline_sdd_unchanged_no_intent_md](../functions/tests/pipeline/pipeline_sdd_unchanged_no_intent_md.md) — Rust Function
 - [pipeline_status_shows_artifact_table](../functions/tests/pipeline/pipeline_status_shows_artifact_table.md) — Rust Function
 - [setup_project](../functions/tests/pipeline/setup_project.md) — Rust Function
+- [schemas_lists_every_builtin_with_its_spcx_short_name](../functions/tests/schemas/schemas_lists_every_builtin_with_its_spcx_short_name.md) — Rust Function
 - [minimal_pipeline_no_agent_scaffolds_all_four_artifacts](../functions/tests/security_first_minimal/minimal_pipeline_no_agent_scaffolds_all_four_artifacts.md) — Rust Function
 - [minimal_status_shows_only_four_artifacts_and_no_clarify_or_review](../functions/tests/security_first_minimal/minimal_status_shows_only_four_artifacts_and_no_clarify_or_review.md) — Rust Function
 - [minimal_tasks_require_only_spec_and_plan_no_security_review](../functions/tests/security_first_minimal/minimal_tasks_require_only_spec_and_plan_no_security_review.md) — Rust Function

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: list_available_schemas_includes_apex_schemas
-resource: src/core/schema.rs#L525-L530
+title: list_available_schemas_project_local_uses_directory_name_not_yaml_label
+resource: src/core/schema.rs#L378-L399
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn list_available_schemas_includes_apex_schemas()`
+`fn list_available_schemas_project_local_uses_directory_name_not_yaml_label()`
 
 # Calls
 

@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L1279
+resource: src/agents/registry.rs#L1-L1331
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -25,9 +25,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: external/super
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: external/crate-core-schema-workflowschema-builtin
     resolved_by: tree-sitter
     confidence: exact
   - target: external/tempfile-tempdir
@@ -56,8 +53,8 @@ relationships:
 - [unregister_all_schema_spcx_commands](../../../functions/src/agents/registry/unregister_all_schema_spcx_commands.md)
 - [register_all](../../../functions/src/agents/registry/register_all.md)
 - [find_binary](../../../functions/src/agents/registry/find_binary.md)
-- [spec_driven_schema](../../../functions/src/agents/registry/spec_driven_schema.md)
 - [register_all_schema_spcx_commands](../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)
+- [write_custom_schema](../../../functions/src/agents/registry/write_custom_schema.md)
 - [detect_claude_when_dir_exists](../../../functions/src/agents/registry/detect_claude_when_dir_exists.md)
 - [detect_multiple_agents](../../../functions/src/agents/registry/detect_multiple_agents.md)
 - [empty_repo_detects_nothing](../../../functions/src/agents/registry/empty_repo_detects_nothing.md)
@@ -94,6 +91,7 @@ relationships:
 - [unregister_removes_per_schema_spcx_commands](../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
 - [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../../../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md)
 - [default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting](../../../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_errors_instead_of_overwriting.md)
+- [default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors](../../../functions/src/agents/registry/default_schema_short_name_colliding_with_a_builtin_case_insensitively_also_errors.md)
 - [unregister_removes_custom_named_default_schema_spcx_commands_too](../../../functions/src/agents/registry/unregister_removes_custom_named_default_schema_spcx_commands_too.md)
 - [apex_command_file_contains_apex_workflow_text](../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)
 
@@ -106,7 +104,6 @@ relationships:
 - `super::guardrails`
 - `crate::core::apex`
 - `super::*`
-- `crate::core::schema::{WorkflowSchema, builtin}`
 - `tempfile::TempDir`
 
 # Member of

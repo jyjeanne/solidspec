@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: claude_gets_namespaced_explore_command_not_a_flat_file
-resource: src/agents/registry.rs#L1060-L1072
+resource: src/agents/registry.rs#L1100-L1112
 visibility: private
 generated:
   by: okf-rs/0.7.0

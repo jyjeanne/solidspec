@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: write_commands_for_agent
-resource: src/agents/registry.rs#L264-L312
+resource: src/agents/registry.rs#L280-L328
 visibility: private
 generated:
   by: okf-rs/0.7.0

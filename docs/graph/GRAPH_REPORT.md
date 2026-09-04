@@ -1,15 +1,15 @@
 # Graph Report - solidspec (2026-09-04)
 
-Built from commit: `6214181`
+Built from commit: `94a35d9`
 
 ## Topology (`solidspec okf generate`)
 
 ```
-Generated 1376 concept(s) into /home/user/solidspec/docs/graph/knowledge (1 file(s) parsed, 93 reused from cache)
+Generated 1380 concept(s) into /home/user/solidspec/docs/graph/knowledge (6 file(s) parsed, 89 reused from cache)
   Package	1
-  Module	94
+  Module	95
   Struct	84
   Enum	25
-  Function	1102
+  Function	1105
   Method	70
 ```

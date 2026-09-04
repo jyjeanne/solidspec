@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: find_binary
-resource: src/agents/registry.rs#L628-L658
+resource: src/agents/registry.rs#L653-L683
 generated:
   by: okf-rs/0.7.0
 relationships:

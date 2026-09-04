@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: opencode_creates_directory_based_skills
-resource: src/agents/registry.rs#L880-L908
+resource: src/agents/registry.rs#L920-L948
 visibility: private
 generated:
   by: okf-rs/0.7.0

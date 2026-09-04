@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: other_agents_get_flat_per_schema_spcx_commands
-resource: src/agents/registry.rs#L1143-L1152
+resource: src/agents/registry.rs#L1183-L1192
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -11,9 +11,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/register_all_schema_spcx_commands
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/spec_driven_schema
     resolved_by: tree-sitter
     confidence: exact
 ---
@@ -26,4 +23,3 @@ relationships:
 
 - [find_agent](../../../../functions/src/agents/config/find_agent.md)
 - [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)
-- [spec_driven_schema](../../../../functions/src/agents/registry/spec_driven_schema.md)

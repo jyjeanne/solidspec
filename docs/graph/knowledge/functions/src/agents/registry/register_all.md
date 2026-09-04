@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all
-resource: src/agents/registry.rs#L579-L625
+resource: src/agents/registry.rs#L604-L650
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -50,7 +50,7 @@ relationships:
 
 # Signature
 
-`pub fn register_all( project_root: &Path, target_agent: Option<&str>, schema: &crate::core::schema::WorkflowSchema, ) -> Result<Vec<String>>`
+`pub fn register_all( project_root: &Path, target_agent: Option<&str>, schema_name: &str, ) -> Result<Vec<String>>`
 
 # Calls
 

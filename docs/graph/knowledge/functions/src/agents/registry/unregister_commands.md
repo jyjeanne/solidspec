@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_commands
-resource: src/agents/registry.rs#L424-L488
+resource: src/agents/registry.rs#L440-L504
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -44,7 +44,7 @@ relationships:
 
 # Signature
 
-`pub fn unregister_commands( project_root: &Path, agent: &AgentConfig, default_schema: Option<&crate::core::schema::WorkflowSchema>, ) -> Result<()>`
+`pub fn unregister_commands( project_root: &Path, agent: &AgentConfig, default_schema_name: Option<&str>, ) -> Result<()>`
 
 # Calls
 

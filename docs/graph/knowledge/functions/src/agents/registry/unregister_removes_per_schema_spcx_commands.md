@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_per_schema_spcx_commands
-resource: src/agents/registry.rs#L1169-L1192
+resource: src/agents/registry.rs#L1209-L1232
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,9 +14,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/register_all_schema_spcx_commands
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/spec_driven_schema
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/unregister_commands
@@ -39,7 +36,6 @@ relationships:
 - [find_agent](../../../../functions/src/agents/config/find_agent.md)
 - [register_commands](../../../../functions/src/agents/registry/register_commands.md)
 - [register_all_schema_spcx_commands](../../../../functions/src/agents/registry/register_all_schema_spcx_commands.md)
-- [spec_driven_schema](../../../../functions/src/agents/registry/spec_driven_schema.md)
 - [unregister_commands](../../../../functions/src/agents/registry/unregister_commands.md)
 - [names](../../../../functions/src/core/schema/names.md)
 - [schema_short_name](../../../../functions/src/agents/spcx/schema_short_name.md)

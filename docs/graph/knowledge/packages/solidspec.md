@@ -97,6 +97,7 @@ generated:
 - [init](../modules/tests/init.md)
 - [okf_extension](../modules/tests/okf_extension.md)
 - [pipeline](../modules/tests/pipeline.md)
+- [schemas](../modules/tests/schemas.md)
 - [security_first_minimal](../modules/tests/security_first_minimal.md)
 - [ship](../modules/tests/ship.md)
 - [status](../modules/tests/status.md)

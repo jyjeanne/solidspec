@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: unregister_removes_claude_spcx_explore_file
-resource: src/agents/registry.rs#L1088-L1095
+resource: src/agents/registry.rs#L1128-L1135
 visibility: private
 generated:
   by: okf-rs/0.7.0

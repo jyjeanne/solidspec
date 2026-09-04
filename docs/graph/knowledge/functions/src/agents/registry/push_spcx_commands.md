@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: push_spcx_commands
-resource: src/agents/registry.rs#L239-L255
+resource: src/agents/registry.rs#L255-L271
 visibility: private
 generated:
   by: okf-rs/0.7.0

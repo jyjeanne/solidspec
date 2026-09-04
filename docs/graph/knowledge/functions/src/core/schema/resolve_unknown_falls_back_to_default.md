@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: resolve_unknown_falls_back_to_default
-resource: src/core/schema.rs#L270-L275
+resource: src/core/schema.rs#L279-L284
 visibility: private
 generated:
   by: okf-rs/0.7.0

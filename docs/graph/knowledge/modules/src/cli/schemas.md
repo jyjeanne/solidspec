@@ -1,12 +1,15 @@
 ---
 type: Rust Module
 title: schemas
-resource: src/cli/schemas.rs#L1-L44
+resource: src/cli/schemas.rs#L1-L53
 generated:
   by: okf-rs/0.7.0
 relationships:
   imports:
   - target: external/anyhow-result
+    resolved_by: tree-sitter
+    confidence: exact
+  - target: external/crate-agents-spcx-schema-short-name
     resolved_by: tree-sitter
     confidence: exact
   - target: external/crate-config
@@ -28,6 +31,7 @@ relationships:
 # Imports
 
 - `anyhow::Result`
+- `crate::agents::spcx::schema_short_name`
 - `crate::config`
 - `crate::core::schema`
 

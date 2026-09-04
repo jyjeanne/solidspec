@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: apex_driven_converts_to_valid_graph
-resource: src/core/schema.rs#L410-L415
+resource: src/core/schema.rs#L443-L448
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_schema_spcx_commands
-resource: src/agents/registry.rs#L674-L681
+resource: src/agents/registry.rs#L694-L701
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -36,7 +36,7 @@ relationships:
 
 # Signature
 
-`fn register_all_schema_spcx_commands( project_root: &Path, agent: &AgentConfig, default_schema: &WorkflowSchema, ) -> Result<()>`
+`fn register_all_schema_spcx_commands( project_root: &Path, agent: &AgentConfig, default_schema_name: &str, ) -> Result<()>`
 
 # Calls
 

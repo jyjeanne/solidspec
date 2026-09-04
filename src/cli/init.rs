@@ -47,7 +47,6 @@ pub fn run(
             schema::builtin::names().join(", ")
         );
     }
-    let (workflow_schema, _) = schema::resolve_schema(&schema_name, &project_dir)?;
 
     println!("Initializing SolidSpec project: {project_name} (schema: {schema_name})");
 
@@ -57,7 +56,7 @@ pub fn run(
     // Save root config — records schema_name as the project's default, so
     // status/pipeline/go/continue pick it up without repeating --schema.
     let mut root_config = RootConfig::new(&project_name);
-    root_config.pipeline.schema = schema_name;
+    root_config.pipeline.schema = schema_name.clone();
     root_config.save(&project_dir.join("solidspec.toml"))?;
 
     // Save internal config
@@ -82,7 +81,7 @@ pub fn run(
     // directory, ...) are real but not something a user needs to see at init
     // time — see docs/simplification-study-openspec.md item #8. Full detail
     // is still one 'solidspec check' away.
-    let registered = registry::register_all(&project_dir, agent.as_deref(), &workflow_schema)?;
+    let registered = registry::register_all(&project_dir, agent.as_deref(), &schema_name)?;
     if registered.is_empty() {
         println!("  No AI agent detected — run 'solidspec check' for setup details");
     } else {

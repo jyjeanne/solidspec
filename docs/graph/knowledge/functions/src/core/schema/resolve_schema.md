@@ -13,12 +13,6 @@ relationships:
   - target: functions/src/agents/registry/all_schema_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/cli/init/run
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/cli/upgrade/run
-    resolved_by: tree-sitter
-    confidence: exact
   - target: functions/src/core/pipeline/graph_for
     resolved_by: tree-sitter
     confidence: exact
@@ -53,8 +47,6 @@ relationships:
 # Called by
 
 - [all_schema_spcx_commands](../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
-- [run](../../../../functions/src/cli/init/run.md)
-- [run](../../../../functions/src/cli/upgrade/run.md)
 - [graph_for](../../../../functions/src/core/pipeline/graph_for.md)
 - [load_graph](../../../../functions/src/core/schema/load_graph.md)
 - [resolve_builtin_schema](../../../../functions/src/core/schema/resolve_builtin_schema.md)
