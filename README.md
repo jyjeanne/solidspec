@@ -620,7 +620,7 @@ Every built-in workflow gets 3 commands that chain the per-phase ones underneath
 | `/spcx:iapex:new` / `:apply` / `:finalise` | Intent-anchored with APEX and evidence collection |
 | `/spcx:explore` | Exploratory research and discussion — no files written, schema-independent |
 
-See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd:apply` really does walk you through RED → implement → REFACTOR and `/spcx:min:finalise` really does say there's nothing left to run. A project running a fully custom-named schema (`.solidspec/workflows/<name>/schema.yaml`) gets `/spcx:<name>:*` too.
+See [Workflows and Methodologies](#workflows-and-methodologies) for what each schema's artifacts actually are — every command above is generated straight from that schema's own DAG (`src/agents/spcx.rs`), so `/spcx:tdd:apply` really does walk you through RED → implement → REFACTOR and `/spcx:min:finalise` really does say there's nothing left to run. A project running a fully custom-named schema (`.solidspec/workflows/<name>/schema.yaml`) gets `/spcx:<name>:*` too — unless that name happens to reduce to the same short name as a built-in (e.g. a custom schema literally named `tdd`), in which case `solidspec init`/`upgrade` fail loudly with a rename suggestion instead of silently overwriting the built-in's commands.
 
 Every individual phase also has its own command, for explicit control or other schemas:
 
