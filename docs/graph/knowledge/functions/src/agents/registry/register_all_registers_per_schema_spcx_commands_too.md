@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all_registers_per_schema_spcx_commands_too
-resource: src/agents/registry.rs#L1116-L1131
+resource: src/agents/registry.rs#L1106-L1117
 visibility: private
 generated:
   by: okf-rs/0.7.0

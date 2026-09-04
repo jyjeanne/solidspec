@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: security_first_finalise_has_nothing_to_run
-resource: src/agents/spcx.rs#L259-L263
+resource: src/agents/spcx.rs#L296-L300
 visibility: private
 generated:
   by: okf-rs/0.7.0

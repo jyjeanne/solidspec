@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: artifact_id_for_phase
-resource: src/agents/spcx.rs#L60-L62
+resource: src/agents/spcx.rs#L63-L65
 visibility: private
 generated:
   by: okf-rs/0.7.0

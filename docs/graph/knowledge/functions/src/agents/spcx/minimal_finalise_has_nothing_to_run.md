@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: minimal_finalise_has_nothing_to_run
-resource: src/agents/spcx.rs#L225-L229
+resource: src/agents/spcx.rs#L262-L266
 visibility: private
 generated:
   by: okf-rs/0.7.0

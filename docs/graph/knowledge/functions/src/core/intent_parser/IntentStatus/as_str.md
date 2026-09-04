@@ -6,6 +6,9 @@ generated:
   by: okf-rs/0.7.0
 relationships:
   called_by:
+  - target: functions/src/agents/registry/all_schema_spcx_commands
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/spcx/render_new
     resolved_by: tree-sitter
     confidence: exact
@@ -101,6 +104,7 @@ relationships:
 
 # Called by
 
+- [all_schema_spcx_commands](../../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
 - [render_new](../../../../../functions/src/agents/spcx/render_new.md)
 - [run](../../../../../functions/src/cli/completions/run.md)
 - [run](../../../../../functions/src/cli/init/run.md)

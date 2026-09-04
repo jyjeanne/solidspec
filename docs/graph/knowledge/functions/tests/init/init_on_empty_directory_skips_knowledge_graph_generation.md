@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: init_on_empty_directory_skips_knowledge_graph_generation
-resource: tests/init.rs#L152-L165
+resource: tests/init.rs#L135-L148
 visibility: private
 generated:
   by: okf-rs/0.7.0

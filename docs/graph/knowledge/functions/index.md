@@ -75,11 +75,12 @@
 - [apex_command_file_contains_apex_workflow_text](../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md) — Rust Function
 - [apex_skill_dir](../functions/src/agents/registry/apex_skill_dir.md) — Rust Function
 - [apex_skill_dir_returns_correct_paths](../functions/src/agents/registry/apex_skill_dir_returns_correct_paths.md) — Rust Function
-- [claude_gets_namespaced_spcx_commands_not_flat_files](../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md) — Rust Function
+- [claude_gets_namespaced_explore_command_not_a_flat_file](../functions/src/agents/registry/claude_gets_namespaced_explore_command_not_a_flat_file.md) — Rust Function
 - [command_body](../functions/src/agents/registry/command_body.md) — Rust Function
 - [command_body_generic_fallback_for_unknown_phase](../functions/src/agents/registry/command_body_generic_fallback_for_unknown_phase.md) — Rust Function
 - [command_files_contain_compliance_guardrails](../functions/src/agents/registry/command_files_contain_compliance_guardrails.md) — Rust Function
 - [copilot_creates_agent_md_and_prompt_md](../functions/src/agents/registry/copilot_creates_agent_md_and_prompt_md.md) — Rust Function
+- [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md) — Rust Function
 - [detect_agents](../functions/src/agents/registry/detect_agents.md) — Rust Function
 - [detect_claude_when_dir_exists](../functions/src/agents/registry/detect_claude_when_dir_exists.md) — Rust Function
 - [detect_multiple_agents](../functions/src/agents/registry/detect_multiple_agents.md) — Rust Function
@@ -89,10 +90,11 @@
 - [kimi_uses_dot_separator_others_use_hyphen](../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md) — Rust Function
 - [no_override_falls_back_to_embedded_default](../functions/src/agents/registry/no_override_falls_back_to_embedded_default.md) — Rust Function
 - [opencode_creates_directory_based_skills](../functions/src/agents/registry/opencode_creates_directory_based_skills.md) — Rust Function
+- [other_agents_get_flat_explore_command](../functions/src/agents/registry/other_agents_get_flat_explore_command.md) — Rust Function
 - [other_agents_get_flat_per_schema_spcx_commands](../functions/src/agents/registry/other_agents_get_flat_per_schema_spcx_commands.md) — Rust Function
-- [other_agents_get_flat_spcx_commands](../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md) — Rust Function
 - [per_schema_spcx_bodies_actually_differ_by_schema](../functions/src/agents/registry/per_schema_spcx_bodies_actually_differ_by_schema.md) — Rust Function
 - [project_local_override_wins_over_embedded_command_body](../functions/src/agents/registry/project_local_override_wins_over_embedded_command_body.md) — Rust Function
+- [push_spcx_commands](../functions/src/agents/registry/push_spcx_commands.md) — Rust Function
 - [register_all](../functions/src/agents/registry/register_all.md) — Rust Function
 - [register_all_also_registers_apex_skill_for_claude](../functions/src/agents/registry/register_all_also_registers_apex_skill_for_claude.md) — Rust Function
 - [register_all_auto_detect](../functions/src/agents/registry/register_all_auto_detect.md) — Rust Function
@@ -106,9 +108,7 @@
 - [register_apex_skill_returns_false_for_unsupported_agent](../functions/src/agents/registry/register_apex_skill_returns_false_for_unsupported_agent.md) — Rust Function
 - [register_commands](../functions/src/agents/registry/register_commands.md) — Rust Function
 - [register_markdown_agent_creates_md_files](../functions/src/agents/registry/register_markdown_agent_creates_md_files.md) — Rust Function
-- [register_spcx_commands](../functions/src/agents/registry/register_spcx_commands.md) — Rust Function
 - [register_toml_agent_creates_toml_files](../functions/src/agents/registry/register_toml_agent_creates_toml_files.md) — Rust Function
-- [spcx_new_body_has_guardrails_and_arguments_placeholder](../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md) — Rust Function
 - [spec_driven_schema](../functions/src/agents/registry/spec_driven_schema.md) — Rust Function
 - [unregister_all_schema_spcx_commands](../functions/src/agents/registry/unregister_all_schema_spcx_commands.md) — Rust Function
 - [unregister_apex_skill](../functions/src/agents/registry/unregister_apex_skill.md) — Rust Function
@@ -116,7 +116,7 @@
 - [unregister_apex_skill_removes_directory](../functions/src/agents/registry/unregister_apex_skill_removes_directory.md) — Rust Function
 - [unregister_commands](../functions/src/agents/registry/unregister_commands.md) — Rust Function
 - [unregister_removes_apex_skill_directory](../functions/src/agents/registry/unregister_removes_apex_skill_directory.md) — Rust Function
-- [unregister_removes_claude_spcx_directory_contents](../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md) — Rust Function
+- [unregister_removes_claude_spcx_explore_file](../functions/src/agents/registry/unregister_removes_claude_spcx_explore_file.md) — Rust Function
 - [unregister_removes_copilot_files](../functions/src/agents/registry/unregister_removes_copilot_files.md) — Rust Function
 - [unregister_removes_kimi_dirs](../functions/src/agents/registry/unregister_removes_kimi_dirs.md) — Rust Function
 - [unregister_removes_opencode_skills](../functions/src/agents/registry/unregister_removes_opencode_skills.md) — Rust Function
@@ -135,6 +135,9 @@
 - [render_finalise](../functions/src/agents/spcx/render_finalise.md) — Rust Function
 - [render_new](../functions/src/agents/spcx/render_new.md) — Rust Function
 - [schema](../functions/src/agents/spcx/schema.md) — Rust Function
+- [schema_short_name](../functions/src/agents/spcx/schema_short_name.md) — Rust Function
+- [schema_short_name_maps_every_builtin_and_is_hyphen_free](../functions/src/agents/spcx/schema_short_name_maps_every_builtin_and_is_hyphen_free.md) — Rust Function
+- [schema_short_name_passes_through_unknown_names](../functions/src/agents/spcx/schema_short_name_passes_through_unknown_names.md) — Rust Function
 - [security_first_finalise_has_nothing_to_run](../functions/src/agents/spcx/security_first_finalise_has_nothing_to_run.md) — Rust Function
 - [security_first_new_includes_security_review_step](../functions/src/agents/spcx/security_first_new_includes_security_review_step.md) — Rust Function
 - [spec_driven_finalise_includes_analyze_review_and_ship](../functions/src/agents/spcx/spec_driven_finalise_includes_analyze_review_and_ship.md) — Rust Function

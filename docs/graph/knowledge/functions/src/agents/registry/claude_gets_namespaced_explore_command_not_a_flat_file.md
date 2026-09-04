@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: no_override_falls_back_to_embedded_default
-resource: src/agents/registry.rs#L709-L718
+title: claude_gets_namespaced_explore_command_not_a_flat_file
+resource: src/agents/registry.rs#L1011-L1023
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn no_override_falls_back_to_embedded_default()`
+`fn claude_gets_namespaced_explore_command_not_a_flat_file()`
 
 # Calls
 

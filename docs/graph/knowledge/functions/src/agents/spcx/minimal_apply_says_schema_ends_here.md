@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: minimal_apply_says_schema_ends_here
-resource: src/agents/spcx.rs#L232-L235
+resource: src/agents/spcx.rs#L269-L272
 visibility: private
 generated:
   by: okf-rs/0.7.0

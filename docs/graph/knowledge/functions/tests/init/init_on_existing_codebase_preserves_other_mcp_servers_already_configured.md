@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: init_on_existing_codebase_preserves_other_mcp_servers_already_configured
-resource: tests/init.rs#L201-L228
+resource: tests/init.rs#L184-L211
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: render_apply
-resource: src/agents/spcx.rs#L154-L177
+resource: src/agents/spcx.rs#L189-L214
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -14,7 +14,7 @@ relationships:
 
 # Signature
 
-`fn render_apply(phases: &[&ArtifactNode], nothing_after: bool) -> String`
+`fn render_apply(short: &str, phases: &[&ArtifactNode], nothing_after: bool) -> String`
 
 # Called by
 

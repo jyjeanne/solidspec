@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: apex_skill_dir
-resource: src/agents/registry.rs#L356-L363
+resource: src/agents/registry.rs#L359-L366
 visibility: private
 generated:
   by: okf-rs/0.7.0

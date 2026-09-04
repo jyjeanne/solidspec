@@ -1,7 +1,7 @@
 ---
 type: Rust Module
 title: registry
-resource: src/agents/registry.rs#L1-L1168
+resource: src/agents/registry.rs#L1-L1184
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -45,8 +45,8 @@ relationships:
 - [DetectedAgent](../../../classes/src/agents/registry/DetectedAgent.md)
 - [detect_agents](../../../functions/src/agents/registry/detect_agents.md)
 - [register_commands](../../../functions/src/agents/registry/register_commands.md)
-- [register_spcx_commands](../../../functions/src/agents/registry/register_spcx_commands.md)
 - [all_schema_spcx_commands](../../../functions/src/agents/registry/all_schema_spcx_commands.md)
+- [push_spcx_commands](../../../functions/src/agents/registry/push_spcx_commands.md)
 - [write_commands_for_agent](../../../functions/src/agents/registry/write_commands_for_agent.md)
 - [write_command_file](../../../functions/src/agents/registry/write_command_file.md)
 - [apex_skill_dir](../../../functions/src/agents/registry/apex_skill_dir.md)
@@ -84,15 +84,15 @@ relationships:
 - [unregister_apex_skill_is_idempotent](../../../functions/src/agents/registry/unregister_apex_skill_is_idempotent.md)
 - [register_all_also_registers_apex_skill_for_claude](../../../functions/src/agents/registry/register_all_also_registers_apex_skill_for_claude.md)
 - [unregister_removes_apex_skill_directory](../../../functions/src/agents/registry/unregister_removes_apex_skill_directory.md)
-- [claude_gets_namespaced_spcx_commands_not_flat_files](../../../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md)
-- [spcx_new_body_has_guardrails_and_arguments_placeholder](../../../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md)
-- [other_agents_get_flat_spcx_commands](../../../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md)
-- [unregister_removes_claude_spcx_directory_contents](../../../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md)
+- [claude_gets_namespaced_explore_command_not_a_flat_file](../../../functions/src/agents/registry/claude_gets_namespaced_explore_command_not_a_flat_file.md)
+- [other_agents_get_flat_explore_command](../../../functions/src/agents/registry/other_agents_get_flat_explore_command.md)
+- [unregister_removes_claude_spcx_explore_file](../../../functions/src/agents/registry/unregister_removes_claude_spcx_explore_file.md)
 - [register_all_schema_spcx_commands_covers_every_builtin_schema](../../../functions/src/agents/registry/register_all_schema_spcx_commands_covers_every_builtin_schema.md)
 - [per_schema_spcx_bodies_actually_differ_by_schema](../../../functions/src/agents/registry/per_schema_spcx_bodies_actually_differ_by_schema.md)
 - [other_agents_get_flat_per_schema_spcx_commands](../../../functions/src/agents/registry/other_agents_get_flat_per_schema_spcx_commands.md)
 - [register_all_registers_per_schema_spcx_commands_too](../../../functions/src/agents/registry/register_all_registers_per_schema_spcx_commands_too.md)
 - [unregister_removes_per_schema_spcx_commands](../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
+- [default_schema_named_outside_the_7_builtins_still_gets_spcx_commands](../../../functions/src/agents/registry/default_schema_named_outside_the_7_builtins_still_gets_spcx_commands.md)
 - [apex_command_file_contains_apex_workflow_text](../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)
 
 # Imports

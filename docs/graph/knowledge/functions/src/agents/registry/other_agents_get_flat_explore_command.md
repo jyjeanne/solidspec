@@ -1,7 +1,7 @@
 ---
 type: Rust Function
-title: no_override_falls_back_to_embedded_default
-resource: src/agents/registry.rs#L709-L718
+title: other_agents_get_flat_explore_command
+resource: src/agents/registry.rs#L1026-L1036
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -17,7 +17,7 @@ relationships:
 
 # Signature
 
-`fn no_override_falls_back_to_embedded_default()`
+`fn other_agents_get_flat_explore_command()`
 
 # Calls
 

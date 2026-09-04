@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_all
-resource: src/agents/registry.rs#L519-L566
+resource: src/agents/registry.rs#L530-L576
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -13,9 +13,6 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/register_commands
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/register_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/write_commands_for_agent
@@ -60,7 +57,6 @@ relationships:
 - [all_schema_spcx_commands](../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
 - [find_agent](../../../../functions/src/agents/config/find_agent.md)
 - [register_commands](../../../../functions/src/agents/registry/register_commands.md)
-- [register_spcx_commands](../../../../functions/src/agents/registry/register_spcx_commands.md)
 - [write_commands_for_agent](../../../../functions/src/agents/registry/write_commands_for_agent.md)
 - [register_apex_skill](../../../../functions/src/agents/registry/register_apex_skill.md)
 - [detect_agents](../../../../functions/src/agents/registry/detect_agents.md)

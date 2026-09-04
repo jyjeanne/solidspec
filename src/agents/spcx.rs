@@ -1,5 +1,7 @@
 //! Schema-aware generation of the 4 `/spcx:*` meta-command bodies
-//! (`new`/`apply`/`finalise`; `explore` is generic and schema-independent).
+//! (`new`/`apply`/`finalise` — each namespaced per schema as
+//! `/spcx:<short>:<phase>`, see `schema_short_name` below; `explore` is
+//! generic, schema-independent, and stays flat as `/spcx:explore`).
 //!
 //! Each built-in and project-local schema already carries, per artifact, a
 //! human-readable `instruction` field (`schemas/*/schema.yaml`) that was
@@ -11,16 +13,17 @@
 //! (`core::pipeline::phase_type`) splits it into three segments with no
 //! per-schema special-casing needed:
 //!
-//! - a leading run of `Auto` phases → `/spcx:new` (scaffold + fill in)
-//! - the following run of `Handoff` phases → `/spcx:apply` (implement/apex/...)
+//! - a leading run of `Auto` phases → `/spcx:<short>:new` (scaffold + fill in)
+//! - the following run of `Handoff` phases → `/spcx:<short>:apply`
+//!   (implement/apex/...)
 //! - everything after that (analyze/review, or nothing at all for a schema
 //!   like `minimal` that ends at `implement`), plus `ship` when the schema's
-//!   artifact graph has one → `/spcx:finalise`
+//!   artifact graph has one → `/spcx:<short>:finalise`
 //!
-//! This is why `minimal`'s `/spcx:finalise` correctly says "nothing more to
-//! run" instead of referencing analyze/review/ship it doesn't have, and why
-//! `security-first`'s `/spcx:new` correctly includes `security-review`
-//! without this module knowing that schema exists.
+//! This is why `minimal`'s `/spcx:min:finalise` correctly says "nothing more
+//! to run" instead of referencing analyze/review/ship it doesn't have, and
+//! why `security-first`'s `/spcx:sec:new` correctly includes
+//! `security-review` without this module knowing that schema exists.
 //!
 //! Note this deliberately does NOT use `ArtifactGraph::topological_order`:
 //! that order is only DAG-valid, not narrative — e.g. `spec-driven`'s
@@ -59,6 +62,35 @@ fn cli_command_for(artifact_id: &str) -> &str {
 /// `core::pipeline::schema_artifact_id`, which is private to that module).
 fn artifact_id_for_phase(phase: &str) -> &str {
     if phase == "specify" { "spec" } else { phase }
+}
+
+/// Reduced (short) schema name used as the middle segment of the
+/// `/spcx:<short>:<phase>` slash-command pattern (`registry.rs`'s
+/// `all_schema_spcx_commands`/`write_command_file`): a schema variant is a
+/// namespace segment of its own, not text glued onto the action name, so
+/// `/spcx:tdd:new` reads as `<namespace>:<domain>:<action>` instead of
+/// `/spcx:tdd-driven-new`'s single hyphenated blob. Every phase name
+/// (`new`/`apply`/`finalise`) is hyphen-free, so `write_command_file` can
+/// always round-trip the internal `spcx-<short>-<phase>` name back into its
+/// two parts with `rsplit_once('-')` on the *last* hyphen — safe even when
+/// `<short>` itself contains hyphens (a passed-through custom schema name,
+/// below).
+///
+/// A project-local schema whose name isn't one of the 7 built-ins (custom
+/// `.solidspec/workflows/<name>/schema.yaml`) falls through unchanged: it's
+/// already the name a project author picked.
+pub fn schema_short_name(schema_name: &str) -> String {
+    match schema_name {
+        "minimal" => "min",
+        "spec-driven" => "sdd",
+        "security-first" => "sec",
+        "tdd-driven" => "tdd",
+        "intent-driven" => "intent",
+        "apex-driven" => "apex",
+        "intent-apex" => "iapex",
+        other => other,
+    }
+    .to_string()
 }
 
 /// Generate the `new`/`apply`/`finalise` bodies for `schema`. Each still
@@ -114,14 +146,15 @@ pub fn generate_bodies(schema: &WorkflowSchema) -> Result<SpcxBodies> {
         finalise_phases.push(ship);
     }
 
+    let short = schema_short_name(&schema_name);
     Ok(SpcxBodies {
-        new: render_new(&schema_name, &new_phases),
-        apply: render_apply(&apply_phases, finalise_phases.is_empty()),
+        new: render_new(&schema_name, &short, &new_phases),
+        apply: render_apply(&short, &apply_phases, finalise_phases.is_empty()),
         finalise: render_finalise(&schema_name, &finalise_phases),
     })
 }
 
-fn render_new(schema_name: &str, phases: &[&ArtifactNode]) -> String {
+fn render_new(schema_name: &str, short: &str, phases: &[&ArtifactNode]) -> String {
     let chain: Vec<&str> = phases.iter().map(|n| n.id.as_str()).collect();
     let last_cli_phase = phases
         .last()
@@ -147,11 +180,13 @@ fn render_new(schema_name: &str, phases: &[&ArtifactNode]) -> String {
         out.push_str(&format!("{}. {}\n", i + 2, node.instruction));
     }
 
-    out.push_str("\nNext: /spcx:apply to implement, or /spcx:explore to discuss the plan first.\n");
+    out.push_str(&format!(
+        "\nNext: /spcx:{short}:apply to implement, or /spcx:explore to discuss the plan first.\n"
+    ));
     out
 }
 
-fn render_apply(phases: &[&ArtifactNode], nothing_after: bool) -> String {
+fn render_apply(short: &str, phases: &[&ArtifactNode], nothing_after: bool) -> String {
     let mut out = "Read the project context from .solidspec/AGENT.md.\n\n\
          Feature: $ARGUMENTS (auto-detected from the current git branch or latest spec \
          if left empty).\n\n\
@@ -171,7 +206,9 @@ fn render_apply(phases: &[&ArtifactNode], nothing_after: bool) -> String {
             "\nThis schema ends here — run `solidspec status` to confirm everything is done.\n",
         );
     } else {
-        out.push_str("\nNext: /spcx:finalise to validate, review, and get a SHIP/HOLD decision.\n");
+        out.push_str(&format!(
+            "\nNext: /spcx:{short}:finalise to validate, review, and get a SHIP/HOLD decision.\n"
+        ));
     }
     out
 }
@@ -266,7 +303,7 @@ mod tests {
     fn tdd_driven_apply_covers_all_three_handoff_phases() {
         let bodies = generate_bodies(&schema("tdd-driven")).unwrap();
         assert!(bodies.apply.contains("tdd-tests") || bodies.apply.to_lowercase().contains("red"));
-        assert!(bodies.apply.contains("Next: /spcx:finalise"));
+        assert!(bodies.apply.contains("Next: /spcx:tdd:finalise"));
     }
 
     #[test]
@@ -274,6 +311,31 @@ mod tests {
         let bodies = generate_bodies(&schema("intent-driven")).unwrap();
         // "intent" schema artifact id maps 1:1 to the `intent` CLI command.
         assert!(bodies.new.contains("intent"));
+    }
+
+    #[test]
+    fn schema_short_name_maps_every_builtin_and_is_hyphen_free() {
+        let expected = [
+            ("minimal", "min"),
+            ("spec-driven", "sdd"),
+            ("security-first", "sec"),
+            ("tdd-driven", "tdd"),
+            ("intent-driven", "intent"),
+            ("apex-driven", "apex"),
+            ("intent-apex", "iapex"),
+        ];
+        for (schema_name, short) in expected {
+            assert_eq!(schema_short_name(schema_name), short);
+            assert!(
+                !short.contains('-'),
+                "{short} must be hyphen-free so spcx-{{short}}-{{phase}} round-trips"
+            );
+        }
+    }
+
+    #[test]
+    fn schema_short_name_passes_through_unknown_names() {
+        assert_eq!(schema_short_name("my-custom-flow"), "my-custom-flow");
     }
 
     #[test]

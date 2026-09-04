@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: minimal_new_covers_specify_plan_tasks_and_stops_before_implement
-resource: src/agents/spcx.rs#L218-L222
+resource: src/agents/spcx.rs#L255-L259
 visibility: private
 generated:
   by: okf-rs/0.7.0

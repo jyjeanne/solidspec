@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: render_finalise
-resource: src/agents/spcx.rs#L179-L206
+resource: src/agents/spcx.rs#L216-L243
 visibility: private
 generated:
   by: okf-rs/0.7.0

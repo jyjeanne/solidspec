@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: generate_bodies
-resource: src/agents/spcx.rs#L69-L122
+resource: src/agents/spcx.rs#L101-L155
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -18,6 +18,9 @@ relationships:
   - target: functions/src/core/pipeline/phase_type
     resolved_by: tree-sitter
     confidence: exact
+  - target: functions/src/agents/spcx/schema_short_name
+    resolved_by: tree-sitter
+    confidence: exact
   - target: functions/src/agents/spcx/render_new
     resolved_by: tree-sitter
     confidence: exact
@@ -28,10 +31,7 @@ relationships:
     resolved_by: tree-sitter
     confidence: exact
   called_by:
-  - target: functions/src/agents/registry/register_spcx_commands
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/all_schema_spcx_commands
+  - target: functions/src/agents/registry/push_spcx_commands
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement
@@ -76,14 +76,14 @@ relationships:
 - [phases_for_schema](../../../../functions/src/core/pipeline/phases_for_schema.md)
 - [artifact_id_for_phase](../../../../functions/src/agents/spcx/artifact_id_for_phase.md)
 - [phase_type](../../../../functions/src/core/pipeline/phase_type.md)
+- [schema_short_name](../../../../functions/src/agents/spcx/schema_short_name.md)
 - [render_new](../../../../functions/src/agents/spcx/render_new.md)
 - [render_apply](../../../../functions/src/agents/spcx/render_apply.md)
 - [render_finalise](../../../../functions/src/agents/spcx/render_finalise.md)
 
 # Called by
 
-- [register_spcx_commands](../../../../functions/src/agents/registry/register_spcx_commands.md)
-- [all_schema_spcx_commands](../../../../functions/src/agents/registry/all_schema_spcx_commands.md)
+- [push_spcx_commands](../../../../functions/src/agents/registry/push_spcx_commands.md)
 - [minimal_new_covers_specify_plan_tasks_and_stops_before_implement](../../../../functions/src/agents/spcx/minimal_new_covers_specify_plan_tasks_and_stops_before_implement.md)
 - [minimal_finalise_has_nothing_to_run](../../../../functions/src/agents/spcx/minimal_finalise_has_nothing_to_run.md)
 - [minimal_apply_says_schema_ends_here](../../../../functions/src/agents/spcx/minimal_apply_says_schema_ends_here.md)

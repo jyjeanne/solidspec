@@ -17,7 +17,7 @@ Two threads of work landed on top of v0.3.1, not yet cut as a tagged release: ma
 | `solidspec schemas` | One command listing all 7 workflow schemas with version, source, use case, and artifact count — replaces reading a README table before running anything. |
 | `--schema` on `solidspec init`, persisted | Recorded in `solidspec.toml`'s `[pipeline].schema`. `go`/`continue`/`status`/`tasks`/`pipeline` all resolve an unset `--schema` flag to this stored default instead of each independently hardcoding `spec-driven`. |
 | `minimal` is the default schema | Omitting `--schema` on `init` now scaffolds the lean 4-artifact workflow rather than the full 9-artifact one — start light, opt into more ceremony explicitly. |
-| Schema-aware `/spcx:*` commands | `/spcx:new`/`apply`/`finalise` for the project's default schema, plus a namespaced `/spcx:<schema>-{new,apply,finalise}` for every one of the 7 built-in schemas (`/spcx:tdd-driven-apply`, `/spcx:security-first-new`, ...) — generated straight from each schema's own DAG (`src/agents/spcx.rs`), so the body always matches what that schema actually does. |
+| Schema-aware `/spcx:*` commands | `/spcx:<short>:{new,apply,finalise}` — reduced-schema-name namespaced, one per built-in schema (`/spcx:tdd:apply`, `/spcx:sec:new`, ...), no flagless default-schema shortcut — generated straight from each schema's own DAG (`src/agents/spcx.rs`), so the body always matches what that schema actually does. |
 | "Next: solidspec X" hints | Every phase-producing command ends with what to run next, computed from the artifact graph's own topological order rather than hardcoded per command. |
 | `analyze` is primary again | After a dedicated study of `check` vs `validate` vs `analyze`'s actual purposes, the earlier `validate` rename was reverted — `analyze` is the canonical name, `validate` remains a `clap` alias. |
 | Mistral Vibe removed, OpenCode promoted | 19 supported agents (from 20) — Vibe had no meaningful adoption signal; OpenCode's directory-based skills format is now a first-class example throughout the docs. |
@@ -51,7 +51,7 @@ Two threads of work landed on top of v0.3.1, not yet cut as a tagged release: ma
 | DAG Artifact Graph | ✅ | Kahn's algorithm topological sort, completion detection, `solidspec status` |
 | Schema-Driven Workflows | ✅ | 7 built-in schemas (YAML-customizable), 3-level resolution (project-local → built-in → default), `minimal` as the actual `init` default |
 | Multi-Agent Support (19) | ✅ | Auto-detection, format translation, slash command registration per agent |
-| Schema-Aware `/spcx:*` Commands | ✅ | Project-default `/spcx:new`/`apply`/`finalise` plus a namespaced variant per built-in schema, generated from each schema's own DAG (`src/agents/spcx.rs`) |
+| Schema-Aware `/spcx:*` Commands | ✅ | `/spcx:<short>:new`/`apply`/`finalise`, reduced-schema-name namespaced per built-in schema, generated from each schema's own DAG (`src/agents/spcx.rs`) |
 | Multi-Agent Pipeline | ✅ | Automated pipeline with CLI invocation, timeout, mixed-mode and scaffold-only modes |
 | Agent Timeout | ✅ | 300s `try_wait()` polling loop, process killed on timeout |
 | Constitution Gates | ✅ | Simplicity, Anti-Abstraction, Integration-First — auto-checked in plan phase |

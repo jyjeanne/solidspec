@@ -1,7 +1,7 @@
 ---
 type: Rust Struct
 title: SpcxBodies
-resource: src/agents/spcx.rs#L40-L44
+resource: src/agents/spcx.rs#L43-L47
 generated:
   by: okf-rs/0.7.0
 ---

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: render_new
-resource: src/agents/spcx.rs#L124-L152
+resource: src/agents/spcx.rs#L157-L187
 visibility: private
 generated:
   by: okf-rs/0.7.0
@@ -21,7 +21,7 @@ relationships:
 
 # Signature
 
-`fn render_new(schema_name: &str, phases: &[&ArtifactNode]) -> String`
+`fn render_new(schema_name: &str, short: &str, phases: &[&ArtifactNode]) -> String`
 
 # Calls
 

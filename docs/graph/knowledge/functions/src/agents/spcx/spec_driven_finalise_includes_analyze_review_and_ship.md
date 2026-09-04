@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: spec_driven_finalise_includes_analyze_review_and_ship
-resource: src/agents/spcx.rs#L244-L249
+resource: src/agents/spcx.rs#L281-L286
 visibility: private
 generated:
   by: okf-rs/0.7.0

@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: schema
-resource: src/agents/spcx.rs#L213-L215
+resource: src/agents/spcx.rs#L250-L252
 visibility: private
 generated:
   by: okf-rs/0.7.0

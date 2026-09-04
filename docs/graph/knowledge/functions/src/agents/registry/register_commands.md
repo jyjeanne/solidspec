@@ -1,7 +1,7 @@
 ---
 type: Rust Function
 title: register_commands
-resource: src/agents/registry.rs#L154-L166
+resource: src/agents/registry.rs#L135-L147
 generated:
   by: okf-rs/0.7.0
 relationships:
@@ -55,16 +55,13 @@ relationships:
   - target: functions/src/agents/registry/unregister_removes_apex_skill_directory
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files
+  - target: functions/src/agents/registry/claude_gets_namespaced_explore_command_not_a_flat_file
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder
+  - target: functions/src/agents/registry/other_agents_get_flat_explore_command
     resolved_by: tree-sitter
     confidence: exact
-  - target: functions/src/agents/registry/other_agents_get_flat_spcx_commands
-    resolved_by: tree-sitter
-    confidence: exact
-  - target: functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents
+  - target: functions/src/agents/registry/unregister_removes_claude_spcx_explore_file
     resolved_by: tree-sitter
     confidence: exact
   - target: functions/src/agents/registry/unregister_removes_per_schema_spcx_commands
@@ -100,9 +97,8 @@ relationships:
 - [kimi_uses_dot_separator_others_use_hyphen](../../../../functions/src/agents/registry/kimi_uses_dot_separator_others_use_hyphen.md)
 - [command_files_contain_compliance_guardrails](../../../../functions/src/agents/registry/command_files_contain_compliance_guardrails.md)
 - [unregister_removes_apex_skill_directory](../../../../functions/src/agents/registry/unregister_removes_apex_skill_directory.md)
-- [claude_gets_namespaced_spcx_commands_not_flat_files](../../../../functions/src/agents/registry/claude_gets_namespaced_spcx_commands_not_flat_files.md)
-- [spcx_new_body_has_guardrails_and_arguments_placeholder](../../../../functions/src/agents/registry/spcx_new_body_has_guardrails_and_arguments_placeholder.md)
-- [other_agents_get_flat_spcx_commands](../../../../functions/src/agents/registry/other_agents_get_flat_spcx_commands.md)
-- [unregister_removes_claude_spcx_directory_contents](../../../../functions/src/agents/registry/unregister_removes_claude_spcx_directory_contents.md)
+- [claude_gets_namespaced_explore_command_not_a_flat_file](../../../../functions/src/agents/registry/claude_gets_namespaced_explore_command_not_a_flat_file.md)
+- [other_agents_get_flat_explore_command](../../../../functions/src/agents/registry/other_agents_get_flat_explore_command.md)
+- [unregister_removes_claude_spcx_explore_file](../../../../functions/src/agents/registry/unregister_removes_claude_spcx_explore_file.md)
 - [unregister_removes_per_schema_spcx_commands](../../../../functions/src/agents/registry/unregister_removes_per_schema_spcx_commands.md)
 - [apex_command_file_contains_apex_workflow_text](../../../../functions/src/agents/registry/apex_command_file_contains_apex_workflow_text.md)
