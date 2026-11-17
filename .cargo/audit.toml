@@ -5,7 +5,13 @@
 # RUSTSEC-2026-0097: rand 0.8.x unsound with custom global logger.
 # This is a transitive dependency of tera 1.x, which pins rand = "0.8".
 # tera 2.x (which drops this dep) is still in alpha; ignore until it stabilises.
-ignore = ["RUSTSEC-2026-0097"]
+#
+# RUSTSEC-2024-0449: unsafe-libyaml is unmaintained (informational, no CVE, no
+# patched release — the repo is archived). Pulled in by serde_yaml 0.9, which
+# both solidspec and the pinned okf-rs crates (okf-core/-parser/-validator/
+# -generator) depend on, so swapping serde_yaml here alone would not remove it.
+# Drop this once solidspec and okf-rs move to a maintained YAML crate.
+ignore = ["RUSTSEC-2026-0097", "RUSTSEC-2024-0449"]
 
 [output]
 quiet = false
