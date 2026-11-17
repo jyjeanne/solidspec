@@ -147,7 +147,7 @@ pub fn run(
             );
             results.push(pipeline::PhaseResult {
                 name: phase.to_string(),
-                agent: agent.clone(),
+                agent,
                 status: pipeline::PhaseStatus::Skipped,
                 duration_ms: 0,
                 output: reason,
@@ -199,7 +199,7 @@ pub fn run(
                 println!("    ✓ {} ({duration_str})", output);
                 results.push(pipeline::PhaseResult {
                     name: phase.to_string(),
-                    agent: agent.clone(),
+                    agent,
                     status,
                     duration_ms: elapsed_ms,
                     output,
