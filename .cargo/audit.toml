@@ -12,9 +12,10 @@
 # -generator) depend on, so swapping serde_yaml here alone would not remove it.
 # Drop this once solidspec and okf-rs move to a maintained YAML crate.
 #
-# RUSTSEC-2026-0543: chrono is unmaintained; no fixed upgrade is available.
-# Both solidspec and the pinned okf-rs crates depend on it. Remove this exception
-# once both have migrated to a maintained alternative.
+# RUSTSEC-2026-0543: chrono is unmaintained and has no fixed replacement
+# release. It's currently pulled both directly by solidspec and transitively by
+# pinned okf-rs crates, so this warning is not presently remediable via a
+# version bump. Remove this ignore once solidspec and okf-rs migrate off chrono.
 ignore = ["RUSTSEC-2026-0097", "RUSTSEC-2024-0449", "RUSTSEC-2026-0543"]
 
 [output]
